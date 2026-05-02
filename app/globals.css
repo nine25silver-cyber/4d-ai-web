@@ -79,11 +79,32 @@ button:disabled { opacity: 0.65; cursor: not-allowed; }
 .section-title { font-size: 0.82rem; color: #6b7280; font-weight: 700; }
 .numbers-grid {
   margin-top: 0.45rem; display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 0.42rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.42rem;
+  width: 100%;
 }
 .number-chip {
   background: #fff; border: 1px solid #d2dae6; border-radius: 8px;
-  text-align: center; padding: 0.45rem; font-weight: 800; font-size: 1.02rem;
+  text-align: center; padding: 0.8rem 0.35rem 0.42rem; font-weight: 800; font-size: 1rem;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+}
+.slot-label {
+  position: absolute;
+  top: 0.18rem;
+  left: 0.3rem;
+  font-size: 0.6rem;
+  color: #b91c1c;
+  font-weight: 800;
+  line-height: 1;
+}
+.slot-number {
+  display: block;
+  font-size: 1em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
 }
 
 .meta-row {
@@ -108,6 +129,6 @@ button:disabled { opacity: 0.65; cursor: not-allowed; }
   .refresh-btn { width: 100%; margin-left: 0; }
   .top-prizes { gap: 0.45rem; }
   .prize-card strong { font-size: 1.5rem; }
-  .number-chip { font-size: 1.1rem; padding: 0.55rem; }
+  .number-chip { font-size: 0.9rem; padding: 0.75rem 0.2rem 0.4rem; }
   .numbers-grid { grid-template-columns: repeat(var(--mobile-cols, 5), minmax(0, 1fr)); }
 }
