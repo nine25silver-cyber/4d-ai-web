@@ -24,8 +24,6 @@ export type ProviderResult = {
   status?: string;
 };
 
-const BASE_URL = 'https://data.4dai88.com/latest';
-
 function toArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.map((v) => String(v));
@@ -35,6 +33,17 @@ function asString(value: unknown): string | undefined {
   if (value === null || value === undefined) return undefined;
   const str = String(value).trim();
   return str.length ? str : undefined;
+}
+
+async function extractErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const payload = await res.json();
+    if (payload?.error && typeof payload.error === 'string') return payload.error;
+  } catch {
+    // ignore parse error and fallback
+  }
+
+  return fallback;
 }
 
 export function normalizeProviderResult(payload: any): ProviderResult {
@@ -53,14 +62,20 @@ export function normalizeProviderResult(payload: any): ProviderResult {
 }
 
 export async function fetchHome(): Promise<any> {
-  const res = await fetch(`${BASE_URL}/home.json`, { cache: 'no-store' });
-  if (!res.ok) throw new Error('Failed to fetch home feed');
+  const res = await fetch('/api/latest/home', { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error(await extractErrorMessage(res, 'Failed to fetch home feed'));
+  }
+
   return res.json();
 }
 
 export async function fetchProvider(provider: Provider): Promise<ProviderResult> {
-  const res = await fetch(`${BASE_URL}/providers/${provider}.json`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`Failed to fetch ${provider} feed`);
+  const res = await fetch(`/api/latest/providers/${provider}`, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error(await extractErrorMessage(res, `Failed to fetch ${provider} feed`));
+  }
+
   const data = await res.json();
   return normalizeProviderResult(data);
 }
