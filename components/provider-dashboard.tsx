@@ -44,15 +44,21 @@ function formatMalaysiaTime(timestamp?: string) {
   }).format(date);
 }
 
-function NumberGrid({ title, values }: { title: string; values?: string[] }) {
+function NumberGrid({ title, values, mobileCols = 5 }: { title: string; values?: string[]; mobileCols?: number }) {
   return (
     <div className="numbers-section">
       <div className="section-title">{title}</div>
-      <div className="numbers-grid">
+      <div className="numbers-grid" style={{ ['--mobile-cols' as string]: String(mobileCols) }}>
         {(values ?? []).length ? (values ?? []).map((n, idx) => <div key={`${n}-${idx}`} className="number-chip">{n}</div>) : <div className="value">-</div>}
       </div>
     </div>
   );
+}
+
+function getSpecialCells(result: ProviderResult | null | undefined): string[] {
+  if (!result) return [];
+  if (result.special_cells?.length) return result.special_cells;
+  return result.special_numbers ?? [];
 }
 
 export default function ProviderDashboard() {
@@ -115,6 +121,7 @@ export default function ProviderDashboard() {
           const card = cards[provider];
           const accent = PROVIDER_ACCENTS[provider];
           const phaseStatus = [card?.result?.phase, card?.result?.status].filter(Boolean).join(' / ') || '-';
+          const specialValues = getSpecialCells(card?.result);
 
           return (
             <article key={provider} className="provider-card" style={{ borderTopColor: accent }}>
@@ -137,8 +144,8 @@ export default function ProviderDashboard() {
                     <div className="prize-card"><span>2nd Prize</span><strong>{card?.result?.second_prize ?? '-'}</strong></div>
                     <div className="prize-card"><span>3rd Prize</span><strong>{card?.result?.third_prize ?? '-'}</strong></div>
                   </div>
-                  <NumberGrid title="Special Numbers" values={card?.result?.special_numbers} />
-                  <NumberGrid title="Consolation Numbers" values={card?.result?.consolation_numbers} />
+                  <NumberGrid title="Special Numbers" values={specialValues} mobileCols={5} />
+                  <NumberGrid title="Consolation Numbers" values={card?.result?.consolation_numbers} mobileCols={5} />
                   <div className="meta-row">
                     <span>Phase / Status: {phaseStatus}</span>
                     <span>Updated: {formatMalaysiaTime(card?.result?.last_refreshed)}</span>

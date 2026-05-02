@@ -31,11 +31,62 @@ export type ProviderResult = {
   second_prize?: string;
   third_prize?: string;
   special_numbers?: string[];
+  special_cells?: string[];
   consolation_numbers?: string[];
   phase?: string;
   status?: string;
   last_refreshed?: string;
 };
+
+function flattenToStrings(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => flattenToStrings(item));
+  }
+  const str = asString(value);
+  return str ? [str] : [];
+}
+
+function parseOrderedSlots(latest: any): string[] {
+  const candidates = [
+    latest?.special_slot_layout,
+    latest?.special_slots,
+    latest?.ordered_special_slots,
+    latest?.special_numbers_ordered,
+    latest?.draw_slot_layouts_recent?.special,
+  ];
+
+  for (const candidate of candidates) {
+    const slots = flattenToStrings(candidate);
+    if (slots.length) return slots;
+  }
+
+  return [];
+}
+
+function normalizeSpecialCells(latest: any): string[] | undefined {
+  const orderedSlots = parseOrderedSlots(latest);
+  if (!orderedSlots.length) return undefined;
+
+  const top3 = [
+    asString(latest?.first_prize ?? latest?.top1),
+    asString(latest?.second_prize ?? latest?.top2),
+    asString(latest?.third_prize ?? latest?.top3),
+  ].filter(Boolean) as string[];
+
+  const remaining = new Map<string, number>();
+  for (const value of top3) {
+    remaining.set(value, (remaining.get(value) ?? 0) + 1);
+  }
+
+  return orderedSlots.map((slot) => {
+    const count = remaining.get(slot) ?? 0;
+    if (count > 0) {
+      remaining.set(slot, count - 1);
+      return '----';
+    }
+    return slot;
+  });
+}
 
 function toArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -61,6 +112,7 @@ async function extractErrorMessage(res: Response, fallback: string): Promise<str
 
 export function normalizeProviderResult(payload: any): ProviderResult {
   const latest = payload?.latest_result ?? payload?.result ?? payload;
+  const specialCells = normalizeSpecialCells(latest);
   return {
     draw_date: asString(latest?.draw_date ?? latest?.date),
     draw_number: asString(latest?.draw_number ?? latest?.draw_no),
@@ -68,6 +120,7 @@ export function normalizeProviderResult(payload: any): ProviderResult {
     second_prize: asString(latest?.second_prize ?? latest?.top2),
     third_prize: asString(latest?.third_prize ?? latest?.top3),
     special_numbers: toArray(latest?.special_numbers ?? latest?.special),
+    special_cells: specialCells,
     consolation_numbers: toArray(latest?.consolation_numbers ?? latest?.consolation),
     phase: asString(latest?.phase),
     status: asString(latest?.status),
