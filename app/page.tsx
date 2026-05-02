@@ -25,7 +25,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center text-sm text-slate-600">
           <strong className="text-slate-900">4D AI</strong>
           <span className="mx-2">•</span>
-          <span>Data source: Cloudflare JSON feed proxy</span>
+          <span>Data source: Cloudflare JSON proxy</span>
         </div>
       </footer>
     </main>
