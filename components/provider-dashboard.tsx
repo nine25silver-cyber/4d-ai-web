@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { fetchProvider, PROVIDERS, PROVIDER_LABELS, type Provider, type ProviderResult } from '@/lib/providers';
+import { useEffect, useState, useMemo } from 'react';
+import { fetchProvider, Providers, PROVIDER_LABELS, type Provider, type ProviderResult } from '@/lib/providers';
 
 type RegionTab = 'west' | 'east' | 'singapore' | 'cambodia';
 
@@ -11,170 +11,159 @@ type ProviderCardState = {
   result: ProviderResult | null;
 };
 
-const REGION_TABS: Array<{ key: RegionTab; label: string; providers: Provider[] }> = [
-  { key: 'west', label: 'West Malaysia', providers: ['magnum', 'sports_toto', 'da_ma_cai'] },
-  { key: 'east', label: 'East Malaysia', providers: ['sabah88', 'sarawak', 'sandakan'] },
-  { key: 'singapore', label: 'Singapore', providers: ['singapore'] },
-  { key: 'cambodia', label: 'Cambodia', providers: ['grand_dragon', 'nine_lotto'] },
-];
-
-const PROVIDER_META: Record<Provider, { accent: string; badgeText: string; badgeBackground: string; specialSlots: number }> = {
-  magnum: { accent: '#dc2626', badgeText: 'Ma', badgeBackground: 'linear-gradient(135deg, #111827, #f59e0b)', specialSlots: 13 },
-  sports_toto: { accent: '#1d4ed8', badgeText: 'ST', badgeBackground: 'linear-gradient(135deg, #1f2937, #2563eb)', specialSlots: 13 },
-  da_ma_cai: { accent: '#2563eb', badgeText: 'DMC', badgeBackground: 'linear-gradient(135deg, #1e3a8a, #3b82f6)', specialSlots: 10 },
-  grand_dragon: { accent: '#dc2626', badgeText: 'GD', badgeBackground: 'linear-gradient(135deg, #b91c1c, #ca8a04)', specialSlots: 13 },
-  nine_lotto: { accent: '#7e22ce', badgeText: 'NL', badgeBackground: 'linear-gradient(135deg, #7e22ce, #ca8a04)', specialSlots: 13 },
-  sabah88: { accent: '#ea580c', badgeText: 'S88', badgeBackground: 'linear-gradient(135deg, #9a3412, #f97316)', specialSlots: 13 },
-  sarawak: { accent: '#065f46', badgeText: 'SWK', badgeBackground: 'linear-gradient(135deg, #14532d, #047857)', specialSlots: 13 },
-  sandakan: { accent: '#0284c7', badgeText: 'SDK', badgeBackground: 'linear-gradient(135deg, #155e75, #0ea5e9)', specialSlots: 13 },
-  singapore: { accent: '#be123c', badgeText: 'SG', badgeBackground: 'linear-gradient(135deg, #881337, #e11d48)', specialSlots: 10 },
+// Provider Logo mapping - 这里定义Logo路径
+const PROVIDER_LOGOS: Record<string, string> = {
+  'magnum': '/logos/magnum.png',
+  'sports_toto': '/logos/toto.png',
+  'da_ma_cai': '/logos/damacai.png',
+  'sabah': '/logos/sabah.png',
+  'sarawak': '/logos/sarawak.png',
+  'sandakan': '/logos/sandakan.png',
+  'singapore': '/logos/singapore.png',
+  'grand_dragon': '/logos/grand-dragon.png',
 };
 
-function formatMalaysiaTime(timestamp?: string) {
-  if (!timestamp) return 'Not available';
-  const date = new Date(timestamp);
-  if (Number.isNaN(date.getTime())) return 'Not available';
-  return new Intl.DateTimeFormat('en-MY', {
-    timeZone: 'Asia/Kuala_Lumpur',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  }).format(date);
-}
+export default function ProviderDashboard() {
+  const [selectedRegion, setSelectedRegion] = useState<RegionTab>('west');
 
-function NumberGrid({ title, values, labels, mobileCols = 5 }: { title: string; values: string[]; labels: string[]; mobileCols?: number }) {
+  const REGION_TABS: Array<{ key: RegionTab; label: string; providers: Provider[] }> = [
+    { key: 'west', label: 'West Malaysia', providers: ['magnum', 'sports_toto', 'da_ma_cai'] },
+    { key: 'east', label: 'East Malaysia', providers: ['sabah', 'sarawak', 'sandakan'] },
+    { key: 'singapore', label: 'Singapore', providers: ['singapore'] },
+    { key: 'cambodia', label: 'Cambodia', providers: ['grand_dragon'] },
+  ];
+
+  const [providerStates, setProviderStates] = useState<Record<Provider, ProviderCardState>>(
+    Object.fromEntries(
+      Providers.map((p) => [p, { loading: false, error: null, result: null }])
+    ) as Record<Provider, ProviderCardState>
+  );
+
+  const currentProviders = useMemo(
+    () => REGION_TABS.find((tab) => tab.key === selectedRegion)?.providers || [],
+    [selectedRegion]
+  );
+
+  useEffect(() => {
+    currentProviders.forEach((provider) => {
+      setProviderStates((prev) => ({ ...prev, [provider]: { ...prev[provider], loading: true, error: null } }));
+      fetchProvider(provider)
+        .then((result) => {
+          setProviderStates((prev) => ({ ...prev, [provider]: { loading: false, error: null, result } }));
+        })
+        .catch((err) => {
+          setProviderStates((prev) => ({ ...prev, [provider]: { loading: false, error: err.message, result: null } }));
+        });
+    });
+  }, [currentProviders]);
+
   return (
-    <div className="numbers-section">
-      <div className="section-title">{title}</div>
-      <div className="numbers-grid" style={{ ['--mobile-cols' as string]: String(mobileCols) }}>
-        {values.map((n, idx) => (
-          <div key={`${labels[idx] ?? idx}-${idx}`} className="number-chip">
-            <span className="slot-label">{labels[idx] ?? ''}</span>
-            <span className="slot-number">{n}</span>
-          </div>
+    <div>
+      {/* Region Tabs */}
+      <div className="flex gap-2 mb-6 overflow-x-auto">
+        {REGION_TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setSelectedRegion(tab.key)}
+            className={`px-6 py-3 rounded-lg font-medium transition whitespace-nowrap ${
+              selectedRegion === tab.key
+                ? 'bg-blue-500 text-white shadow-lg'
+                : 'bg-white text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            {tab.label}
+          </button>
         ))}
+      </div>
+
+      {/* Provider Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {currentProviders.map((provider) => {
+          const state = providerStates[provider];
+          const logoSrc = PROVIDER_LOGOS[provider];
+          
+          return (
+            <div key={provider} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+              {/* Provider Header with Logo */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  {logoSrc ? (
+                    <img 
+                      src={logoSrc} 
+                      alt={PROVIDER_LABELS[provider]}
+                      className="h-12 w-12 object-contain"
+                      onError={(e) => {
+                        // 如果图片加载失败，显示字母fallback
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center ${logoSrc ? 'hidden' : ''}`}>
+                    <span className="text-white font-bold text-lg">
+                      {PROVIDER_LABELS[provider].charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-slate-900">{PROVIDER_LABELS[provider]}</h3>
+                    {state.result && <p className="text-sm text-slate-500">{state.result.date}</p>}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setProviderStates((prev) => ({ ...prev, [provider]: { ...prev[provider], loading: true } }));
+                    fetchProvider(provider)
+                      .then((result) => setProviderStates((prev) => ({ ...prev, [provider]: { loading: false, error: null, result } })))
+                      .catch((err) => setProviderStates((prev) => ({ ...prev, [provider]: { loading: false, error: err.message, result: null } })));
+                  }}
+                  className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+                  disabled={state.loading}
+                >
+                  {state.loading ? 'Refreshing...' : 'Refresh'}
+                </button>
+              </div>
+
+              {/* Loading State */}
+              {state.loading && (
+                <div className="text-center py-8">
+                  <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+                </div>
+              )}
+
+              {/* Error State */}
+              {state.error && (
+                <div className="text-center py-8 text-red-500">
+                  <p>Error: {state.error}</p>
+                </div>
+              )}
+
+              {/* Results */}
+              {state.result && !state.loading && (
+                <div className="space-y-4">
+                  {/* Draw Number */}
+                  <div className="text-center pb-3 border-b">
+                    <span className="text-sm text-slate-500">Draw #{state.result.drawNumber}</span>
+                  </div>
+
+                  {/* Numbers Grid */}
+                  <div className="numbers-grid" style={{ '--mobile-cols': slotCols(state.result), '--desktop-cols': Math.min(slotCols(state.result), 5) } as React.CSSProperties}>
+                    {state.result.numbers.map((n, idx) => (
+                      <div key={`${state.result!.drawNumber}-${idx}`} className="number-chip">
+                        <span className="slot-label">{state.result!.labels[idx] ?? ''}</span>
+                        <span className="slot-number">{n}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function slotLabels(startCharCode: number, count: number): string[] {
-  return Array.from({ length: count }, (_, i) => String.fromCharCode(startCharCode + i));
-}
-
-function normalizeSlotCells(values: string[] | undefined, slotCount: number): string[] {
-  return Array.from({ length: slotCount }, (_, idx) => {
-    const value = values?.[idx];
-    return value && value.trim() ? value : '----';
-  });
-}
-
-function getSpecialCells(result: ProviderResult | null | undefined, slotCount: number): string[] {
-  if (!result) return normalizeSlotCells(undefined, slotCount);
-  if (result.special_cells?.length) return normalizeSlotCells(result.special_cells, slotCount);
-  return normalizeSlotCells(result.special_numbers, slotCount);
-}
-
-export default function ProviderDashboard() {
-  const [activeRegion, setActiveRegion] = useState<RegionTab>('west');
-  const [cards, setCards] = useState<Record<Provider, ProviderCardState>>(() =>
-    Object.fromEntries(PROVIDERS.map((provider) => [provider, { loading: true, error: null, result: null }])) as Record<Provider, ProviderCardState>,
-  );
-
-  const visibleProviders = useMemo(
-    () => REGION_TABS.find((tab) => tab.key === activeRegion)?.providers ?? [],
-    [activeRegion],
-  );
-
-  const refreshProviders = async (providers: Provider[]) => {
-    setCards((prev) => {
-      const next = { ...prev };
-      providers.forEach((provider) => {
-        next[provider] = { ...prev[provider], loading: true, error: null };
-      });
-      return next;
-    });
-
-    const results = await Promise.allSettled(providers.map(async (provider) => ({ provider, data: await fetchProvider(provider) })));
-
-    setCards((prev) => {
-      const next = { ...prev };
-      results.forEach((result, idx) => {
-        const provider = providers[idx];
-        if (result.status === 'fulfilled') {
-          next[provider] = { loading: false, error: null, result: result.value.data };
-        } else {
-          next[provider] = { loading: false, error: result.reason instanceof Error ? result.reason.message : 'Unknown error', result: null };
-        }
-      });
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    void refreshProviders(PROVIDERS as unknown as Provider[]);
-  }, []);
-
-  const anyLoading = visibleProviders.some((provider) => cards[provider]?.loading);
-
-  return (
-    <section className="panel">
-      <div className="region-tabs">
-        {REGION_TABS.map((tab) => (
-          <button key={tab.key} className={activeRegion === tab.key ? 'active' : ''} onClick={() => setActiveRegion(tab.key)}>
-            {tab.label}
-          </button>
-        ))}
-        <button className="refresh-btn" onClick={() => void refreshProviders(visibleProviders)} disabled={anyLoading}>
-          {anyLoading ? 'Refreshing...' : 'Refresh'}
-        </button>
-      </div>
-
-      <div className="cards-grid">
-        {visibleProviders.map((provider) => {
-          const card = cards[provider];
-          const meta = PROVIDER_META[provider];
-          const accent = meta.accent;
-          const phaseStatus = [card?.result?.phase, card?.result?.status].filter(Boolean).join(' / ') || '-';
-          const specialValues = getSpecialCells(card?.result, meta.specialSlots);
-          const consolationValues = normalizeSlotCells(card?.result?.consolation_numbers, 10);
-
-          return (
-            <article key={provider} className="provider-card" style={{ borderTopColor: accent }}>
-              <div className="provider-head">
-                <div className="provider-badge" style={{ background: meta.badgeBackground }}>{meta.badgeText}</div>
-                <div>
-                  <h3>{PROVIDER_LABELS[provider] ?? provider}</h3>
-                  <p>Draw Date: {card?.result?.draw_date ?? '-'}</p>
-                  <p>Draw No: {card?.result?.draw_number ?? '-'}</p>
-                </div>
-              </div>
-
-              {card?.loading && <div className="card-message loading">Loading latest result...</div>}
-              {card?.error && <div className="card-message error">Failed to load: {card.error}</div>}
-
-              {!card?.loading && !card?.error && (
-                <>
-                  <div className="top-prizes">
-                    <div className="prize-card"><span>1st Prize</span><strong>{card?.result?.first_prize ?? '-'}</strong></div>
-                    <div className="prize-card"><span>2nd Prize</span><strong>{card?.result?.second_prize ?? '-'}</strong></div>
-                    <div className="prize-card"><span>3rd Prize</span><strong>{card?.result?.third_prize ?? '-'}</strong></div>
-                  </div>
-                  <NumberGrid title="Special Numbers" values={specialValues} labels={slotLabels(65, meta.specialSlots)} mobileCols={5} />
-                  <NumberGrid title="Consolation Numbers" values={consolationValues} labels={slotLabels(78, 10)} mobileCols={5} />
-                  <div className="meta-row">
-                    <span>Phase / Status: {phaseStatus}</span>
-                    <span>Updated: {formatMalaysiaTime(card?.result?.last_refreshed)}</span>
-                  </div>
-                </>
-              )}
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
+function slotCols(result: ProviderResult): number {
+  return result.numbers.length;
 }
