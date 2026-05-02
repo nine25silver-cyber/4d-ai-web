@@ -4,8 +4,8 @@ export default function HomePage() {
   return (
     <main>
       <header className="page-header">
-        <h1>4D AI Results Dashboard</h1>
-        <p>Latest 4D results from Cloudflare JSON feeds.</p>
+        <h1>4D AI</h1>
+        <p>Malaysia 4D Latest Results</p>
       </header>
       <ProviderDashboard />
       <footer className="footer">

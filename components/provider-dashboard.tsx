@@ -3,6 +3,23 @@
 import { useEffect, useState } from 'react';
 import { fetchProvider, PROVIDERS, PROVIDER_LABELS, type Provider, type ProviderResult } from '@/lib/providers';
 
+function formatMalaysiaTime(timestamp?: string) {
+  if (!timestamp) return 'Not available';
+
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return 'Not available';
+
+  return new Intl.DateTimeFormat('en-MY', {
+    timeZone: 'Asia/Kuala_Lumpur',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(date);
+}
+
 function Row({ label, value }: { label: string; value?: string }) {
   return (
     <div className="item">
@@ -93,7 +110,7 @@ export default function ProviderDashboard() {
             <Row label="Draw Date" value={result.draw_date} />
             <Row label="Draw Number" value={result.draw_number} />
             <Row label="Phase / Status" value={[result.phase, result.status].filter(Boolean).join(' / ') || '-'} />
-            <Row label="Last Refreshed" value={result.last_refreshed} />
+            <Row label="Last Refreshed" value={formatMalaysiaTime(result.last_refreshed)} />
             <NumberGrid title="Special Numbers" values={result.special_numbers} />
             <NumberGrid title="Consolation Numbers" values={result.consolation_numbers} />
           </div>
