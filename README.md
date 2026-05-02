@@ -61,3 +61,10 @@ npm run start
 5. Output: default Next.js output.
 
 No API keys or secrets are required for this first version.
+
+
+---
+Last updated: 2026-05-03 - Magnum logo added
+
+---
+Last updated: 2026-05-03
