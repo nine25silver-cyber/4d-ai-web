@@ -1,13 +1,24 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fetchProvider, PROVIDERS, type Provider, type ProviderResult } from '@/lib/providers';
+import { fetchProvider, PROVIDERS, PROVIDER_LABELS, type Provider, type ProviderResult } from '@/lib/providers';
 
 function Row({ label, value }: { label: string; value?: string }) {
   return (
     <div className="item">
       <div className="label">{label}</div>
       <div className="value">{value ?? '-'}</div>
+    </div>
+  );
+}
+
+function NumberGrid({ title, values }: { title: string; values?: string[] }) {
+  return (
+    <div className="item numbers-section" style={{ gridColumn: '1 / -1' }}>
+      <div className="label">{title}</div>
+      <div className="numbers-grid">
+        {(values ?? []).length ? (values ?? []).map((n, idx) => <div key={`${n}-${idx}`} className="number-chip">{n}</div>) : <div className="value">-</div>}
+      </div>
     </div>
   );
 }
@@ -48,10 +59,10 @@ export default function ProviderDashboard() {
             onClick={() => setProvider(name)}
             disabled={loading && provider === name}
           >
-            {name}
+            {PROVIDER_LABELS[name] ?? name}
           </button>
         ))}
-        <button onClick={() => void loadProvider(provider)} disabled={loading}>
+        <button className="refresh-btn" onClick={() => void loadProvider(provider)} disabled={loading}>
           {loading ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
@@ -61,22 +72,32 @@ export default function ProviderDashboard() {
       {isEmpty && <p>No latest result available for this provider.</p>}
 
       {!loading && !error && result && !isEmpty && (
-        <div className="grid">
-          <Row label="Draw Date" value={result.draw_date} />
-          <Row label="Draw Number" value={result.draw_number} />
-          <Row label="1st Prize" value={result.first_prize} />
-          <Row label="2nd Prize" value={result.second_prize} />
-          <Row label="3rd Prize" value={result.third_prize} />
-          <Row label="Phase / Status" value={[result.phase, result.status].filter(Boolean).join(' / ') || '-'} />
-          <div className="item" style={{ gridColumn: '1 / -1' }}>
-            <div className="label">Special Numbers</div>
-            <ul className="list">{(result.special_numbers ?? []).map((n) => <li key={n}>{n}</li>)}</ul>
+        <>
+          <div className="top-prizes">
+            <div className="prize-card">
+              <div className="label">1st Prize</div>
+              <div className="prize-number">{result.first_prize ?? '-'}</div>
+            </div>
+            <div className="prize-card">
+              <div className="label">2nd Prize</div>
+              <div className="prize-number">{result.second_prize ?? '-'}</div>
+            </div>
+            <div className="prize-card">
+              <div className="label">3rd Prize</div>
+              <div className="prize-number">{result.third_prize ?? '-'}</div>
+            </div>
           </div>
-          <div className="item" style={{ gridColumn: '1 / -1' }}>
-            <div className="label">Consolation Numbers</div>
-            <ul className="list">{(result.consolation_numbers ?? []).map((n) => <li key={n}>{n}</li>)}</ul>
+
+          <div className="grid">
+            <Row label="Provider" value={PROVIDER_LABELS[provider] ?? provider} />
+            <Row label="Draw Date" value={result.draw_date} />
+            <Row label="Draw Number" value={result.draw_number} />
+            <Row label="Phase / Status" value={[result.phase, result.status].filter(Boolean).join(' / ') || '-'} />
+            <Row label="Last Refreshed" value={result.last_refreshed} />
+            <NumberGrid title="Special Numbers" values={result.special_numbers} />
+            <NumberGrid title="Consolation Numbers" values={result.consolation_numbers} />
           </div>
-        </div>
+        </>
       )}
     </section>
   );

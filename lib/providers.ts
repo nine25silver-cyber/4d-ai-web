@@ -10,6 +10,18 @@ export const PROVIDERS = [
   'singapore',
 ] as const;
 
+export const PROVIDER_LABELS: Record<Provider, string> = {
+  magnum: 'Magnum',
+  sports_toto: 'Sports Toto',
+  da_ma_cai: 'Da Ma Cai',
+  sabah88: 'Sabah 88',
+  sarawak: 'Sarawak',
+  sandakan: 'Sandakan',
+  grand_dragon: 'Grand Dragon',
+  nine_lotto: 'Nine Lotto',
+  singapore: 'Singapore',
+};
+
 export type Provider = (typeof PROVIDERS)[number];
 
 export type ProviderResult = {
@@ -22,6 +34,7 @@ export type ProviderResult = {
   consolation_numbers?: string[];
   phase?: string;
   status?: string;
+  last_refreshed?: string;
 };
 
 function toArray(value: unknown): string[] {
@@ -58,6 +71,9 @@ export function normalizeProviderResult(payload: any): ProviderResult {
     consolation_numbers: toArray(latest?.consolation_numbers ?? latest?.consolation),
     phase: asString(latest?.phase),
     status: asString(latest?.status),
+    last_refreshed: asString(
+      latest?.last_refreshed ?? latest?.refreshed_at ?? latest?.updated_at ?? payload?.last_refreshed ?? payload?.updated_at,
+    ),
   };
 }
 
