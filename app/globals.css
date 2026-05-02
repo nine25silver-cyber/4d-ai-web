@@ -2,177 +2,111 @@
   color-scheme: light;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background: #f3f4f6;
+  background: #f4f6fb;
   color: #111827;
 }
 
 main {
-  max-width: 960px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: 1rem;
 }
 
 .page-header {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 0.95rem 1rem;
+  background: linear-gradient(120deg, #111827 0%, #1f2937 80%);
+  color: #fff;
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
   margin-bottom: 0.9rem;
 }
-
-.page-header h1 {
-  margin: 0;
-  font-size: 1.4rem;
-}
-
-.page-header p {
-  margin: 0.25rem 0 0;
-  color: #4b5563;
-  font-weight: 500;
-}
+.page-header h1 { margin: 0; font-size: 1.5rem; }
+.page-header p { margin: 0.28rem 0 0; color: #d1d5db; font-weight: 500; }
 
 .panel {
   background: #fff;
   border-radius: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #dbe3ef;
   padding: 1rem;
   box-shadow: 0 8px 20px rgba(17, 24, 39, 0.06);
 }
 
-.tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
+.region-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
 button {
-  border: 1px solid #d1d5db;
+  border: 1px solid #cfd8e3;
   border-radius: 10px;
   background: #fff;
-  padding: 0.55rem 0.85rem;
+  padding: 0.55rem 0.9rem;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
 }
+button.active { background: #111827; color: #fff; }
+button:disabled { opacity: 0.65; cursor: not-allowed; }
+.refresh-btn { margin-left: auto; min-width: 104px; }
 
-button.active {
-  background: #111827;
-  color: #fff;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.refresh-btn {
-  margin-left: auto;
-  min-width: 96px;
-}
-
-.top-prizes {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 0.9rem;
-}
-
-.prize-card {
-  border-radius: 12px;
-  border: 1px solid #cbd5e1;
-  background: linear-gradient(180deg, #ffffff 0%, #eef2ff 100%);
+.cards-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; }
+.provider-card {
+  border: 1px solid #e5e7eb;
+  border-top: 5px solid #374151;
+  border-radius: 14px;
+  background: #fafcff;
   padding: 0.85rem;
 }
-
-.prize-number {
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  margin-top: 0.35rem;
+.provider-head { display: flex; gap: 0.7rem; align-items: center; margin-bottom: 0.65rem; }
+.provider-badge {
+  width: 40px; height: 40px; border-radius: 10px; color: #fff;
+  font-weight: 800; display: grid; place-items: center;
 }
+.provider-head h3 { margin: 0; font-size: 1.05rem; }
+.provider-head p { margin: 0.1rem 0 0; color: #4b5563; font-size: 0.83rem; }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+.card-message { border-radius: 10px; padding: 0.7rem; font-weight: 600; margin: 0.45rem 0; }
+.card-message.loading { background: #eff6ff; color: #1d4ed8; }
+.card-message.error { background: #fff1f2; color: #be123c; }
+
+.top-prizes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.75rem; }
+.prize-card {
+  border: 1px solid #d4dbe8; border-radius: 11px; background: #fff;
+  text-align: center; padding: 0.55rem 0.35rem;
 }
+.prize-card span { display: block; color: #6b7280; font-size: 0.76rem; }
+.prize-card strong { display: block; font-size: 1.35rem; margin-top: 0.2rem; letter-spacing: 0.05em; }
 
-.item {
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 0.75rem;
-  background: #f9fafb;
-}
-
-.label {
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-.value {
-  font-weight: 600;
-  margin-top: 0.2rem;
-}
-
+.section-title { font-size: 0.82rem; color: #6b7280; font-weight: 700; }
 .numbers-grid {
-  margin-top: 0.55rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-  gap: 0.45rem;
+  margin-top: 0.45rem; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 0.42rem;
+}
+.number-chip {
+  background: #fff; border: 1px solid #d2dae6; border-radius: 8px;
+  text-align: center; padding: 0.45rem; font-weight: 800; font-size: 1.02rem;
 }
 
-.number-chip {
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  text-align: center;
-  padding: 0.5rem;
-  font-weight: 700;
+.meta-row {
+  margin-top: 0.7rem; padding-top: 0.55rem; border-top: 1px dashed #d4dbe8;
+  display: flex; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;
+  font-size: 0.78rem; color: #4b5563;
 }
 
 .footer {
-  margin-top: 1rem;
-  color: #6b7280;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  font-size: 0.9rem;
+  margin-top: 1rem; color: #6b7280; display: flex; justify-content: space-between;
+  flex-wrap: wrap; gap: 0.4rem; font-size: 0.9rem; padding: 0.2rem 0.1rem;
+}
+
+@media (max-width: 900px) {
+  .cards-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
-  main {
-    padding: 0.8rem;
-  }
-
-  .tabs {
-    gap: 0.45rem;
-    margin-bottom: 0.85rem;
-  }
-
-  button {
-    padding: 0.6rem 0.8rem;
-  }
-
-  .refresh-btn {
-    width: 100%;
-    margin-left: 0;
-    position: sticky;
-    bottom: 0.5rem;
-  }
-
-  .top-prizes {
-    grid-template-columns: 1fr;
-  }
-
-  .grid {
-    grid-template-columns: 1fr;
-  }
+  main { padding: 0.75rem; }
+  .region-tabs { gap: 0.42rem; }
+  button { padding: 0.62rem 0.82rem; }
+  .refresh-btn { width: 100%; margin-left: 0; }
+  .top-prizes { gap: 0.45rem; }
+  .prize-card strong { font-size: 1.5rem; }
+  .number-chip { font-size: 1.1rem; padding: 0.55rem; }
 }
