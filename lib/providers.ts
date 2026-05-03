@@ -44,7 +44,9 @@ export type ProviderResult = {
   third_prize?: string;
   special_numbers?: string[];
   special_cells?: string[];
+  special_slot_labels?: string[];
   consolation_numbers?: string[];
+  consolation_slot_labels?: string[];
   phase?: string;
   status?: string;
   last_refreshed?: string;
@@ -105,6 +107,11 @@ function toArray(value: unknown): string[] {
   return value.map((v) => String(v));
 }
 
+function toOptionalArray(value: unknown): string[] | undefined {
+  const values = flattenToStrings(value);
+  return values.length ? values : undefined;
+}
+
 function asString(value: unknown): string | undefined {
   if (value === null || value === undefined) return undefined;
   const str = String(value).trim();
@@ -133,7 +140,9 @@ export function normalizeProviderResult(payload: any): ProviderResult {
     third_prize: asString(latest?.third_prize ?? latest?.top3),
     special_numbers: toArray(latest?.special_numbers ?? latest?.special),
     special_cells: specialCells,
+    special_slot_labels: toOptionalArray(latest?.special_slot_labels ?? latest?.special_labels),
     consolation_numbers: toArray(latest?.consolation_numbers ?? latest?.consolation),
+    consolation_slot_labels: toOptionalArray(latest?.consolation_slot_labels ?? latest?.consolation_labels),
     phase: asString(latest?.phase),
     status: asString(latest?.status),
     last_refreshed: asString(
