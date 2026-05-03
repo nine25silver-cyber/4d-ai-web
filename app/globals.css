@@ -42,7 +42,7 @@ button {
   background: #fff;
   padding: 0.55rem 0.9rem;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 800;
 }
 button.active { background: #111827; color: #fff; }
 button:disabled { opacity: 0.65; cursor: not-allowed; }
@@ -76,7 +76,7 @@ button:disabled { opacity: 0.65; cursor: not-allowed; }
 .prize-card span { display: block; color: #6b7280; font-size: 0.76rem; }
 .prize-card strong { display: block; font-size: 1.35rem; margin-top: 0.2rem; letter-spacing: 0.05em; }
 
-.section-title { font-size: 0.82rem; color: #6b7280; font-weight: 700; }
+.section-title { font-size: 0.82rem; color: #6b7280; font-weight: 800; }
 .numbers-grid {
   margin-top: 0.45rem; display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.42rem;
@@ -117,7 +117,7 @@ button:disabled { opacity: 0.65; cursor: not-allowed; }
 .slot-cell {
   position: relative;
   min-width: 0;
-  min-height: 52px;
+  min-height: 54px;
   border: 1px solid #cfd6e0;
   border-radius: 8px;
   background: white;
@@ -133,13 +133,13 @@ button:disabled { opacity: 0.65; cursor: not-allowed; }
   top: 3px;
   left: 5px;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
   color: #e05252;
   line-height: 1;
 }
 
 .slot-number {
-  font-size: clamp(18px, 6vw, 28px);
+  font-size: clamp(16px, 5.2vw, 26px);
   font-weight: 800;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -180,4 +180,42 @@ button:disabled { opacity: 0.65; cursor: not-allowed; }
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.top3-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.top3-cell {
+  position: relative;
+  border: 1px solid #cfd6e0;
+  border-radius: 10px;
+  background: #fff;
+  min-height: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.top3-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.top3-number {
+  font-size: clamp(18px, 4.2vw, 28px);
+  font-weight: 800;
+}
+
+.top3-slot {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  color: #e05252;
+  font-size: 11px;
+  font-weight: 800;
 }
