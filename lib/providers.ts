@@ -63,6 +63,20 @@ export type NormalizedSlotDisplay = {
   slotLayoutSource: string;
 };
 
+export function buildFixedSlotCells(
+  slotLabels: string[],
+  valuesBySlot: Record<string, string>,
+  extractedSlots: string[],
+): { slotLabel: string; number: string }[] {
+  const extractedSet = new Set(extractedSlots.map((slot) => slot.toUpperCase()));
+  return slotLabels.map((slotLabel) => {
+    const normalizedSlot = slotLabel.toUpperCase();
+    if (extractedSet.has(normalizedSlot)) return { slotLabel, number: '----' };
+    const number = valuesBySlot[normalizedSlot];
+    return { slotLabel, number: number ?? '----' };
+  });
+}
+
 type SlotLayout = {
   special_slots?: unknown;
   consolation_slots?: unknown;
@@ -253,17 +267,30 @@ export function normalizeProviderSlotDisplay(providerCode: Provider, payload: an
   const specialLabels = specialMap.size > 0 ? Array.from(specialMap.keys()) : fallbackSpecialLabels;
   const consolationLabels = consolationMap.size > 0 ? Array.from(consolationMap.keys()) : fallbackConsolationLabels;
   const extractedTop3 = new Set(top3Cells.map((c) => c.slotLabel).filter(Boolean) as string[]);
+  const specialValuesBySlot: Record<string, string> = {};
+  specialMap.forEach((number, slot) => { specialValuesBySlot[slot.toUpperCase()] = number; });
+  const consolationValuesBySlot: Record<string, string> = {};
+  consolationMap.forEach((number, slot) => { consolationValuesBySlot[slot.toUpperCase()] = number; });
 
-  const specialCells = specialLabels.map((slotLabel, index) => {
-    const fallbackNumber = normalizeNumber((latest?.special_numbers ?? latest?.special ?? [])[index]);
-    const number = specialMap.get(slotLabel) ?? fallbackNumber;
-    return { slotLabel, number: extractedTop3.has(slotLabel) ? '----' : number };
-  });
+  const specialCells = specialMap.size > 0
+    ? buildFixedSlotCells(specialLabels, specialValuesBySlot, Array.from(extractedTop3))
+    : buildFixedSlotCells(
+        specialLabels,
+        Object.fromEntries(
+          specialLabels.map((slotLabel, index) => [slotLabel.toUpperCase(), normalizeNumber((latest?.special_numbers ?? latest?.special ?? [])[index])]),
+        ),
+        Array.from(extractedTop3),
+      );
 
-  const consolationCells = consolationLabels.slice(0, 10).map((slotLabel, index) => ({
-    slotLabel,
-    number: consolationMap.get(slotLabel) ?? normalizeNumber((latest?.consolation_numbers ?? latest?.consolation ?? [])[index]),
-  }));
+  const consolationCells = consolationMap.size > 0
+    ? buildFixedSlotCells(consolationLabels.slice(0, 10), consolationValuesBySlot, [])
+    : buildFixedSlotCells(
+        consolationLabels.slice(0, 10),
+        Object.fromEntries(
+          consolationLabels.slice(0, 10).map((slotLabel, index) => [slotLabel.toUpperCase(), normalizeNumber((latest?.consolation_numbers ?? latest?.consolation ?? [])[index])]),
+        ),
+        [],
+      );
 
   // Fallback only: upstream payload did not expose slot layout, slot accuracy cannot be guaranteed.
   return { top3Cells, specialCells, consolationCells, usedSlotLayout, slotLayoutSource };
@@ -343,4 +370,3 @@ export async function fetchProvider(provider: Provider): Promise<ProviderResult>
   }
   return normalized;
 }
-
