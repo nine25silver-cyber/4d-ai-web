@@ -11,6 +11,16 @@ type ProviderCardState = {
   result: ProviderResult | null;
 };
 
+const SPECIAL_LABELS = 'ABCDEFGHIJKLM'.split('');
+const CONSOLATION_LABELS = 'NOPQRSTUVW'.split('');
+
+function formatUpdatedTime(value?: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
+}
+
 export default function ProviderDashboard() {
   const [selectedRegion, setSelectedRegion] = useState<RegionTab>('west');
   const [hiddenLogos, setHiddenLogos] = useState<Record<Provider, boolean>>({} as Record<Provider, boolean>);
@@ -96,8 +106,52 @@ export default function ProviderDashboard() {
 
               {state.result && !state.loading && (
                 <div className="space-y-4">
-                  <div className="text-center pb-3 border-b">
-                    <span className="text-sm text-slate-500">Draw #{state.result.draw_number ?? '-'}</span>
+                  <div className="text-center pb-3 border-b space-y-1">
+                    <p className="text-sm text-slate-500">Draw #{state.result.draw_number ?? '-'}</p>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="rounded-lg bg-amber-50 border border-amber-200 p-2">
+                        <p className="text-xs text-slate-500">1st Prize</p>
+                        <p className="text-lg font-bold text-amber-700">{state.result.first_prize ?? '-'}</p>
+                      </div>
+                      <div className="rounded-lg bg-slate-50 border border-slate-200 p-2">
+                        <p className="text-xs text-slate-500">2nd Prize</p>
+                        <p className="text-lg font-bold text-slate-700">{state.result.second_prize ?? '-'}</p>
+                      </div>
+                      <div className="rounded-lg bg-orange-50 border border-orange-200 p-2">
+                        <p className="text-xs text-slate-500">3rd Prize</p>
+                        <p className="text-lg font-bold text-orange-700">{state.result.third_prize ?? '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Special Numbers</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(state.result.special_cells ?? state.result.special_numbers ?? []).map((num, idx) => (
+                        <div key={`special-${provider}-${idx}`} className="flex items-center justify-between rounded-md bg-slate-50 px-2 py-1.5 border border-slate-200">
+                          <span className="text-xs font-semibold text-slate-500">{SPECIAL_LABELS[idx] ?? `${idx + 1}`}</span>
+                          <span className="font-mono font-semibold text-slate-800">{num}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Consolation Numbers</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(state.result.consolation_numbers ?? []).map((num, idx) => (
+                        <div key={`consolation-${provider}-${idx}`} className="flex items-center justify-between rounded-md bg-slate-50 px-2 py-1.5 border border-slate-200">
+                          <span className="text-xs font-semibold text-slate-500">{CONSOLATION_LABELS[idx] ?? `${idx + 1}`}</span>
+                          <span className="font-mono font-semibold text-slate-800">{num}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t text-sm text-slate-500 space-y-1">
+                    <p>Phase: {state.result.phase ?? '-'}</p>
+                    <p>Status: {state.result.status ?? '-'}</p>
+                    {formatUpdatedTime(state.result.last_refreshed) && <p>Updated: {formatUpdatedTime(state.result.last_refreshed)}</p>}
                   </div>
                 </div>
               )}
