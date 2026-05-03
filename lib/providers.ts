@@ -48,6 +48,7 @@ export type ProviderResult = {
   consolation_numbers?: string[];
   consolation_slot_labels?: string[];
   top3_slot_labels?: { first?: string; second?: string; third?: string };
+  slot_layout?: Record<string, unknown>;
   phase?: string;
   status?: string;
   last_refreshed?: string;
@@ -175,6 +176,11 @@ export function normalizeProviderResult(payload: any): ProviderResult {
   const latest = payload?.latest_result ?? payload?.result ?? payload;
   const slotLayout = parseSlotLayout(latest);
   const specialCells = normalizeSpecialCells(latest);
+  const top3SlotLabels = slotLayout?.top3_slots ?? {
+    first: asString(latest?.slot_layout?.first_prize_slot ?? latest?.first_prize_slot),
+    second: asString(latest?.slot_layout?.second_prize_slot ?? latest?.second_prize_slot),
+    third: asString(latest?.slot_layout?.third_prize_slot ?? latest?.third_prize_slot),
+  };
   return {
     draw_date: asString(latest?.draw_date ?? latest?.date),
     draw_number: asString(latest?.draw_number ?? latest?.draw_no),
@@ -186,7 +192,8 @@ export function normalizeProviderResult(payload: any): ProviderResult {
     special_slot_labels: slotLayout?.special_slots ?? toOptionalArray(latest?.special_slot_labels ?? latest?.special_labels),
     consolation_numbers: toArray(latest?.consolation_numbers ?? latest?.consolation),
     consolation_slot_labels: slotLayout?.consolation_slots ?? toOptionalArray(latest?.consolation_slot_labels ?? latest?.consolation_labels),
-    top3_slot_labels: slotLayout?.top3_slots,
+    top3_slot_labels: top3SlotLabels,
+    slot_layout: latest?.slot_layout,
     phase: asString(latest?.phase),
     status: asString(latest?.status),
     last_refreshed: asString(
