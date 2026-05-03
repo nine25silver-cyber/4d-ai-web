@@ -13,6 +13,48 @@ type ProviderCardState = {
 
 const SPECIAL_LABELS = 'ABCDEFGHIJKLM'.split('');
 const CONSOLATION_LABELS = 'NOPQRSTUVW'.split('');
+const TEN_SLOT_SPECIAL_PROVIDERS: Provider[] = ['singapore', 'da_ma_cai', 'sarawak'];
+const PROVIDER_ACCENTS: Record<Provider, string> = {
+  magnum: 'border-t-red-500',
+  sports_toto: 'border-t-blue-500',
+  da_ma_cai: 'border-t-yellow-500',
+  sabah88: 'border-t-emerald-500',
+  sarawak: 'border-t-orange-500',
+  sandakan: 'border-t-cyan-500',
+  grand_dragon: 'border-t-rose-500',
+  nine_lotto: 'border-t-purple-500',
+  singapore: 'border-t-indigo-500',
+};
+
+function padSlots(values: string[], slotCount: number): string[] {
+  return Array.from({ length: slotCount }, (_, index) => values[index] ?? '----');
+}
+
+function buildSpecialSlots(provider: Provider, result: ProviderResult) {
+  const slotCount = TEN_SLOT_SPECIAL_PROVIDERS.includes(provider) ? 10 : 13;
+  const values = result.special_cells ?? result.special_numbers ?? [];
+  const labels = result.special_slot_labels?.length
+    ? result.special_slot_labels
+    : slotCount === 13
+      ? SPECIAL_LABELS
+      : Array.from({ length: 10 }, (_, i) => `S${i + 1}`);
+
+  return {
+    slotCount,
+    cells: padSlots(values, slotCount).map((value, idx) => ({ label: labels[idx] ?? `${idx + 1}`, value })),
+  };
+}
+
+function buildConsolationSlots(provider: Provider, result: ProviderResult) {
+  const values = result.consolation_numbers ?? [];
+  const labels = result.consolation_slot_labels?.length
+    ? result.consolation_slot_labels
+    : TEN_SLOT_SPECIAL_PROVIDERS.includes(provider)
+      ? Array.from({ length: 10 }, (_, i) => `C${i + 1}`)
+      : CONSOLATION_LABELS;
+
+  return padSlots(values, 10).map((value, idx) => ({ label: labels[idx] ?? `${idx + 1}`, value }));
+}
 
 function formatUpdatedTime(value?: string): string | null {
   if (!value) return null;
@@ -77,7 +119,7 @@ export default function ProviderDashboard() {
           const showImage = Boolean(logoSrc) && !hiddenLogos[provider];
 
           return (
-            <div key={provider} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+            <div key={provider} className={`bg-white rounded-xl shadow-lg p-4 md:p-6 hover:shadow-xl transition border border-slate-200 border-t-4 ${PROVIDER_ACCENTS[provider]}` }>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="provider-logo-box h-12 w-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
@@ -126,23 +168,27 @@ export default function ProviderDashboard() {
 
                   <div>
                     <p className="text-sm font-semibold text-slate-700 mb-2">Special Numbers</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(state.result.special_cells ?? state.result.special_numbers ?? []).map((num, idx) => (
-                        <div key={`special-${provider}-${idx}`} className="flex items-center justify-between rounded-md bg-slate-50 px-2 py-1.5 border border-slate-200">
-                          <span className="text-xs font-semibold text-slate-500">{SPECIAL_LABELS[idx] ?? `${idx + 1}`}</span>
-                          <span className="font-mono font-semibold text-slate-800">{num}</span>
+                    {(() => {
+                      const special = buildSpecialSlots(provider, state.result);
+                      return (
+                        <div className="grid grid-cols-5 gap-2">
+                          {special.cells.map((cell, idx) => (
+                            <div key={`special-${provider}-${idx}`} className="rounded-md bg-slate-50 px-1 py-1.5 border border-slate-200 min-w-0 text-center">
+                              <span className="block text-[10px] font-semibold text-slate-500 leading-none mb-1">{cell.label}</span>
+                              <span className="block font-mono font-semibold text-slate-800 text-sm md:text-base leading-tight whitespace-nowrap">{cell.value}</span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })()}
                   </div>
-
                   <div>
                     <p className="text-sm font-semibold text-slate-700 mb-2">Consolation Numbers</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(state.result.consolation_numbers ?? []).map((num, idx) => (
-                        <div key={`consolation-${provider}-${idx}`} className="flex items-center justify-between rounded-md bg-slate-50 px-2 py-1.5 border border-slate-200">
-                          <span className="text-xs font-semibold text-slate-500">{CONSOLATION_LABELS[idx] ?? `${idx + 1}`}</span>
-                          <span className="font-mono font-semibold text-slate-800">{num}</span>
+                    <div className="grid grid-cols-5 gap-2">
+                      {buildConsolationSlots(provider, state.result).map((cell, idx) => (
+                        <div key={`consolation-${provider}-${idx}`} className="rounded-md bg-slate-50 px-1 py-1.5 border border-slate-200 min-w-0 text-center">
+                          <span className="block text-[10px] font-semibold text-slate-500 leading-none mb-1">{cell.label}</span>
+                          <span className="block font-mono font-semibold text-slate-800 text-sm md:text-base leading-tight whitespace-nowrap">{cell.value}</span>
                         </div>
                       ))}
                     </div>
