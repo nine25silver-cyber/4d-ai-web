@@ -55,9 +55,12 @@ export type ProviderResult = {
 };
 
 type SlotLayout = {
-  special_slots?: string[];
-  consolation_slots?: string[];
+  special_slots?: unknown;
+  consolation_slots?: unknown;
   top3_slots?: { first?: string; second?: string; third?: string };
+  first_prize_slot?: string;
+  second_prize_slot?: string;
+  third_prize_slot?: string;
 };
 
 function flattenToStrings(value: unknown): string[] {
@@ -86,12 +89,12 @@ function parseOrderedSlots(latest: any): string[] {
 }
 
 function parseSlotLayout(latest: any): SlotLayout | undefined {
-  const slotLayout = latest?.slot_layout;
+  const slotLayout = latest?.slot_layout ?? latest?.slotLayout;
   if (!slotLayout || typeof slotLayout !== 'object') return undefined;
 
-  const specialSlots = flattenToStrings(slotLayout.special_slots);
-  const consolationSlots = flattenToStrings(slotLayout.consolation_slots);
-  const top3SlotsRaw = slotLayout.top3_slots;
+  const specialSlots = slotLayout.special_slots ?? slotLayout.specialSlots ?? slotLayout.special;
+  const consolationSlots = slotLayout.consolation_slots ?? slotLayout.consolationSlots ?? slotLayout.consolation;
+  const top3SlotsRaw = slotLayout.top3_slots ?? slotLayout.top3Slots;
   const top3Slots = top3SlotsRaw && typeof top3SlotsRaw === 'object'
     ? {
         first: asString(top3SlotsRaw.first),
@@ -100,18 +103,32 @@ function parseSlotLayout(latest: any): SlotLayout | undefined {
       }
     : undefined;
 
-  if (!specialSlots.length && !consolationSlots.length && !top3Slots) return undefined;
+  const firstPrizeSlot = asString(slotLayout.first_prize_slot ?? slotLayout.firstPrizeSlot);
+  const secondPrizeSlot = asString(slotLayout.second_prize_slot ?? slotLayout.secondPrizeSlot);
+  const thirdPrizeSlot = asString(slotLayout.third_prize_slot ?? slotLayout.thirdPrizeSlot);
+
+  if (!specialSlots && !consolationSlots && !top3Slots && !firstPrizeSlot && !secondPrizeSlot && !thirdPrizeSlot) return undefined;
 
   return {
-    special_slots: specialSlots.length ? specialSlots : undefined,
-    consolation_slots: consolationSlots.length ? consolationSlots : undefined,
+    special_slots: specialSlots,
+    consolation_slots: consolationSlots,
     top3_slots: top3Slots,
+    first_prize_slot: firstPrizeSlot,
+    second_prize_slot: secondPrizeSlot,
+    third_prize_slot: thirdPrizeSlot,
   };
+}
+
+function extractSlotLabels(value: unknown): string[] | undefined {
+  if (!value) return undefined;
+  if (Array.isArray(value)) return value.map((_, idx) => String(idx + 1));
+  if (typeof value === 'object') return Object.keys(value).map((key) => key.trim().toUpperCase());
+  return undefined;
 }
 
 function normalizeSpecialCells(latest: any): string[] | undefined {
   const slotLayout = parseSlotLayout(latest);
-  const values = slotLayout?.special_slots ?? parseOrderedSlots(latest);
+  const values = slotLayout?.special_slots ? flattenToStrings(slotLayout.special_slots) : parseOrderedSlots(latest);
   if (!values.length) return undefined;
 
   const promotedSlots = new Set(
@@ -189,11 +206,14 @@ export function normalizeProviderResult(payload: any): ProviderResult {
     third_prize: asString(latest?.third_prize ?? latest?.top3),
     special_numbers: toArray(latest?.special_numbers ?? latest?.special),
     special_cells: specialCells,
-    special_slot_labels: slotLayout?.special_slots ?? toOptionalArray(latest?.special_slot_labels ?? latest?.special_labels),
+    special_slot_labels: extractSlotLabels(slotLayout?.special_slots) ?? toOptionalArray(latest?.special_slot_labels ?? latest?.special_labels),
     consolation_numbers: toArray(latest?.consolation_numbers ?? latest?.consolation),
-    consolation_slot_labels: slotLayout?.consolation_slots ?? toOptionalArray(latest?.consolation_slot_labels ?? latest?.consolation_labels),
+    consolation_slot_labels: extractSlotLabels(slotLayout?.consolation_slots) ?? toOptionalArray(latest?.consolation_slot_labels ?? latest?.consolation_labels),
     top3_slot_labels: top3SlotLabels,
-    slot_layout: latest?.slot_layout,
+    slot_layout: {
+      ...(latest?.slot_layout ?? latest?.slotLayout ?? {}),
+      ...(slotLayout ?? {}),
+    },
     phase: asString(latest?.phase),
     status: asString(latest?.status),
     last_refreshed: asString(
