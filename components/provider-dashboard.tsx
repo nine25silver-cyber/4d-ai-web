@@ -39,9 +39,12 @@ function buildSpecialSlots(provider: Provider, result: ProviderResult) {
       ? SPECIAL_LABELS
       : Array.from({ length: 10 }, (_, i) => `S${i + 1}`);
 
+  const top3 = new Set([result.first_prize, result.second_prize, result.third_prize].filter(Boolean));
+  const dedupedValues = padSlots(values, slotCount).map((value) => (top3.has(value) ? '----' : value));
+
   return {
     slotCount,
-    cells: padSlots(values, slotCount).map((value, idx) => ({ label: labels[idx] ?? `${idx + 1}`, value })),
+    cells: dedupedValues.map((value, idx) => ({ label: labels[idx] ?? `${idx + 1}`, value })),
   };
 }
 
@@ -61,6 +64,25 @@ function formatUpdatedTime(value?: string): string | null {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString();
+}
+
+function SlotCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="slot-cell">
+      <span className="slot-label">{label}</span>
+      <span className="slot-number">{value || '----'}</span>
+    </div>
+  );
+}
+
+function SlotGrid({ cells }: { cells: Array<{ label: string; value: string }> }) {
+  return (
+    <div className="slot-grid slot-grid-5">
+      {cells.map((cell, idx) => (
+        <SlotCell key={`${cell.label}-${idx}`} label={cell.label} value={cell.value} />
+      ))}
+    </div>
+  );
 }
 
 export default function ProviderDashboard() {
@@ -171,27 +193,13 @@ export default function ProviderDashboard() {
                     {(() => {
                       const special = buildSpecialSlots(provider, state.result);
                       return (
-                        <div className="grid grid-cols-5 gap-2">
-                          {special.cells.map((cell, idx) => (
-                            <div key={`special-${provider}-${idx}`} className="rounded-md bg-slate-50 px-1 py-1.5 border border-slate-200 min-w-0 text-center">
-                              <span className="block text-[10px] font-semibold text-slate-500 leading-none mb-1">{cell.label}</span>
-                              <span className="block font-mono font-semibold text-slate-800 text-sm md:text-base leading-tight whitespace-nowrap">{cell.value}</span>
-                            </div>
-                          ))}
-                        </div>
+                        <SlotGrid cells={special.cells} />
                       );
                     })()}
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-700 mb-2">Consolation Numbers</p>
-                    <div className="grid grid-cols-5 gap-2">
-                      {buildConsolationSlots(provider, state.result).map((cell, idx) => (
-                        <div key={`consolation-${provider}-${idx}`} className="rounded-md bg-slate-50 px-1 py-1.5 border border-slate-200 min-w-0 text-center">
-                          <span className="block text-[10px] font-semibold text-slate-500 leading-none mb-1">{cell.label}</span>
-                          <span className="block font-mono font-semibold text-slate-800 text-sm md:text-base leading-tight whitespace-nowrap">{cell.value}</span>
-                        </div>
-                      ))}
-                    </div>
+                    <SlotGrid cells={buildConsolationSlots(provider, state.result)} />
                   </div>
 
                   <div className="pt-2 border-t text-sm text-slate-500 space-y-1">
