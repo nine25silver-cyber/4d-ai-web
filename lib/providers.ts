@@ -10,6 +10,8 @@ export const PROVIDERS = [
   'singapore',
 ] as const;
 
+export type Provider = (typeof PROVIDERS)[number];
+
 export const PROVIDER_LABELS: Record<Provider, string> = {
   magnum: 'Magnum',
   sports_toto: 'Sports Toto',
@@ -22,7 +24,17 @@ export const PROVIDER_LABELS: Record<Provider, string> = {
   singapore: 'Singapore',
 };
 
-export type Provider = (typeof PROVIDERS)[number];
+export const PROVIDER_META: Record<Provider, { label: string; logo?: string }> = {
+  magnum: { label: 'Magnum', logo: '/logos/magnum.png' },
+  sports_toto: { label: 'Sports Toto', logo: '/logos/sports-toto.png' },
+  da_ma_cai: { label: 'Da Ma Cai', logo: '/logos/da-ma-cai.png' },
+  sabah88: { label: 'Sabah 88', logo: '/logos/sabah88.png' },
+  sarawak: { label: 'Sarawak', logo: '/logos/sarawak.png' },
+  sandakan: { label: 'Sandakan', logo: '/logos/sandakan.png' },
+  singapore: { label: 'Singapore', logo: '/logos/singapore.png' },
+  grand_dragon: { label: 'Grand Dragon', logo: '/logos/grand-dragon.png' },
+  nine_lotto: { label: 'Nine Lotto', logo: '/logos/nine-lotto.png' },
+};
 
 export type ProviderResult = {
   draw_date?: string;
