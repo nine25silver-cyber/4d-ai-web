@@ -52,6 +52,15 @@ export type ProviderResult = {
   phase?: string;
   status?: string;
   last_refreshed?: string;
+  slot_display?: NormalizedSlotDisplay;
+};
+
+export type NormalizedSlotDisplay = {
+  top3Cells: { prizeLabel: '1st Prize' | '2nd Prize' | '3rd Prize'; slotLabel: string | null; number: string }[];
+  specialCells: { slotLabel: string; number: string }[];
+  consolationCells: { slotLabel: string; number: string }[];
+  usedSlotLayout: boolean;
+  slotLayoutSource: string;
 };
 
 type SlotLayout = {
@@ -178,6 +187,88 @@ function asString(value: unknown): string | undefined {
   return str.length ? str : undefined;
 }
 
+const THIRTEEN_SLOT_SPECIAL_PROVIDERS = new Set(['magnum', 'sports_toto', 'sabah88', 'sandakan', 'grand_dragon', 'nine_lotto']);
+const SPECIAL_LABELS_13 = 'ABCDEFGHIJKLM'.split('');
+const CONSOLATION_LABELS_13 = 'NOPQRSTUVW'.split('');
+
+function normalizeNumber(value: unknown): string {
+  const normalized = asString(value);
+  return normalized ?? '----';
+}
+
+function parseSlotEntries(value: unknown): Map<string, string> {
+  const map = new Map<string, string>();
+  const labelKeys = ['slot', 'label', 'key', 'position', 'name'];
+  const numberKeys = ['number', 'value', 'result', 'prize', 'text'];
+  if (!value) return map;
+  if (Array.isArray(value)) {
+    value.forEach((item) => {
+      if (Array.isArray(item) && item.length >= 2) {
+        const label = asString(item[0])?.toUpperCase();
+        if (label) map.set(label, normalizeNumber(item[1]));
+        return;
+      }
+      if (item && typeof item === 'object') {
+        const record = item as Record<string, unknown>;
+        const label = labelKeys.map((k) => asString(record[k])).find(Boolean)?.toUpperCase();
+        const number = numberKeys.map((k) => record[k]).find((v) => asString(v) !== undefined);
+        if (label) map.set(label, normalizeNumber(number));
+      }
+    });
+    return map;
+  }
+  if (typeof value === 'object') {
+    Object.entries(value as Record<string, unknown>).forEach(([k, v]) => {
+      const label = asString(k)?.toUpperCase();
+      if (label) map.set(label, normalizeNumber(v));
+    });
+  }
+  return map;
+}
+
+export function normalizeProviderSlotDisplay(providerCode: Provider, payload: any): NormalizedSlotDisplay {
+  const latest = payload?.latest_result ?? payload?.result ?? payload;
+  const slotLayout = (latest?.slot_layout ?? latest?.slotLayout) as Record<string, unknown> | undefined;
+  const top3Slots = slotLayout?.top3_slots ?? slotLayout?.top3Slots ?? latest?.top3_slots ?? latest?.top3Slots;
+  const top3Cells = [
+    { prizeLabel: '1st Prize' as const, slotLabel: asString(top3Slots?.first ?? slotLayout?.first_prize_slot ?? latest?.first_prize_slot)?.toUpperCase() ?? null, number: normalizeNumber(latest?.first_prize ?? latest?.top1) },
+    { prizeLabel: '2nd Prize' as const, slotLabel: asString(top3Slots?.second ?? slotLayout?.second_prize_slot ?? latest?.second_prize_slot)?.toUpperCase() ?? null, number: normalizeNumber(latest?.second_prize ?? latest?.top2) },
+    { prizeLabel: '3rd Prize' as const, slotLabel: asString(top3Slots?.third ?? slotLayout?.third_prize_slot ?? latest?.third_prize_slot)?.toUpperCase() ?? null, number: normalizeNumber(latest?.third_prize ?? latest?.top3) },
+  ];
+
+  const is13 = THIRTEEN_SLOT_SPECIAL_PROVIDERS.has(providerCode);
+  const fallbackSpecialLabels = is13 ? SPECIAL_LABELS_13 : Array.from({ length: 10 }, (_, i) => `S${i + 1}`);
+  const fallbackConsolationLabels = is13 ? CONSOLATION_LABELS_13 : Array.from({ length: 10 }, (_, i) => `C${i + 1}`);
+
+  const specialSource = slotLayout?.special_slots ?? slotLayout?.specialSlots ?? latest?.special_slots ?? latest?.specialSlots;
+  const consolationSource = slotLayout?.consolation_slots ?? slotLayout?.consolationSlots ?? latest?.consolation_slots ?? latest?.consolationSlots;
+  const specialMap = parseSlotEntries(specialSource);
+  const consolationMap = parseSlotEntries(consolationSource);
+
+  const usedSlotLayout = specialMap.size > 0 || consolationMap.size > 0 || top3Cells.some((c) => c.slotLabel);
+  const slotLayoutSource = usedSlotLayout
+    ? (slotLayout ? 'payload.slot_layout|slotLayout' : 'provider-level slot fields')
+    : 'fallback: flat arrays';
+
+  const specialLabels = specialMap.size > 0 ? Array.from(specialMap.keys()) : fallbackSpecialLabels;
+  const consolationLabels = consolationMap.size > 0 ? Array.from(consolationMap.keys()) : fallbackConsolationLabels;
+  const extractedTop3 = new Set(top3Cells.map((c) => c.slotLabel).filter(Boolean) as string[]);
+
+  const specialCells = specialLabels.map((slotLabel, index) => {
+    const fallbackNumber = normalizeNumber((latest?.special_numbers ?? latest?.special ?? [])[index]);
+    const number = specialMap.get(slotLabel) ?? fallbackNumber;
+    return { slotLabel, number: extractedTop3.has(slotLabel) ? '----' : number };
+  });
+
+  const consolationCells = consolationLabels.slice(0, 10).map((slotLabel, index) => ({
+    slotLabel,
+    number: consolationMap.get(slotLabel) ?? normalizeNumber((latest?.consolation_numbers ?? latest?.consolation ?? [])[index]),
+  }));
+
+  // Fallback only: upstream payload did not expose slot layout, slot accuracy cannot be guaranteed.
+  return { top3Cells, specialCells, consolationCells, usedSlotLayout, slotLayoutSource };
+}
+
 async function extractErrorMessage(res: Response, fallback: string): Promise<string> {
   try {
     const payload = await res.json();
@@ -191,6 +282,8 @@ async function extractErrorMessage(res: Response, fallback: string): Promise<str
 
 export function normalizeProviderResult(payload: any): ProviderResult {
   const latest = payload?.latest_result ?? payload?.result ?? payload;
+  const providerCode = asString(payload?.provider)?.toLowerCase() as Provider | undefined;
+  const slotDisplay = providerCode ? normalizeProviderSlotDisplay(providerCode, payload) : undefined;
   const slotLayout = parseSlotLayout(latest);
   const specialCells = normalizeSpecialCells(latest);
   const top3SlotLabels = slotLayout?.top3_slots ?? {
@@ -219,6 +312,7 @@ export function normalizeProviderResult(payload: any): ProviderResult {
     last_refreshed: asString(
       latest?.last_refreshed ?? latest?.refreshed_at ?? latest?.updated_at ?? payload?.last_refreshed ?? payload?.updated_at,
     ),
+    slot_display: slotDisplay,
   };
 }
 
@@ -238,9 +332,15 @@ export async function fetchProvider(provider: Provider): Promise<ProviderResult>
   }
 
   const data = await res.json();
+  const normalized = normalizeProviderResult(data);
   if (process.env.NODE_ENV !== 'production') {
-    const latest = data?.latest_result ?? data?.result ?? data;
-    console.log('[slot-debug]', provider, Object.keys(latest ?? {}), latest?.slot_layout);
+    console.log('[slot-debug]', {
+      provider,
+      usedSlotLayout: normalized.slot_display?.usedSlotLayout,
+      slotLayoutSource: normalized.slot_display?.slotLayoutSource,
+      fallbackUsed: !normalized.slot_display?.usedSlotLayout,
+    });
   }
-  return normalizeProviderResult(data);
+  return normalized;
 }
+
