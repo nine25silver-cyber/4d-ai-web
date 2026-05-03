@@ -47,9 +47,16 @@ export type ProviderResult = {
   special_slot_labels?: string[];
   consolation_numbers?: string[];
   consolation_slot_labels?: string[];
+  top3_slot_labels?: { first?: string; second?: string; third?: string };
   phase?: string;
   status?: string;
   last_refreshed?: string;
+};
+
+type SlotLayout = {
+  special_slots?: string[];
+  consolation_slots?: string[];
+  top3_slots?: { first?: string; second?: string; third?: string };
 };
 
 function flattenToStrings(value: unknown): string[] {
@@ -77,9 +84,44 @@ function parseOrderedSlots(latest: any): string[] {
   return [];
 }
 
+function parseSlotLayout(latest: any): SlotLayout | undefined {
+  const slotLayout = latest?.slot_layout;
+  if (!slotLayout || typeof slotLayout !== 'object') return undefined;
+
+  const specialSlots = flattenToStrings(slotLayout.special_slots);
+  const consolationSlots = flattenToStrings(slotLayout.consolation_slots);
+  const top3SlotsRaw = slotLayout.top3_slots;
+  const top3Slots = top3SlotsRaw && typeof top3SlotsRaw === 'object'
+    ? {
+        first: asString(top3SlotsRaw.first),
+        second: asString(top3SlotsRaw.second),
+        third: asString(top3SlotsRaw.third),
+      }
+    : undefined;
+
+  if (!specialSlots.length && !consolationSlots.length && !top3Slots) return undefined;
+
+  return {
+    special_slots: specialSlots.length ? specialSlots : undefined,
+    consolation_slots: consolationSlots.length ? consolationSlots : undefined,
+    top3_slots: top3Slots,
+  };
+}
+
 function normalizeSpecialCells(latest: any): string[] | undefined {
-  const orderedSlots = parseOrderedSlots(latest);
-  if (!orderedSlots.length) return undefined;
+  const slotLayout = parseSlotLayout(latest);
+  const values = slotLayout?.special_slots ?? parseOrderedSlots(latest);
+  if (!values.length) return undefined;
+
+  const promotedSlots = new Set(
+    [slotLayout?.top3_slots?.first, slotLayout?.top3_slots?.second, slotLayout?.top3_slots?.third].filter(Boolean) as string[],
+  );
+
+  if (promotedSlots.size > 0) {
+    return values.map((slotValue) => (promotedSlots.has(slotValue) ? '----' : slotValue));
+  }
+
+  const orderedSlots = values;
 
   const top3 = [
     asString(latest?.first_prize ?? latest?.top1),
@@ -131,6 +173,7 @@ async function extractErrorMessage(res: Response, fallback: string): Promise<str
 
 export function normalizeProviderResult(payload: any): ProviderResult {
   const latest = payload?.latest_result ?? payload?.result ?? payload;
+  const slotLayout = parseSlotLayout(latest);
   const specialCells = normalizeSpecialCells(latest);
   return {
     draw_date: asString(latest?.draw_date ?? latest?.date),
@@ -140,9 +183,10 @@ export function normalizeProviderResult(payload: any): ProviderResult {
     third_prize: asString(latest?.third_prize ?? latest?.top3),
     special_numbers: toArray(latest?.special_numbers ?? latest?.special),
     special_cells: specialCells,
-    special_slot_labels: toOptionalArray(latest?.special_slot_labels ?? latest?.special_labels),
+    special_slot_labels: slotLayout?.special_slots ?? toOptionalArray(latest?.special_slot_labels ?? latest?.special_labels),
     consolation_numbers: toArray(latest?.consolation_numbers ?? latest?.consolation),
-    consolation_slot_labels: toOptionalArray(latest?.consolation_slot_labels ?? latest?.consolation_labels),
+    consolation_slot_labels: slotLayout?.consolation_slots ?? toOptionalArray(latest?.consolation_slot_labels ?? latest?.consolation_labels),
+    top3_slot_labels: slotLayout?.top3_slots,
     phase: asString(latest?.phase),
     status: asString(latest?.status),
     last_refreshed: asString(
