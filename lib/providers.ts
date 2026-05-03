@@ -218,5 +218,9 @@ export async function fetchProvider(provider: Provider): Promise<ProviderResult>
   }
 
   const data = await res.json();
+  if (process.env.NODE_ENV !== 'production') {
+    const latest = data?.latest_result ?? data?.result ?? data;
+    console.log('[slot-debug]', provider, Object.keys(latest ?? {}), latest?.slot_layout);
+  }
   return normalizeProviderResult(data);
 }
