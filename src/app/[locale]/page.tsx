@@ -45,19 +45,19 @@ export default async function HomePage({params}: {params: Promise<{locale: Local
     <main>
       <StructuredData data={{'@context': 'https://schema.org', '@type': 'WebSite', name: '4D AI', url: siteUrl(`/${locale}`)}} />
       <section className="border-b border-slate-200 bg-white py-10">
-        <div className="container-shell grid gap-8 lg:grid-cols-[1.3fr_0.7fr] lg:items-center">
-          <div>
-            <p className="text-sm font-bold uppercase text-blue-800">4D AI Web MVP</p>
-            <h1 className="mt-3 max-w-3xl text-4xl font-black tracking-normal text-slate-950 sm:text-5xl">{t('headline')}</h1>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">{t('intro')}</p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href={`/${locale}/results/west-malaysia`} className="rounded-md bg-blue-800 px-5 py-3 font-bold text-white hover:bg-blue-900">{t('primaryCta')}</Link>
-              <Link href={`/${locale}/pricing`} className="rounded-md border border-slate-300 px-5 py-3 font-bold text-slate-800 hover:bg-slate-100">{t('pricingCta')}</Link>
-            </div>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-5">
-            <h2 className="text-base font-black text-slate-900">{t('regionsTitle')}</h2>
-            <div className="mt-4"><RegionNav locale={locale} /></div>
+        <div className="container-shell">
+          <h1 className="text-3xl font-black tracking-normal text-slate-950 sm:text-4xl">
+            {locale === 'zh' ? '今日4D成绩' : locale === 'ms' ? 'Keputusan 4D Hari Ini' : 'Today 4D Results'}
+          </h1>
+          <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
+            {locale === 'zh'
+              ? '选择地区后直接进入开彩成绩页面。'
+              : locale === 'ms'
+                ? 'Pilih kawasan untuk terus masuk ke halaman keputusan.'
+                : 'Choose a region to go directly to the live result page.'}
+          </p>
+          <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-5">
+            <RegionNav locale={locale} />
           </div>
         </div>
       </section>
