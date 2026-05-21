@@ -10,6 +10,12 @@ export function generateStaticParams() {
 export default async function LocaleLayout({children, params}: {children: React.ReactNode; params: Promise<{locale: string}>}) {
   const {locale} = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
+  const betaNotice =
+    locale === 'zh'
+      ? 'Beta 测试中：当前网站为公开测试版，功能会持续优化与调整。'
+      : locale === 'ms'
+        ? 'Beta sedang diuji: laman ini ialah versi ujian awam dan ciri akan terus ditambah baik.'
+        : 'Beta testing: this public web version is still being refined and features may change.';
   return (
     <html lang={locale}>
       <head>
@@ -19,6 +25,11 @@ export default async function LocaleLayout({children, params}: {children: React.
       <body>
         <NextIntlClientProvider>
           <SiteHeader locale={locale as Locale} />
+          <div className="border-b border-amber-200 bg-amber-50 text-amber-900">
+            <div className="container-shell py-2 text-center text-sm font-medium">
+              {betaNotice}
+            </div>
+          </div>
           {children}
           <footer className="mt-16 border-t border-slate-200 bg-white py-8 text-sm text-slate-500">
             <div className="container-shell flex flex-wrap items-center justify-between gap-3">
