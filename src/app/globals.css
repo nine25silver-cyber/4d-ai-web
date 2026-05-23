@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --background: #f6f9ff;
+  --foreground: #132238;
+  --brand-primary: #2563eb;
+  --brand-primary-dark: #1d4ed8;
+  --brand-soft: #eff6ff;
+  --brand-coral: #e8705b;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: Arial, Helvetica, sans-serif; }
+a { color: inherit; text-decoration: none; }
+button, input, select { font: inherit; }
+.container-shell { width: min(1180px, calc(100vw - 32px)); margin: 0 auto; }
+.result-number { font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+@keyframes ai-hit-flash {
+  0%, 100% {
+    background: #fff7ed;
+    border-color: #fcd34d;
+    box-shadow: 0 0 0 rgba(245, 158, 11, 0);
+  }
+  50% {
+    background: #fef3c7;
+    border-color: #d97706;
+    box-shadow: 0 0 18px rgba(245, 158, 11, 0.34);
+  }
+}
+
+.ai-hit-flash {
+  animation: ai-hit-flash 900ms ease-in-out infinite;
+}
+
+.ai-hit-sequence-flash {
+  animation: ai-hit-flash 360ms ease-in-out 3;
+}
