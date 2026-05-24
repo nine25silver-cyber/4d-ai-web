@@ -5,7 +5,6 @@ import {useEffect, useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {Locale} from '@/i18n/routing';
 import {initMemberState, loginUser, logoutUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
-import {getSupabaseConfigStatus} from '@/lib/supabase-browser';
 
 type Props = {
   locale: Locale;
@@ -23,13 +22,6 @@ export function HeaderAccountActions({locale, labels}: Props) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const supabaseConfig = getSupabaseConfigStatus();
-  const configStatusText = supabaseConfig.configured
-    ? 'Supabase config: configured'
-    : `Supabase config: ${[
-        !supabaseConfig.hasUrl ? 'missing url' : null,
-        !supabaseConfig.hasAnonKey ? 'missing anon key' : null
-      ].filter(Boolean).join(' / ')}`;
 
   useEffect(() => {
     initMemberState();
@@ -79,7 +71,6 @@ export function HeaderAccountActions({locale, labels}: Props) {
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <p className="max-w-[240px] text-right text-[11px] font-bold text-amber-100">{configStatusText}</p>
       {error ? <p className="max-w-[240px] text-right text-xs font-bold text-amber-200">{error}</p> : null}
       <div className="flex items-center gap-2">
       <button
