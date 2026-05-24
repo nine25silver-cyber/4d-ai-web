@@ -4,7 +4,7 @@ import {useEffect, useMemo, useState} from 'react';
 import {useLocale} from 'next-intl';
 import {usePathname, useRouter} from 'next/navigation';
 import {initMemberState, loginUser, logoutUser, readMemberState, setPlan, subscribeMemberState, type MemberState} from '@/lib/member-state';
-import {hasSupabaseConfig} from '@/lib/supabase-browser';
+import {getSupabaseConfigStatus, hasSupabaseConfig} from '@/lib/supabase-browser';
 
 type Props = {
   labels: {
@@ -32,6 +32,13 @@ export function MembershipFlowClient({labels}: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const isSupabaseMode = hasSupabaseConfig();
+  const supabaseConfig = getSupabaseConfigStatus();
+  const configStatusText = supabaseConfig.configured
+    ? 'Supabase config: configured'
+    : `Supabase config: ${[
+        !supabaseConfig.hasUrl ? 'missing url' : null,
+        !supabaseConfig.hasAnonKey ? 'missing anon key' : null
+      ].filter(Boolean).join(' / ')}`;
 
   useEffect(() => {
     initMemberState();
@@ -89,6 +96,9 @@ export function MembershipFlowClient({labels}: Props) {
       <p className="mt-2 text-sm leading-6 text-slate-700">{labels.panelText}</p>
       <p className="mt-4 rounded-md border border-blue-300 bg-white px-3 py-2 text-sm font-bold text-slate-800">
         {labels.statusLabel}: {statusText}
+      </p>
+      <p className="mt-3 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800">
+        {configStatusText}
       </p>
       {syncWarningText ? (
         <p className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
