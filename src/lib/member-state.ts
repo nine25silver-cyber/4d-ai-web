@@ -13,6 +13,12 @@ export type MemberState = {
   updatedAt: string;
 };
 
+export type AuthActionResult = {
+  ok: boolean;
+  error?: string;
+  demo?: boolean;
+};
+
 const STORAGE_KEY = 'four_d_ai_member_state_v1';
 const EVENT_NAME = 'four-d-ai-member-state-updated';
 const DEFAULT_LOGIN_EMAIL = 'demo@4dai.local';
@@ -274,29 +280,40 @@ export async function refreshMemberStateFromAuth() {
   await writeFromSession(data.session);
 }
 
-export async function loginUser(locale: string, nextPath?: string) {
+function isSafeNextPath(nextPath: string | undefined): nextPath is string {
+  return Boolean(nextPath && nextPath.startsWith('/') && !nextPath.startsWith('//'));
+}
+
+export async function loginUser(locale: string, nextPath?: string): Promise<AuthActionResult> {
   if (!hasSupabaseConfig()) {
-    loginDemoUser();
-    return;
+    if (process.env.NODE_ENV !== 'production') {
+      loginDemoUser();
+      return {ok: true, demo: true};
+    }
+    return {ok: false, error: 'Supabase auth is not configured.'};
   }
   const supabase = getSupabaseBrowserClient();
   if (!supabase || typeof window === 'undefined') {
-    loginDemoUser();
-    return;
+    return {ok: false, error: 'Supabase auth is not available in this browser session.'};
   }
   const fallbackNext = `/${locale}/account`;
-  const next = nextPath && nextPath.startsWith('/') ? nextPath : fallbackNext;
+  const next = isSafeNextPath(nextPath) ? nextPath : fallbackNext;
   const redirectTo = `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(next)}`;
-  await supabase.auth.signInWithOAuth({
+  const {data, error} = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {redirectTo}
   });
+  if (error) return {ok: false, error: error.message || 'Could not start Google sign in.'};
+  if (data.url) window.location.assign(data.url);
+  if (!data.url) return {ok: false, error: 'No OAuth redirect URL was returned.'};
+  return {ok: true};
 }
 
-export async function logoutUser() {
+export async function logoutUser(): Promise<AuthActionResult> {
   const supabase = getSupabaseBrowserClient();
   if (supabase) {
-    await supabase.auth.signOut();
+    const {error} = await supabase.auth.signOut();
+    if (error) return {ok: false, error: error.message || 'Could not sign out.'};
   }
   writeMemberState({
     loggedIn: false,
@@ -305,4 +322,5 @@ export async function logoutUser() {
     syncError: null,
     updatedAt: new Date().toISOString()
   });
+  return {ok: true};
 }
