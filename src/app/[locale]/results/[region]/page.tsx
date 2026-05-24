@@ -5,20 +5,22 @@ import {LiveResultsGrid} from '@/components/LiveResultsGrid';
 import {RegionNav} from '@/components/RegionNav';
 import {StructuredData} from '@/components/StructuredData';
 import {fetchRegionLatest} from '@/lib/cloudflare';
-import {getRegion, regions} from '@/lib/providers';
+import {getRegion} from '@/lib/providers';
 import {buildMetadata, siteUrl} from '@/lib/seo';
-import {routing, type Locale} from '@/i18n/routing';
+import type {Locale} from '@/i18n/routing';
 
-export function generateStaticParams() {
-  return routing.locales.flatMap((locale) => regions.map((region) => ({locale, region: region.slug})));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale; region: string}>}): Promise<Metadata> {
   const {locale, region: regionSlug} = await params;
   const region = getRegion(regionSlug);
   if (!region) return {};
-  const t = await getTranslations({locale, namespace: 'Results'});
-  return buildMetadata({locale, path: `/results/${region.slug}`, title: t('metaTitle', {region: region.label}), description: t('metaDescription', {region: region.label})});
+  return buildMetadata({
+    locale,
+    path: `/results/${region.slug}`,
+    title: `${region.label} 4D results`,
+    description: `View latest 4D results for ${region.label}.`
+  });
 }
 
 export default async function RegionResultsPage({params}: {params: Promise<{locale: Locale; region: string}>}) {

@@ -2,17 +2,19 @@ import Link from 'next/link';
 import type {Metadata} from 'next';
 import {getTranslations} from 'next-intl/server';
 import {FavoritesToolClient} from '@/components/FavoritesToolClient';
-import {routing, type Locale} from '@/i18n/routing';
+import type {Locale} from '@/i18n/routing';
 import {buildMetadata} from '@/lib/seo';
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({locale}));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale}>}): Promise<Metadata> {
   const {locale} = await params;
-  const t = await getTranslations({locale, namespace: 'Tools'});
-  return buildMetadata({locale, path: '/tools/favorites', title: t('favoritesMetaTitle'), description: t('favoritesMetaDescription')});
+  return buildMetadata({
+    locale,
+    path: '/tools/favorites',
+    title: 'Saved 4D numbers',
+    description: 'Save and organize favorite 4D numbers locally.'
+  });
 }
 
 export default async function FavoritesToolPage({params}: {params: Promise<{locale: Locale}>}) {

@@ -2,12 +2,10 @@ import Link from 'next/link';
 import type {Metadata} from 'next';
 import {regions} from '@/lib/providers';
 import {buildMetadata} from '@/lib/seo';
-import {routing, type Locale} from '@/i18n/routing';
+import type {Locale} from '@/i18n/routing';
 import {ThousandHitsToolClient} from '@/components/ThousandHitsToolClient';
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({locale}));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale}>}): Promise<Metadata> {
   const {locale} = await params;

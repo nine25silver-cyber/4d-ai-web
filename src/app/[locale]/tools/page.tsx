@@ -4,6 +4,8 @@ import {getTranslations} from 'next-intl/server';
 import {buildMetadata} from '@/lib/seo';
 import type {Locale} from '@/i18n/routing';
 
+export const dynamic = 'force-dynamic';
+
 const pageKey = 'Tools';
 const pagePath = 'tools';
 const toolCards = ['numberSearch', 'thousandHits', 'digitMap', 'hotCold', 'packageRanking', 'favorites'] as const;
@@ -31,8 +33,12 @@ function extraCardCopy(locale: Locale) {
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale}>}): Promise<Metadata> {
   const {locale} = await params;
-  const t = await getTranslations({locale, namespace: pageKey});
-  return buildMetadata({locale, path: `/${pagePath}`, title: t('metaTitle'), description: t('metaDescription')});
+  return buildMetadata({
+    locale,
+    path: `/${pagePath}`,
+    title: '4D AI tools',
+    description: 'Search 4D numbers, 3D winning records, number maps, hot and cold signals, boxed rankings and saved numbers.'
+  });
 }
 
 export default async function InfoPage({params}: {params: Promise<{locale: Locale}>}) {

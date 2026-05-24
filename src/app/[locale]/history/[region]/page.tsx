@@ -6,18 +6,21 @@ import {RegionNav} from '@/components/RegionNav';
 import {fetchRegionHistoryLatest30} from '@/lib/cloudflare';
 import {getRegion, regions} from '@/lib/providers';
 import {buildMetadata} from '@/lib/seo';
-import {routing, type Locale} from '@/i18n/routing';
+import type {Locale} from '@/i18n/routing';
 
-export function generateStaticParams() {
-  return routing.locales.flatMap((locale) => regions.map((region) => ({locale, region: region.slug})));
-}
+export const dynamic = 'force-dynamic';
+
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale; region: string}>}): Promise<Metadata> {
   const {locale, region: regionSlug} = await params;
   const region = getRegion(regionSlug);
   if (!region) return {};
-  const t = await getTranslations({locale, namespace: 'History'});
-  return buildMetadata({locale, path: `/history/${region.slug}`, title: t('regionMetaTitle', {region: region.label}), description: t('regionMetaDescription', {region: region.label})});
+  return buildMetadata({
+    locale,
+    path: `/history/${region.slug}`,
+    title: `${region.label} 4D history`,
+    description: `Browse recent 4D history dates for ${region.label}.`
+  });
 }
 
 export default async function RegionHistoryPage({params}: {params: Promise<{locale: Locale; region: string}>}) {

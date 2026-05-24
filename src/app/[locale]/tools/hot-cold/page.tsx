@@ -2,18 +2,20 @@ import Link from 'next/link';
 import type {Metadata} from 'next';
 import {getTranslations} from 'next-intl/server';
 import {HotColdToolClient} from '@/components/HotColdToolClient';
-import {routing, type Locale} from '@/i18n/routing';
+import type {Locale} from '@/i18n/routing';
 import {regions} from '@/lib/providers';
 import {buildMetadata} from '@/lib/seo';
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({locale}));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale}>}): Promise<Metadata> {
   const {locale} = await params;
-  const t = await getTranslations({locale, namespace: 'Tools'});
-  return buildMetadata({locale, path: '/tools/hot-cold', title: t('hotColdMetaTitle'), description: t('hotColdMetaDescription')});
+  return buildMetadata({
+    locale,
+    path: '/tools/hot-cold',
+    title: 'Hot and cold 4D numbers',
+    description: 'Analyze hot and cold 4D number trends by provider and date range.'
+  });
 }
 
 export default async function HotColdToolPage({params}: {params: Promise<{locale: Locale}>}) {

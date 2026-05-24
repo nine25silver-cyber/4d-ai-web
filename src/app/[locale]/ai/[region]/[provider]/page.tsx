@@ -9,21 +9,21 @@ import {AiProviderSwitcher} from '@/components/AiProviderSwitcher';
 import {getRegion, regions} from '@/lib/providers';
 import {buildMetadata} from '@/lib/seo';
 import {computeAiHitHistoryFromCloudflareHistory, fetchAiHitHistory, fetchAiRecommendation, fetchProviderLatest} from '@/lib/cloudflare';
-import {routing, type Locale} from '@/i18n/routing';
+import type {Locale} from '@/i18n/routing';
 
-export function generateStaticParams() {
-  return routing.locales.flatMap((locale) =>
-    regions.flatMap((region) => region.providers.map((provider) => ({locale, region: region.slug, provider: provider.code})))
-  );
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale; region: string; provider: string}>}): Promise<Metadata> {
   const {locale, region: regionSlug, provider: providerCode} = await params;
   const region = getRegion(regionSlug);
   const provider = region?.providers.find((item) => item.code === providerCode);
   if (!region || !provider) return {};
-  const t = await getTranslations({locale, namespace: 'AI'});
-  return buildMetadata({locale, path: `/ai/${region.slug}/${provider.code}`, title: t('providerMetaTitle', {provider: provider.name}), description: t('providerMetaDescription', {provider: provider.name})});
+  return buildMetadata({
+    locale,
+    path: `/ai/${region.slug}/${provider.code}`,
+    title: `${provider.name} 4D AI recommendations`,
+    description: `View ${provider.name} 4D AI recommendation numbers and recent hit history.`
+  });
 }
 
 export default async function AiProviderPage({params}: {params: Promise<{locale: Locale; region: string; provider: string}>}) {

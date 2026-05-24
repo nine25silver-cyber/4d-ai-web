@@ -1,12 +1,10 @@
 import Link from 'next/link';
 import type {Metadata} from 'next';
 import {buildMetadata} from '@/lib/seo';
-import {routing, type Locale} from '@/i18n/routing';
+import type {Locale} from '@/i18n/routing';
 import {DigitMapToolClient} from '@/components/DigitMapToolClient';
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({locale}));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale}>}): Promise<Metadata> {
   const {locale} = await params;

@@ -4,18 +4,20 @@ import {getTranslations} from 'next-intl/server';
 import {AiProviderLogoGrid} from '@/components/AiProviderLogoGrid';
 import {getRegion, regions} from '@/lib/providers';
 import {buildMetadata} from '@/lib/seo';
-import {routing, type Locale} from '@/i18n/routing';
+import type {Locale} from '@/i18n/routing';
 
-export function generateStaticParams() {
-  return routing.locales.flatMap((locale) => regions.map((region) => ({locale, region: region.slug})));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale; region: string}>}): Promise<Metadata> {
   const {locale, region: regionSlug} = await params;
   const region = getRegion(regionSlug);
   if (!region) return {};
-  const t = await getTranslations({locale, namespace: 'AI'});
-  return buildMetadata({locale, path: `/ai/${region.slug}`, title: t('metaTitle'), description: t('metaDescription')});
+  return buildMetadata({
+    locale,
+    path: `/ai/${region.slug}`,
+    title: `4D AI recommendations - ${region.label}`,
+    description: `Choose a provider in ${region.label} to view 4D AI recommendation signals.`
+  });
 }
 
 export default async function AiRegionPage({params}: {params: Promise<{locale: Locale; region: string}>}) {

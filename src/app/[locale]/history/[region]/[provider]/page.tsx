@@ -3,23 +3,23 @@ import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {getTranslations} from 'next-intl/server';
 import {fetchHistoryLatest30} from '@/lib/cloudflare';
-import {getRegion, regions} from '@/lib/providers';
+import {getRegion} from '@/lib/providers';
 import {buildMetadata} from '@/lib/seo';
-import {routing, type Locale} from '@/i18n/routing';
+import type {Locale} from '@/i18n/routing';
 
-export function generateStaticParams() {
-  return routing.locales.flatMap((locale) =>
-    regions.flatMap((region) => region.providers.map((provider) => ({locale, region: region.slug, provider: provider.code})))
-  );
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale; region: string; provider: string}>}): Promise<Metadata> {
   const {locale, region: regionSlug, provider: providerCode} = await params;
   const region = getRegion(regionSlug);
   const provider = region?.providers.find((item) => item.code === providerCode);
   if (!region || !provider) return {};
-  const t = await getTranslations({locale, namespace: 'History'});
-  return buildMetadata({locale, path: `/history/${region.slug}/${provider.code}`, title: t('providerMetaTitle', {provider: provider.name}), description: t('providerMetaDescription', {provider: provider.name})});
+  return buildMetadata({
+    locale,
+    path: `/history/${region.slug}/${provider.code}`,
+    title: `${provider.name} 4D history`,
+    description: `Browse recent 4D draw history for ${provider.name}.`
+  });
 }
 
 export default async function ProviderHistoryPage({params}: {params: Promise<{locale: Locale; region: string; provider: string}>}) {

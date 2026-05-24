@@ -4,16 +4,18 @@ import {getTranslations} from 'next-intl/server';
 import {SearchToolClient} from '@/components/SearchToolClient';
 import {regions} from '@/lib/providers';
 import {buildMetadata} from '@/lib/seo';
-import {routing, type Locale} from '@/i18n/routing';
+import type {Locale} from '@/i18n/routing';
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({locale}));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale}>}): Promise<Metadata> {
   const {locale} = await params;
-  const t = await getTranslations({locale, namespace: 'Tools'});
-  return buildMetadata({locale, path: '/tools/search', title: t('searchMetaTitle'), description: t('searchMetaDescription')});
+  return buildMetadata({
+    locale,
+    path: '/tools/search',
+    title: '4D number search',
+    description: 'Search exact and boxed 4D winning records across providers.'
+  });
 }
 
 export default async function SearchToolPage({params}: {params: Promise<{locale: Locale}>}) {
