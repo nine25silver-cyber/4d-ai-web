@@ -306,10 +306,12 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
           lockedText={locale === 'zh' ? '包字排行榜仅开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Ranking boxed hanya untuk Pro atau buka sementara melalui iklan.' : 'Package ranking is for Pro or temporary ad unlock.'}
         />
         ) : null}
-        <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">
-          <p>{accessHintText.free}</p>
-          <p className="mt-1">{accessHintText.pro}</p>
-        </div>
+        {!canUseRanking ? (
+          <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">
+            <p>{accessHintText.free}</p>
+            <p className="mt-1">{accessHintText.pro}</p>
+          </div>
+        ) : null}
         {false ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 shadow-sm">
             <p className="text-sm font-bold text-amber-900">
