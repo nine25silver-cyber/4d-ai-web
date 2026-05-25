@@ -56,6 +56,29 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const isPro = memberState?.loggedIn === true && memberState.plan === 'pro';
   const canUseRanking = isPro || adUnlocked;
+  const unlockedAccessText = locale === 'zh'
+    ? '当前已解锁，可直接使用'
+    : locale === 'ms'
+      ? 'Akses sudah dibuka dan sedia digunakan'
+      : 'Currently unlocked and ready to use';
+  const accessBadgeText = isPro
+    ? (locale === 'zh' ? 'Pro 已激活' : locale === 'ms' ? 'Pro aktif' : 'Pro active')
+    : (locale === 'zh' ? '广告临时解锁' : locale === 'ms' ? 'Buka sementara melalui iklan' : 'Temporary ad unlock');
+  const lockedAccessText = locale === 'zh'
+    ? '包字排行榜开放给 Pro 会员，或观看广告后临时解锁。'
+    : locale === 'ms'
+      ? 'Ranking boxed untuk Pro, atau buka sementara melalui iklan.'
+      : 'Package ranking is for Pro, or temporary ad unlock.';
+  const rewardCreditsText = locale === 'zh'
+    ? `可用广告解锁次数：${rewardCredits}`
+    : locale === 'ms'
+      ? `Kredit buka iklan tersedia: ${rewardCredits}`
+      : `Available rewarded unlock credits: ${rewardCredits}`;
+  const adUnlockRemainingText = locale === 'zh'
+    ? `本次广告解锁剩余：约 ${unlockMinutesLeft} 分钟`
+    : locale === 'ms'
+      ? `Baki buka kunci iklan: kira-kira ${unlockMinutesLeft} minit`
+      : `Ad unlock remaining: about ${unlockMinutesLeft} minutes`;
 
   const selectedNames = useMemo(
     () => providers.filter((provider) => selected.has(provider.code)).map((provider) => provider.shortName).join(', '),
@@ -166,7 +189,7 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
   }
 
   return (
-    <section className="mt-8 grid gap-5 xl:grid-cols-[420px_1fr]">
+    <section className="mt-8 grid items-start gap-5 xl:grid-cols-[420px_1fr]">
       <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-sm font-black text-slate-800">{locale === 'zh' ? '时间范围' : locale === 'ms' ? 'Julat masa' : 'Date range'}</h2>
         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -240,7 +263,37 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
         </button>
       </section>
 
-      <section className="grid gap-5">
+      <section className="grid self-start content-start gap-5">
+        <div className={`self-start rounded-lg border px-4 py-3 shadow-sm ${canUseRanking ? 'border-blue-200 bg-blue-50' : 'border-amber-200 bg-amber-50'}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className={`text-sm font-bold ${canUseRanking ? 'text-blue-900' : 'text-amber-900'}`}>
+                {canUseRanking ? unlockedAccessText : lockedAccessText}
+              </p>
+              <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold ${canUseRanking ? 'text-blue-800' : 'text-amber-800'}`}>
+                {canUseRanking ? <span>{accessBadgeText}</span> : null}
+                <span>{rewardCreditsText}</span>
+                {unlockMinutesLeft > 0 ? <span>{adUnlockRemainingText}</span> : null}
+              </div>
+            </div>
+            {!canUseRanking ? (
+              <div className="flex flex-wrap gap-2">
+                {!memberState?.loggedIn ? (
+                  <button type="button" onClick={() => void loginUser(locale)} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-100">
+                    {locale === 'zh' ? '立即登录' : locale === 'ms' ? 'Log masuk' : 'Login now'}
+                  </button>
+                ) : null}
+                <button type="button" onClick={unlockByRewardedAd} className="rounded-md border border-amber-300 bg-white px-3 py-1.5 text-xs font-black text-amber-900 hover:bg-amber-100">
+                  {locale === 'zh' ? '观看广告并解锁30分钟' : locale === 'ms' ? 'Tonton iklan & buka 30 minit' : 'Watch ad and unlock for 30 minutes'}
+                </button>
+                <Link href={`/${locale}/pricing`} className="rounded-md bg-blue-800 px-3 py-1.5 text-xs font-black text-white hover:bg-blue-900">
+                  {locale === 'zh' ? '升级 Pro' : locale === 'ms' ? 'Upgrade Pro' : 'Upgrade Pro'}
+                </Link>
+              </div>
+            ) : null}
+          </div>
+        </div>
+        {false ? (
         <FeatureAccessStatusBar
           locale={locale}
           locked={!canUseRanking}
@@ -252,11 +305,12 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
           proHref={`/${locale}/pricing`}
           lockedText={locale === 'zh' ? '包字排行榜仅开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Ranking boxed hanya untuk Pro atau buka sementara melalui iklan.' : 'Package ranking is for Pro or temporary ad unlock.'}
         />
+        ) : null}
         <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">
           <p>{accessHintText.free}</p>
           <p className="mt-1">{accessHintText.pro}</p>
         </div>
-        {!canUseRanking ? (
+        {false ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 shadow-sm">
             <p className="text-sm font-bold text-amber-900">
               {locale === 'zh'
