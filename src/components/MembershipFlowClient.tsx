@@ -72,7 +72,7 @@ export function MembershipFlowClient({labels}: Props) {
   const entitlementSourceText = useMemo(() => {
     if (!entitlement) return entitlementT('sourceLoading');
     const keyBySource: Record<CurrentUserEntitlement['source'], string> = {
-      user_entitlements: 'sourceUserEntitlements',
+      user_membership_entitlements: 'sourceUserEntitlements',
       missing_row: 'sourceMissingRow',
       not_logged_in: 'sourceNotLoggedIn',
       supabase_unconfigured: 'sourceSupabaseUnconfigured',

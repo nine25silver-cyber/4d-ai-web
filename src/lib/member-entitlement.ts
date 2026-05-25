@@ -8,7 +8,7 @@ export type CurrentUserEntitlement = {
   plan: 'free' | 'pro';
   status?: string | null;
   isPro: boolean;
-  source: 'user_entitlements' | 'missing_row' | 'not_logged_in' | 'supabase_unconfigured' | 'error';
+  source: 'user_membership_entitlements' | 'missing_row' | 'not_logged_in' | 'supabase_unconfigured' | 'error';
   error?: string;
   updatedAt?: string | null;
   currentPeriodEnd?: string | null;
@@ -73,7 +73,7 @@ export async function getCurrentUserEntitlement(): Promise<CurrentUserEntitlemen
   if (!user) return FREE_FALLBACK;
 
   const {data, error} = await supabase
-    .from('user_entitlements')
+    .from('user_membership_entitlements')
     .select('user_id,plan,is_pro,status,current_period_end,updated_at')
     .eq('user_id', user.id)
     .maybeSingle<EntitlementRow>();
@@ -109,7 +109,7 @@ export async function getCurrentUserEntitlement(): Promise<CurrentUserEntitlemen
     plan: isPro ? 'pro' : 'free',
     status: data.status,
     isPro,
-    source: 'user_entitlements',
+    source: 'user_membership_entitlements',
     updatedAt: data.updated_at,
     currentPeriodEnd: data.current_period_end
   };
