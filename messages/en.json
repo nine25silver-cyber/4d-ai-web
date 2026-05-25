@@ -350,6 +350,23 @@
     "proGateStatusFree": "Free member",
     "proGateStatusPro": "Pro member"
   },
+  "MembershipEntitlement": {
+    "title": "Supabase entitlement",
+    "loading": "Checking...",
+    "readOnlyNote": "Read-only membership source. This panel does not change feature access yet.",
+    "sourceLabel": "Source",
+    "statusLabel": "Status",
+    "updatedAtLabel": "Updated",
+    "currentPeriodEndLabel": "Current period ends",
+    "statusUnavailable": "Not available",
+    "sourceLoading": "Checking",
+    "sourceUserEntitlements": "Account entitlement row",
+    "sourceMissingRow": "No entitlement row; Free fallback",
+    "sourceNotLoggedIn": "Not logged in",
+    "sourceSupabaseUnconfigured": "Auth not configured",
+    "sourceError": "Unable to read entitlement",
+    "errorText": "Membership status could not be confirmed. Free access is used for now."
+  },
   "Pricing": {
     "metaTitle": "4D AI Pricing - Free and Pro Access",
     "metaDescription": "Compare free access and Pro access for selected 4D AI tools and analysis features.",

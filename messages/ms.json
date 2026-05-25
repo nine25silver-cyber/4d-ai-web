@@ -350,6 +350,23 @@
     "providersLabel": "Provider",
     "noTrendResults": "Tiada keputusan trend untuk julat ini."
   },
+  "MembershipEntitlement": {
+    "title": "Kelayakan Supabase",
+    "loading": "Sedang semak...",
+    "readOnlyNote": "Sumber keahlian baca sahaja. Panel ini belum mengubah akses ciri.",
+    "sourceLabel": "Sumber",
+    "statusLabel": "Status",
+    "updatedAtLabel": "Dikemas kini",
+    "currentPeriodEndLabel": "Tempoh semasa tamat",
+    "statusUnavailable": "Tiada",
+    "sourceLoading": "Sedang semak",
+    "sourceUserEntitlements": "Rekod kelayakan akaun",
+    "sourceMissingRow": "Tiada rekod kelayakan; guna Percuma",
+    "sourceNotLoggedIn": "Belum log masuk",
+    "sourceSupabaseUnconfigured": "Auth belum dikonfigurasi",
+    "sourceError": "Tidak dapat membaca kelayakan",
+    "errorText": "Status keahlian belum dapat disahkan. Akses Percuma digunakan buat masa ini."
+  },
   "Pricing": {
     "metaTitle": "Harga 4D AI - Akses Percuma dan Pro",
     "metaDescription": "Bandingkan akses percuma dan akses Pro untuk alat serta ciri analisis 4D AI terpilih.",

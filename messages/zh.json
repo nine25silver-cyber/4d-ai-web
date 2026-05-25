@@ -350,6 +350,23 @@
     "providersLabel": "Provider",
     "noTrendResults": "这个日期范围没有找到走势结果。"
   },
+  "MembershipEntitlement": {
+    "title": "Supabase 会员权限",
+    "loading": "检查中...",
+    "readOnlyNote": "只读会员来源。本面板暂时不会改变功能权限。",
+    "sourceLabel": "来源",
+    "statusLabel": "状态",
+    "updatedAtLabel": "更新时间",
+    "currentPeriodEndLabel": "当前周期结束",
+    "statusUnavailable": "暂无",
+    "sourceLoading": "检查中",
+    "sourceUserEntitlements": "账号会员权限记录",
+    "sourceMissingRow": "没有权限记录；使用免费版",
+    "sourceNotLoggedIn": "未登录",
+    "sourceSupabaseUnconfigured": "登录未配置",
+    "sourceError": "无法读取会员权限",
+    "errorText": "暂时无法确认会员状态，目前使用免费版。"
+  },
   "Pricing": {
     "metaTitle": "4D AI收费 - 免费与 Pro 权限",
     "metaDescription": "比较免费访问与 Pro 权限可使用的 4D AI 工具和分析功能。",
