@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type {ReactNode} from 'react';
 import {useEffect, useMemo, useState} from 'react';
+import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {getSupabaseBrowserClient, hasSupabaseConfig} from '@/lib/supabase-browser';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
 import {
@@ -71,6 +72,8 @@ const countOptions = ['3', '5', '8', '10'];
 
 export function AiRecommendationPreviewClient({locale, providerCode, providerName, providerShortName, coreDigits, recommendationNumbers, afterCoreSlot, labels}: Props) {
   const [memberState, setMemberState] = useState<MemberState | null>(null);
+  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
+  const [entitlementLoading, setEntitlementLoading] = useState(true);
   const [rewardCredits, setRewardCredits] = useState(0);
   const [adUnlocked, setAdUnlocked] = useState(false);
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
@@ -84,8 +87,8 @@ export function AiRecommendationPreviewClient({locale, providerCode, providerNam
     if (fromProp.length > 0) return fromProp;
     return supabaseNumbers.slice(0, 5);
   }, [recommendationNumbers, supabaseNumbers]);
-  const isPro = memberState?.loggedIn === true && memberState.plan === 'pro';
-  const isUnlocked = isPro || adUnlocked;
+  const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
+  const isUnlocked = isFormalPro || adUnlocked;
   const safeCoreDigits = useMemo(() => {
     if (!isUnlocked) return ['-', '-', '-', '-', '-'];
     if (coreDigits.length >= 5) return coreDigits.slice(0, 5);
@@ -105,6 +108,9 @@ export function AiRecommendationPreviewClient({locale, providerCode, providerNam
   const generateButtonLabel = isUnlocked
     ? (locale === 'zh' ? '生成推荐' : locale === 'ms' ? 'Jana cadangan' : 'Generate recommendation')
     : labels.generateLockedButton;
+  const lockedAccessText = entitlementLoading
+    ? (locale === 'zh' ? '正在确认会员权限；也可通过广告临时解锁。' : locale === 'ms' ? 'Sedang menyemak akses ahli; iklan masih boleh membuka akses sementara.' : 'Checking membership access; ad unlock remains available.')
+    : (locale === 'zh' ? 'AI 完整推荐仅开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Cadangan AI penuh hanya untuk Pro atau buka sementara melalui iklan.' : 'Full AI recommendations are for Pro or temporary ad unlock.');
 
   useEffect(() => {
     async function loadFromSupabase() {
@@ -151,9 +157,25 @@ export function AiRecommendationPreviewClient({locale, providerCode, providerNam
     void loadFromSupabase();
   }, [providerCode]);
   useEffect(() => {
+    let active = true;
+    const refreshEntitlement = async () => {
+      setEntitlementLoading(true);
+      const next = await getCurrentUserEntitlement();
+      if (!active) return;
+      setEntitlement(next);
+      setEntitlementLoading(false);
+    };
     initMemberState();
     setMemberState(readMemberState());
-    return subscribeMemberState(setMemberState);
+    void refreshEntitlement();
+    const unsubscribe = subscribeMemberState((next) => {
+      setMemberState(next);
+      void refreshEntitlement();
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
   useEffect(() => {
     const update = () => {
@@ -231,7 +253,7 @@ export function AiRecommendationPreviewClient({locale, providerCode, providerNam
           onLogin={() => void loginUser(locale)}
           onUnlock={unlockByRewardedAd}
           proHref={`/${locale}/pricing`}
-          lockedText={locale === 'zh' ? 'AI 完整推荐仅开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Cadangan AI penuh hanya untuk Pro atau buka sementara melalui iklan.' : 'Full AI recommendations are for Pro or temporary ad unlock.'}
+          lockedText={lockedAccessText}
         />
         <section className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
