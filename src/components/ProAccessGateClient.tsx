@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 import {useLocale} from 'next-intl';
 import {ReactNode, useEffect, useState} from 'react';
+import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
 
 type Props = {
@@ -23,22 +24,43 @@ type Props = {
 
 export function ProAccessGateClient({children, labels}: Props) {
   const [state, setState] = useState<MemberState | null>(null);
+  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
+  const [entitlementLoading, setEntitlementLoading] = useState(true);
   const locale = useLocale();
   const pathname = usePathname();
 
   useEffect(() => {
+    let active = true;
+    const refreshEntitlement = async () => {
+      setEntitlementLoading(true);
+      const next = await getCurrentUserEntitlement();
+      if (!active) return;
+      setEntitlement(next);
+      setEntitlementLoading(false);
+    };
     initMemberState();
     setState(readMemberState());
-    return subscribeMemberState(setState);
+    void refreshEntitlement();
+    const unsubscribe = subscribeMemberState((next) => {
+      setState(next);
+      void refreshEntitlement();
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
-  if (state?.loggedIn && state.plan === 'pro') return <>{children}</>;
+  const isEntitledPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
+  if (isEntitledPro) return <>{children}</>;
 
-  const statusText = !state?.loggedIn
-    ? labels.statusGuest
-    : state.plan === 'pro'
-      ? labels.statusPro
-      : labels.statusFree;
+  const statusText = entitlementLoading
+    ? (locale === 'zh' ? '正在确认会员权限' : locale === 'ms' ? 'Sedang menyemak akses ahli' : 'Checking membership access')
+    : entitlement?.source === 'error'
+      ? (locale === 'zh' ? '暂时无法确认会员权限，请稍后再试' : locale === 'ms' ? 'Akses ahli belum dapat disahkan. Sila cuba lagi nanti.' : 'Unable to confirm membership access. Please try again later.')
+      : !state?.loggedIn
+        ? labels.statusGuest
+        : labels.statusFree;
 
   return (
     <section className="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-5">
