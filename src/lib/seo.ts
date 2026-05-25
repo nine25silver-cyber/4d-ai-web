@@ -2,15 +2,19 @@ import type {Metadata} from 'next';
 import {routing, type Locale} from '@/i18n/routing';
 
 export const siteName = '4D AI';
+const defaultSiteUrl = 'https://4dai88.com';
 
 export function siteUrl(path = ''): string {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? defaultSiteUrl).replace(/\/$/, '');
   return `${base}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
 export function localizedAlternates(pathWithoutLocale: string) {
   const normalizedPath = pathWithoutLocale.startsWith('/') ? pathWithoutLocale : `/${pathWithoutLocale}`;
-  return Object.fromEntries(routing.locales.map((locale) => [locale, siteUrl(`/${locale}${normalizedPath}`)]));
+  return {
+    ...Object.fromEntries(routing.locales.map((locale) => [locale, siteUrl(`/${locale}${normalizedPath}`)])),
+    'x-default': siteUrl(`/${routing.defaultLocale}${normalizedPath}`)
+  };
 }
 
 export function buildMetadata({locale, path, title, description}: {locale: Locale; path: string; title: string; description: string}): Metadata {

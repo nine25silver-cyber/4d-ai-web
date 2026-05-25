@@ -31,6 +31,7 @@ export default function AuthCallbackPage() {
 
   return (
     <main className="container-shell py-16">
+      <meta name="robots" content="noindex,nofollow" />
       <p className="text-sm font-bold text-slate-600">Signing in...</p>
     </main>
   );

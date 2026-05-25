@@ -15,8 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/tools/thousand-hits',
     '/tools/digit-map',
     '/tools/favorites',
-    '/pricing',
-    '/account'
+    '/pricing'
   ];
   const resultPages = regions.map((region) => `/results/${region.slug}`);
   const historyRegionPages = regions.map((region) => `/history/${region.slug}`);

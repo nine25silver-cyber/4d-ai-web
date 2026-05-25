@@ -12,7 +12,10 @@ const accountCards = ['login', 'membership', 'credits', 'favorites'] as const;
 export async function generateMetadata({params}: {params: Promise<{locale: Locale}>}): Promise<Metadata> {
   const {locale} = await params;
   const t = await getTranslations({locale, namespace: pageKey});
-  return buildMetadata({locale, path: `/${pagePath}`, title: t('metaTitle'), description: t('metaDescription')});
+  return {
+    ...buildMetadata({locale, path: `/${pagePath}`, title: t('metaTitle'), description: t('metaDescription')}),
+    robots: {index: false, follow: true}
+  };
 }
 
 export default async function InfoPage({params}: {params: Promise<{locale: Locale}>}) {
