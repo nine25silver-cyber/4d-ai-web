@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {useEffect, useMemo, useState} from 'react';
 import type {Locale} from '@/i18n/routing';
 import type {ProviderConfig} from '@/lib/providers';
+import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
 import {
   addRewardCredit,
@@ -91,6 +92,8 @@ type TrendRange = '1y' | '2y' | '3y' | '5y' | '10y' | '15y' | '20y' | '30y' | 'a
 
 export function HotColdToolClient({locale, providers, labels}: Props) {
   const [memberState, setMemberState] = useState<MemberState | null>(null);
+  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
+  const [entitlementLoading, setEntitlementLoading] = useState(true);
   const [rewardCredits, setRewardCredits] = useState(0);
   const [adUnlocked, setAdUnlocked] = useState(false);
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
@@ -103,13 +106,32 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
     () => providers.filter((provider) => selected.has(provider.code)).map((provider) => provider.shortName).join(', '),
     [providers, selected]
   );
-  const isPro = memberState?.loggedIn === true && memberState.plan === 'pro';
-  const canUseTrend = isPro || adUnlocked;
+  const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
+  const canUseTrend = isFormalPro || adUnlocked;
+  const lockedAccessText = entitlementLoading
+    ? (locale === 'zh' ? '正在确认会员权限；也可通过广告临时解锁。' : locale === 'ms' ? 'Sedang menyemak akses ahli; iklan masih boleh membuka akses sementara.' : 'Checking membership access; ad unlock remains available.')
+    : (locale === 'zh' ? 'çƒ­é—¨/å†·é—¨èµ°åŠ¿ä»…å¼€æ”¾ç»™ Pro ä¼šå‘˜ï¼Œæˆ–è§‚çœ‹å¹¿å‘ŠåŽä¸´æ—¶è§£é”ã€‚' : locale === 'ms' ? 'Trend panas/sejuk hanya untuk Pro atau buka sementara melalui iklan.' : 'Hot/Cold trends are for Pro or temporary ad unlock.');
 
   useEffect(() => {
+    let active = true;
+    const refreshEntitlement = async () => {
+      setEntitlementLoading(true);
+      const next = await getCurrentUserEntitlement();
+      if (!active) return;
+      setEntitlement(next);
+      setEntitlementLoading(false);
+    };
     initMemberState();
     setMemberState(readMemberState());
-    return subscribeMemberState(setMemberState);
+    void refreshEntitlement();
+    const unsubscribe = subscribeMemberState((next) => {
+      setMemberState(next);
+      void refreshEntitlement();
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
   useEffect(() => {
     const update = () => {
@@ -264,7 +286,7 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
           onLogin={() => void loginUser(locale)}
           onUnlock={unlockByRewardedAd}
           proHref={`/${locale}/pricing`}
-          lockedText={locale === 'zh' ? '热门/冷门走势仅开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Trend panas/sejuk hanya untuk Pro atau buka sementara melalui iklan.' : 'Hot/Cold trends are for Pro or temporary ad unlock.'}
+          lockedText={lockedAccessText}
         />
         {!canUseTrend ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 shadow-sm">
