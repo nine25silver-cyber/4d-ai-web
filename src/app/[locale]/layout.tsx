@@ -21,10 +21,10 @@ export default async function LocaleLayout({children, params}: {children: React.
   const messages = messagesByLocale[typedLocale];
   const betaNotice =
     locale === 'zh'
-      ? 'Beta 测试中：当前网站为公开测试版，功能会持续优化与调整。'
+      ? '公开测试中：部分功能会持续优化。'
       : locale === 'ms'
-        ? 'Beta sedang diuji: laman ini ialah versi ujian awam dan ciri akan terus ditambah baik.'
-        : 'Beta testing: this public web version is still being refined and features may change.';
+        ? 'Beta awam: Sesetengah ciri akan terus ditambah baik.'
+        : 'Public beta: Some features may continue to improve.';
   return (
     <html lang={typedLocale}>
       <head>

@@ -39,7 +39,7 @@ export function MembershipFlowClient({labels}: Props) {
   const statusText = useMemo(() => {
     if (!state) return `${labels.loggedOut} | ${labels.freePlan}`;
     if (!state.loggedIn) return `${labels.loggedOut} | ${labels.freePlan}`;
-    return `${labels.loggedIn} (${state.email || 'demo@4dai.local'}) | ${state.plan === 'pro' ? labels.proPlan : labels.freePlan}`;
+    return `${labels.loggedIn} (${state.email || '4D AI'}) | ${state.plan === 'pro' ? labels.proPlan : labels.freePlan}`;
   }, [labels, state]);
 
   const syncWarningText = useMemo(() => {
@@ -51,7 +51,7 @@ export function MembershipFlowClient({labels}: Props) {
 
   return (
     <section className="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-5">
-      <p className="text-xs font-black uppercase text-blue-800">MVP</p>
+      <p className="text-xs font-black uppercase text-blue-800">Membership</p>
       <h2 className="mt-2 text-lg font-black text-slate-950">{labels.panelTitle}</h2>
       <p className="mt-2 text-sm leading-6 text-slate-700">{labels.panelText}</p>
       <p className="mt-4 rounded-md border border-blue-300 bg-white px-3 py-2 text-sm font-bold text-slate-800">
