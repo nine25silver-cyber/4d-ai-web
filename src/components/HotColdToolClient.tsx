@@ -15,7 +15,6 @@ import {
   subscribeRewardState,
   unlockFeatureForMinutes
 } from '@/lib/reward-unlock';
-import {FeatureAccessStatusBar} from '@/components/FeatureAccessStatusBar';
 import {ProviderLogoBadge} from '@/components/ProviderLogoBadge';
 
 type TrendNumber = {
@@ -108,10 +107,27 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
   );
   const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
   const canUseTrend = isFormalPro || adUnlocked;
-  const lockedAccessText = entitlementLoading
+  const unlockedAccessText = locale === 'zh'
+    ? '当前已解锁，可直接使用'
+    : locale === 'ms'
+      ? 'Akses sudah dibuka dan sedia digunakan'
+      : 'Currently unlocked and ready to use';
+  const accessBadgeText = isFormalPro
+    ? (locale === 'zh' ? 'Pro 已激活' : locale === 'ms' ? 'Pro aktif' : 'Pro active')
+    : (locale === 'zh' ? '广告临时解锁' : locale === 'ms' ? 'Buka sementara melalui iklan' : 'Temporary ad unlock');
+  const rewardCreditsText = locale === 'zh'
+    ? `可用广告解锁次数：${rewardCredits}`
+    : locale === 'ms'
+      ? `Kredit buka iklan tersedia: ${rewardCredits}`
+      : `Available rewarded unlock credits: ${rewardCredits}`;
+  const adUnlockRemainingText = locale === 'zh'
+    ? `本次广告解锁剩余：约 ${unlockMinutesLeft} 分钟`
+    : locale === 'ms'
+      ? `Baki buka kunci iklan: kira-kira ${unlockMinutesLeft} minit`
+      : `Ad unlock remaining: about ${unlockMinutesLeft} minutes`;
+  const compactLockedAccessText = entitlementLoading
     ? (locale === 'zh' ? '正在确认会员权限；也可通过广告临时解锁。' : locale === 'ms' ? 'Sedang menyemak akses ahli; iklan masih boleh membuka akses sementara.' : 'Checking membership access; ad unlock remains available.')
-    : (locale === 'zh' ? 'çƒ­é—¨/å†·é—¨èµ°åŠ¿ä»…å¼€æ”¾ç»™ Pro ä¼šå‘˜ï¼Œæˆ–è§‚çœ‹å¹¿å‘ŠåŽä¸´æ—¶è§£é”ã€‚' : locale === 'ms' ? 'Trend panas/sejuk hanya untuk Pro atau buka sementara melalui iklan.' : 'Hot/Cold trends are for Pro or temporary ad unlock.');
-
+    : (locale === 'zh' ? '热门/冷门走势开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Trend panas/sejuk untuk ahli Pro, atau buka sementara melalui iklan.' : 'Hot/Cold trends are for Pro, or temporary ad unlock.');
   useEffect(() => {
     let active = true;
     const refreshEntitlement = async () => {
@@ -277,57 +293,35 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
       </form>
 
       <section className="grid gap-5">
-        <FeatureAccessStatusBar
-          locale={locale}
-          locked={!canUseTrend}
-          credits={rewardCredits}
-          minutesLeft={unlockMinutesLeft}
-          showLogin={!memberState?.loggedIn}
-          onLogin={() => void loginUser(locale)}
-          onUnlock={unlockByRewardedAd}
-          proHref={`/${locale}/pricing`}
-          lockedText={lockedAccessText}
-        />
-        {!canUseTrend ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 shadow-sm">
-            <p className="text-sm font-bold text-amber-900">
-              {locale === 'zh'
-                ? '热门/冷门趋势结果仅开放给 Pro 会员。'
-                : locale === 'ms'
-                  ? 'Keputusan trend panas/sejuk hanya untuk ahli Pro.'
-                  : 'Hot/Cold trend results are available for Pro members only.'}
-            </p>
-            <p className="mt-2 text-xs font-bold text-amber-800">
-              {locale === 'zh'
-                ? `可用广告解锁次数：${rewardCredits}`
-                : locale === 'ms'
-                  ? `Kredit buka iklan tersedia: ${rewardCredits}`
-                  : `Available rewarded unlock credits: ${rewardCredits}`}
-            </p>
-            {adUnlocked ? (
-              <p className="mt-1 text-xs font-bold text-blue-800">
-                {locale === 'zh'
-                  ? `本次广告解锁剩余：约 ${unlockMinutesLeft} 分钟`
-                  : locale === 'ms'
-                    ? `Baki buka kunci iklan: kira-kira ${unlockMinutesLeft} minit`
-                    : `Ad unlock remaining: about ${unlockMinutesLeft} minutes`}
+        <div className={`rounded-lg border px-4 py-3 shadow-sm ${canUseTrend ? 'border-blue-200 bg-blue-50' : 'border-amber-200 bg-amber-50'}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className={`text-sm font-bold ${canUseTrend ? 'text-blue-900' : 'text-amber-900'}`}>
+                {canUseTrend ? unlockedAccessText : compactLockedAccessText}
               </p>
-            ) : null}
-            <div className="mt-3 flex flex-wrap gap-2">
-              {!memberState?.loggedIn ? (
-                <button type="button" onClick={() => void loginUser(locale)} className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100">
-                  {locale === 'zh' ? '立即登录' : locale === 'ms' ? 'Log masuk' : 'Login now'}
-                </button>
-              ) : null}
-              <button type="button" onClick={unlockByRewardedAd} className="rounded-md border border-amber-300 bg-white px-4 py-2 text-sm font-black text-amber-900 hover:bg-amber-100">
-                {locale === 'zh' ? '观看广告并解锁30分钟' : locale === 'ms' ? 'Tonton iklan & buka 30 minit' : 'Watch ad and unlock for 30 minutes'}
-              </button>
-              <Link href={`/${locale}/pricing`} className="rounded-md bg-blue-800 px-4 py-2 text-sm font-black text-white hover:bg-blue-900">
-                {locale === 'zh' ? '升级 Pro' : locale === 'ms' ? 'Upgrade Pro' : 'Upgrade Pro'}
-              </Link>
+              <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold ${canUseTrend ? 'text-blue-800' : 'text-amber-800'}`}>
+                {canUseTrend ? <span>{accessBadgeText}</span> : null}
+                <span>{rewardCreditsText}</span>
+                {unlockMinutesLeft > 0 ? <span>{adUnlockRemainingText}</span> : null}
+              </div>
             </div>
+            {!canUseTrend ? (
+              <div className="flex flex-wrap gap-2">
+                {!memberState?.loggedIn ? (
+                  <button type="button" onClick={() => void loginUser(locale)} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-100">
+                    {locale === 'zh' ? '立即登录' : locale === 'ms' ? 'Log masuk' : 'Login now'}
+                  </button>
+                ) : null}
+                <button type="button" onClick={unlockByRewardedAd} className="rounded-md border border-amber-300 bg-white px-3 py-1.5 text-xs font-black text-amber-900 hover:bg-amber-100">
+                  {locale === 'zh' ? '观看广告并解锁30分钟' : locale === 'ms' ? 'Tonton iklan & buka 30 minit' : 'Watch ad and unlock for 30 minutes'}
+                </button>
+                <Link href={`/${locale}/pricing`} className="rounded-md bg-blue-800 px-3 py-1.5 text-xs font-black text-white hover:bg-blue-900">
+                  {locale === 'zh' ? '升级 Pro' : locale === 'ms' ? 'Upgrade Pro' : 'Upgrade Pro'}
+                </Link>
+              </div>
+            ) : null}
           </div>
-        ) : null}
+        </div>
         {status === 'idle' ? <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-600 shadow-sm">{labels.noTrendYet}</div> : null}
         {trend ? (
           <>
