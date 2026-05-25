@@ -5,7 +5,7 @@ import {useEffect} from 'react';
 import type {Locale} from '@/i18n/routing';
 import type {ProviderConfig} from '@/lib/providers';
 import Link from 'next/link';
-import {initMemberState, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
+import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {ProviderLogoBadge} from '@/components/ProviderLogoBadge';
 
 type HitRow = {
@@ -31,7 +31,7 @@ type Mode = 'exact';
 
 export function ThousandHitsToolClient({locale, providers}: Props) {
   const [target, setTarget] = useState('');
-  const [memberState, setMemberState] = useState<MemberState | null>(null);
+  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [data, setData] = useState<HitResponse | null>(null);
@@ -81,16 +81,20 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
     setStatus('done');
   }
   const canSearch = target.length === 3;
-  const isPro = memberState?.loggedIn === true && memberState.plan === 'pro';
+  const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
 
   useEffect(() => {
-    initMemberState();
-    setMemberState(readMemberState());
-    return subscribeMemberState(setMemberState);
+    let active = true;
+    void getCurrentUserEntitlement().then((next) => {
+      if (active) setEntitlement(next);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   function exportAsText() {
-    if (!data || !isPro) return;
+    if (!data || !isFormalPro) return;
     const header = locale === 'zh'
       ? '日期 | Provider | 期号 | 奖项 | 号码'
       : locale === 'ms'
@@ -102,7 +106,7 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
   }
 
   function exportAsCsv() {
-    if (!data || !isPro) return;
+    if (!data || !isFormalPro) return;
     const rows = [
       ['date', 'provider', 'draw_no', 'prize', 'number'],
       ...data.rows.map((row) => [row.drawDate || '', row.providerName, row.drawNo || '', row.prize, row.number])
@@ -136,7 +140,7 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
   }, []);
 
   return (
-    <section className="mt-8 grid gap-5 xl:grid-cols-[420px_1fr]">
+    <section className="mt-8 grid items-start gap-5 xl:grid-cols-[420px_1fr]">
       <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <label className="text-sm font-black text-slate-800">
           {locale === 'zh' ? '千字号码' : locale === 'ms' ? 'Nombor 3D' : '3-digit target'}
@@ -187,7 +191,7 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
         <div className="mt-5" />
       </section>
 
-      <section className="grid gap-5">
+      <section className="grid self-start content-start gap-5">
         <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">
           <p>{accessHint.free}</p>
           <p className="mt-1">{accessHint.pro}</p>
@@ -198,7 +202,7 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
           <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-black text-slate-950">{locale === 'zh' ? `命中记录 (${data.resultCount})` : locale === 'ms' ? `Rekod padanan (${data.resultCount})` : `Matched records (${data.resultCount})`}</h2>
-              {isPro ? (
+              {isFormalPro ? (
                 <div className="flex gap-2">
                   <button type="button" onClick={exportAsText} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-black text-slate-800 hover:bg-slate-100">
                     {locale === 'zh' ? '复制结果' : locale === 'ms' ? 'Salin hasil' : 'Copy results'}

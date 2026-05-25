@@ -4,7 +4,7 @@ import Link from 'next/link';
 import {useEffect, useMemo, useState} from 'react';
 import type {ProviderConfig} from '@/lib/providers';
 import type {Locale} from '@/i18n/routing';
-import {initMemberState, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
+import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {ProviderLogoBadge} from '@/components/ProviderLogoBadge';
 
 type SearchMode = 'exact' | 'boxed';
@@ -59,7 +59,7 @@ function prizeLabel(labels: Props['labels'], prize: SearchResult['prize']) {
 }
 
 export function SearchToolClient({locale, providers, labels}: Props) {
-  const [memberState, setMemberState] = useState<MemberState | null>(null);
+  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
   const [number, setNumber] = useState('');
   const [mode, setMode] = useState<SearchMode>('exact');
   const [selected, setSelected] = useState(() => new Set(providers.map((provider) => provider.code)));
@@ -69,12 +69,16 @@ export function SearchToolClient({locale, providers, labels}: Props) {
     () => providers.filter((provider) => selected.has(provider.code)).map((provider) => provider.shortName).join(', '),
     [providers, selected]
   );
-  const isPro = memberState?.loggedIn === true && memberState.plan === 'pro';
+  const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
 
   useEffect(() => {
-    initMemberState();
-    setMemberState(readMemberState());
-    return subscribeMemberState(setMemberState);
+    let active = true;
+    void getCurrentUserEntitlement().then((next) => {
+      if (active) setEntitlement(next);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   function toggle(code: string) {
@@ -113,7 +117,7 @@ export function SearchToolClient({locale, providers, labels}: Props) {
   }
 
   function copyResults() {
-    if (!isPro || results.length === 0) return;
+    if (!isFormalPro || results.length === 0) return;
     const header = locale === 'zh'
       ? '号码 | Provider | 日期 | 期号 | 奖项'
       : locale === 'ms'
@@ -124,7 +128,7 @@ export function SearchToolClient({locale, providers, labels}: Props) {
   }
 
   function downloadCsv() {
-    if (!isPro || results.length === 0) return;
+    if (!isFormalPro || results.length === 0) return;
     const rows = [
       ['number', 'provider', 'draw_date', 'draw_no', 'prize', 'label'],
       ...results.map((result) => [result.number, result.providerName, result.drawDate, result.drawNo || '', prizeLabel(labels, result.prize), result.label])
@@ -148,7 +152,7 @@ export function SearchToolClient({locale, providers, labels}: Props) {
       : {free: 'Free users can run exact/boxed search and view results.', pro: 'Pro can copy results and download CSV.'};
 
   return (
-    <section className="mt-8 grid gap-5 lg:grid-cols-[1fr_420px]">
+    <section className="mt-8 grid items-start gap-5 lg:grid-cols-[1fr_420px]">
       <form className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
@@ -228,7 +232,7 @@ export function SearchToolClient({locale, providers, labels}: Props) {
         </div>
       </form>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="self-start rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">
           <p>{accessHint.free}</p>
           <p className="mt-1">{accessHint.pro}</p>
@@ -237,7 +241,7 @@ export function SearchToolClient({locale, providers, labels}: Props) {
           <h2 className="text-lg font-black text-slate-950">
             {status === 'done' ? labels.resultCount.replace('{count}', String(results.length)) : labels.resultProvider}
           </h2>
-          {isPro ? (
+          {isFormalPro ? (
             <div className="flex gap-2">
               <button type="button" disabled={results.length === 0} onClick={copyResults} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-black text-slate-800 hover:bg-slate-100 disabled:opacity-50">
                 {locale === 'zh' ? '复制结果' : locale === 'ms' ? 'Salin hasil' : 'Copy results'}
