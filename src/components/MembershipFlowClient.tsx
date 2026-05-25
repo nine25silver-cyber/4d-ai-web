@@ -57,10 +57,9 @@ export function MembershipFlowClient({labels}: Props) {
   }, []);
 
   const statusText = useMemo(() => {
-    if (!state) return `${labels.loggedOut} | ${labels.freePlan}`;
-    if (!state.loggedIn) return `${labels.loggedOut} | ${labels.freePlan}`;
-    return `${labels.loggedIn} (${state.email || '4D AI'}) | ${state.plan === 'pro' ? labels.proPlan : labels.freePlan}`;
-  }, [labels, state]);
+    if (!state?.loggedIn) return labels.loggedOut;
+    return `${labels.loggedIn} (${state.email || '4D AI'})`;
+  }, [labels.loggedIn, labels.loggedOut, state]);
 
   const syncWarningText = useMemo(() => {
     if (!isSupabaseMode || !state?.loggedIn || !state.syncError) return null;
