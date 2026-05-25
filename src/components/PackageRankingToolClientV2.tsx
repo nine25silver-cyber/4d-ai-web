@@ -5,6 +5,7 @@ import type {Locale} from '@/i18n/routing';
 import type {ProviderConfig} from '@/lib/providers';
 import Link from 'next/link';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
+import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {
   addRewardCredit,
   consumeRewardCredit,
@@ -42,6 +43,8 @@ type TrendMode = 'hot' | 'cold';
 
 export function PackageRankingToolClientV2({locale, providers}: Props) {
   const [memberState, setMemberState] = useState<MemberState | null>(null);
+  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
+  const [entitlementLoading, setEntitlementLoading] = useState(true);
   const [rewardCredits, setRewardCredits] = useState(0);
   const [adUnlocked, setAdUnlocked] = useState(false);
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
@@ -54,14 +57,14 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
   const [trendMode, setTrendMode] = useState<TrendMode>('hot');
   const [prizeFilter, setPrizeFilter] = useState<PrizeFilter>('all');
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const isPro = memberState?.loggedIn === true && memberState.plan === 'pro';
-  const canUseRanking = isPro || adUnlocked;
+  const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
+  const canUseRanking = isFormalPro || adUnlocked;
   const unlockedAccessText = locale === 'zh'
     ? '当前已解锁，可直接使用'
     : locale === 'ms'
       ? 'Akses sudah dibuka dan sedia digunakan'
       : 'Currently unlocked and ready to use';
-  const accessBadgeText = isPro
+  const accessBadgeText = isFormalPro
     ? (locale === 'zh' ? 'Pro 已激活' : locale === 'ms' ? 'Pro aktif' : 'Pro active')
     : (locale === 'zh' ? '广告临时解锁' : locale === 'ms' ? 'Buka sementara melalui iklan' : 'Temporary ad unlock');
   const lockedAccessText = locale === 'zh'
@@ -152,6 +155,27 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
     initMemberState();
     setMemberState(readMemberState());
     return subscribeMemberState(setMemberState);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadEntitlement = async () => {
+      setEntitlementLoading(true);
+      const next = await getCurrentUserEntitlement();
+      if (!cancelled) {
+        setEntitlement(next);
+        setEntitlementLoading(false);
+      }
+    };
+
+    void loadEntitlement();
+    const unsubscribe = subscribeMemberState(() => {
+      void loadEntitlement();
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -272,6 +296,7 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
               </p>
               <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold ${canUseRanking ? 'text-blue-800' : 'text-amber-800'}`}>
                 {canUseRanking ? <span>{accessBadgeText}</span> : null}
+                {!canUseRanking && entitlementLoading ? <span>{locale === 'zh' ? '正在确认会员权限' : locale === 'ms' ? 'Sedang semak akses ahli' : 'Checking membership access'}</span> : null}
                 <span>{rewardCreditsText}</span>
                 {unlockMinutesLeft > 0 ? <span>{adUnlockRemainingText}</span> : null}
               </div>
