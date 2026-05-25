@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import {useEffect, useState} from 'react';
 import {Locale} from '@/i18n/routing';
+import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {initMemberState, loginUser, logoutUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
 
 type Props = {
@@ -18,12 +19,28 @@ type Props = {
 
 export function HeaderAccountActions({locale, labels}: Props) {
   const [state, setState] = useState<MemberState | null>(null);
+  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
 
   useEffect(() => {
+    let active = true;
+    const refreshEntitlement = async () => {
+      const next = await getCurrentUserEntitlement();
+      if (active) setEntitlement(next);
+    };
     initMemberState();
     setState(readMemberState());
-    return subscribeMemberState(setState);
+    void refreshEntitlement();
+    const unsubscribe = subscribeMemberState((next) => {
+      setState(next);
+      void refreshEntitlement();
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
+
+  const isEntitledPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
 
   if (!state) {
     return (
@@ -31,15 +48,15 @@ export function HeaderAccountActions({locale, labels}: Props) {
         <Link href={`/${locale}/account`} className="inline-flex h-8 items-center rounded-md border border-[#f7da7a] bg-[#fff8df] px-3 text-sm font-bold text-[#5f4700] hover:bg-[#fff3c4]">
           {labels.login}
         </Link>
-        <Link href={`/${locale}/pricing`} className="inline-flex h-8 items-center rounded-md border border-[#f8e7bb] bg-[#ebc978] px-3 text-sm font-bold text-white hover:bg-[#e2be68]">
-          {labels.goPro}
+        <Link href={`/${locale}/${isEntitledPro ? 'account' : 'pricing'}`} className="inline-flex h-8 items-center rounded-md border border-[#f8e7bb] bg-[#ebc978] px-3 text-sm font-bold text-white hover:bg-[#e2be68]">
+          {isEntitledPro ? labels.proBadge : labels.goPro}
         </Link>
       </div>
     );
   }
 
   const accountLabel = state.loggedIn ? `${labels.account}: ${state.email || 'member'}` : labels.login;
-  const ctaLabel = state.plan === 'pro' ? labels.proBadge : labels.goPro;
+  const ctaLabel = isEntitledPro ? labels.proBadge : labels.goPro;
 
   return (
     <div className="flex items-center gap-2">
@@ -56,7 +73,7 @@ export function HeaderAccountActions({locale, labels}: Props) {
       >
         {state.loggedIn ? labels.logout : accountLabel}
       </button>
-      <Link href={`/${locale}/${state.plan === 'pro' ? 'account' : 'pricing'}`} className="inline-flex h-8 items-center rounded-md border border-[#f8e7bb] bg-[#ebc978] px-3 text-sm font-bold text-white hover:bg-[#e2be68]">
+      <Link href={`/${locale}/${isEntitledPro ? 'account' : 'pricing'}`} className="inline-flex h-8 items-center rounded-md border border-[#f8e7bb] bg-[#ebc978] px-3 text-sm font-bold text-white hover:bg-[#e2be68]">
         {ctaLabel}
       </Link>
     </div>
