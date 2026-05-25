@@ -226,7 +226,7 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
   }
 
   return (
-    <section className="mt-8 grid gap-5 xl:grid-cols-[420px_1fr]">
+    <section className="mt-8 grid items-start gap-5 xl:grid-cols-[420px_1fr]">
       <form className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <section>
           <h2 className="text-sm font-black text-slate-800">{labels.rangeLabel}</h2>
@@ -292,8 +292,8 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
         {status === 'error' ? <p className="mt-3 rounded border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-800">{labels.trendError}</p> : null}
       </form>
 
-      <section className="grid gap-5">
-        <div className={`rounded-lg border px-4 py-3 shadow-sm ${canUseTrend ? 'border-blue-200 bg-blue-50' : 'border-amber-200 bg-amber-50'}`}>
+      <section className="grid self-start content-start gap-5">
+        <div className={`self-start rounded-lg border px-4 py-3 shadow-sm ${canUseTrend ? 'border-blue-200 bg-blue-50' : 'border-amber-200 bg-amber-50'}`}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="min-w-0">
               <p className={`text-sm font-bold ${canUseTrend ? 'text-blue-900' : 'text-amber-900'}`}>
