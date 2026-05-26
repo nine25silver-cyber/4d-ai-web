@@ -33,6 +33,7 @@ export function MembershipFlowClient({labels}: Props) {
   const pathname = usePathname();
   const entitlementT = useTranslations('MembershipEntitlement');
   const isSupabaseMode = hasSupabaseConfig();
+  const showDevelopmentPlanControls = !isSupabaseMode && process.env.NODE_ENV !== 'production';
 
   useEffect(() => {
     let active = true;
@@ -135,7 +136,7 @@ export function MembershipFlowClient({labels}: Props) {
         <button type="button" onClick={() => void loginUser(locale, pathname)} className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100">
           {labels.login}
         </button>
-        {!isSupabaseMode ? (
+        {showDevelopmentPlanControls ? (
           <>
             <button type="button" onClick={() => setPlan('pro')} className="rounded-md bg-blue-800 px-3 py-2 text-sm font-bold text-white hover:bg-blue-900">
               {labels.activatePro}
