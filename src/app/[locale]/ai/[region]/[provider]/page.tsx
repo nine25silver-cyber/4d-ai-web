@@ -146,7 +146,7 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
             locked: t('locked'),
             lockedPanelText: t('lockedPanelText'),
             previewAiHeadline: t('previewAiHeadline'),
-            previewPackageHeadline: t('previewPackageHeadline'),
+            previewPackageHeadline: t('previewPackageHeadline', {type: '{type}'}),
             previewColdHeadline: t('previewColdHeadline'),
             previewHotHeadline: t('previewHotHeadline'),
             previewBasisLocked: t('previewBasisLocked'),
