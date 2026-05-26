@@ -58,124 +58,6 @@ export function writeMemberState(next: MemberState) {
   notifyUpdate();
 }
 
-function resolvePlanFromSession(session: Session): MemberPlan {
-  const appPlan = session.user.app_metadata?.plan;
-  const userPlan = session.user.user_metadata?.plan;
-  const appTier = session.user.app_metadata?.subscription_tier;
-  const userTier = session.user.user_metadata?.subscription_tier;
-  const appRole = session.user.app_metadata?.role;
-  const userRole = session.user.user_metadata?.role;
-  const appMembership = session.user.app_metadata?.membership;
-  const userMembership = session.user.user_metadata?.membership;
-  const appIsPro = session.user.app_metadata?.is_pro;
-  const userIsPro = session.user.user_metadata?.is_pro;
-  const appEntitlement = session.user.app_metadata?.entitlement;
-  const userEntitlement = session.user.user_metadata?.entitlement;
-  if (appIsPro === true || userIsPro === true) return 'pro';
-  if (metadataSuggestsPro(session.user.app_metadata) || metadataSuggestsPro(session.user.user_metadata)) return 'pro';
-  const candidates = [appPlan, userPlan, appTier, userTier, appRole, userRole, appMembership, userMembership, appEntitlement, userEntitlement]
-    .filter((value): value is string => typeof value === 'string')
-    .map((value) => value.toLowerCase());
-  return candidates.some((value) => value.includes('pro')) ? 'pro' : 'free';
-}
-
-function metadataSuggestsPro(value: unknown): boolean {
-  const queue: unknown[] = [value];
-  while (queue.length > 0) {
-    const current = queue.shift();
-    if (current === true) return true;
-    if (typeof current === 'string') {
-      const normalized = current.toLowerCase();
-      if (normalized.includes('pro') || normalized === 'active' || normalized === 'paid' || normalized === 'premium' || normalized === 'gold') {
-        return true;
-      }
-      continue;
-    }
-    if (!current || typeof current !== 'object') continue;
-    for (const [key, next] of Object.entries(current as Record<string, unknown>)) {
-      const normalizedKey = key.toLowerCase();
-      if ((normalizedKey.includes('pro') || normalizedKey.includes('active') || normalizedKey.includes('paid') || normalizedKey.includes('premium')) && next === true) {
-        return true;
-      }
-      queue.push(next);
-    }
-  }
-  return false;
-}
-
-async function resolvePlanFromDatabase(session: Session): Promise<{plan: MemberPlan | null; syncError: string | null}> {
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) return {plan: null, syncError: null};
-  const {data, error} = await supabase
-    .from('profiles')
-    .select('plan,is_pro')
-    .eq('id', session.user.id)
-    .maybeSingle();
-  if (error) return {plan: null, syncError: 'PROFILE_QUERY_ERROR'};
-  if (!data) return {plan: null, syncError: 'PROFILE_NOT_FOUND'};
-  const rawPlan = typeof data.plan === 'string' ? data.plan.toLowerCase() : '';
-  if (rawPlan.includes('pro')) return {plan: 'pro', syncError: null};
-  if (data.is_pro === true) return {plan: 'pro', syncError: null};
-  const fallback = await resolvePlanFromSubscriptionTables(session);
-  if (fallback.plan) return fallback;
-  return {plan: 'free', syncError: fallback.syncError};
-}
-
-function valueLooksPro(value: unknown): boolean {
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'string') {
-    const normalized = value.toLowerCase();
-    return normalized.includes('pro') || normalized === 'active' || normalized === 'paid' || normalized === 'premium' || normalized === 'true';
-  }
-  return false;
-}
-
-async function probeSubscriptionTable(
-  session: Session,
-  table: string,
-  columns: string[],
-  idColumn: 'id' | 'user_id'
-): Promise<{hit: boolean; missing: boolean}> {
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) return {hit: false, missing: true};
-  const selectColumns = columns.join(',');
-  const {data, error} = await supabase
-    .from(table)
-    .select(selectColumns)
-    .eq(idColumn, session.user.id)
-    .order('updated_at', {ascending: false})
-    .limit(1)
-    .maybeSingle();
-  if (error) {
-    // Missing table/column or no permission; continue probing other candidates.
-    if (error.code === '42P01' || error.code === '42703' || error.code === 'PGRST116' || error.code === 'PGRST204') {
-      return {hit: false, missing: true};
-    }
-    return {hit: false, missing: false};
-  }
-  if (!data || typeof data !== 'object') return {hit: false, missing: false};
-  const values = Object.values(data as Record<string, unknown>);
-  return {hit: values.some((value) => valueLooksPro(value)), missing: false};
-}
-
-async function resolvePlanFromSubscriptionTables(session: Session): Promise<{plan: MemberPlan | null; syncError: string | null}> {
-  const probes: Array<{table: string; columns: string[]; idColumn: 'id' | 'user_id'}> = [
-    {table: 'subscriptions', columns: ['status', 'plan', 'is_pro', 'is_active'], idColumn: 'user_id'},
-    {table: 'user_subscriptions', columns: ['status', 'plan', 'is_pro', 'is_active'], idColumn: 'user_id'},
-    {table: 'entitlements', columns: ['status', 'tier', 'is_pro', 'active'], idColumn: 'user_id'},
-    {table: 'user_entitlements', columns: ['status', 'tier', 'is_pro', 'active'], idColumn: 'user_id'},
-    {table: 'memberships', columns: ['status', 'plan', 'is_pro', 'is_active'], idColumn: 'user_id'},
-    {table: 'profiles', columns: ['status', 'tier', 'membership'], idColumn: 'id'}
-  ];
-  let checkedAny = false;
-  for (const probe of probes) {
-    const result = await probeSubscriptionTable(session, probe.table, probe.columns, probe.idColumn);
-    if (!result.missing) checkedAny = true;
-    if (result.hit) return {plan: 'pro', syncError: null};
-  }
-  return {plan: null, syncError: checkedAny ? 'SUBSCRIPTION_TABLE_CHECKED_NO_PRO' : 'SUBSCRIPTION_TABLE_UNAVAILABLE'};
-}
-
 async function writeFromSession(session: Session | null) {
   if (!session) {
     writeMemberState({
@@ -187,33 +69,11 @@ async function writeFromSession(session: Session | null) {
     });
     return;
   }
-  const previous = readMemberState();
-  const sessionPlan = resolvePlanFromSession(session);
-  let plan: MemberPlan = sessionPlan;
-  let syncError: string | null = null;
-  const dbResult = await resolvePlanFromDatabase(session);
-  if (dbResult.plan) {
-    // Never downgrade a session-confirmed Pro user to free due to profile lag/mismatch.
-    if (sessionPlan === 'pro' && dbResult.plan === 'free') {
-      plan = 'pro';
-      if (!syncError) syncError = 'PROFILE_PLAN_CONFLICT_KEEP_SESSION_PRO';
-    } else {
-      plan = dbResult.plan;
-    }
-  }
-  if (dbResult.syncError) syncError = dbResult.syncError;
-  const sameUserAsBefore = previous.loggedIn && previous.email !== '' && previous.email === (session.user.email ?? '');
-  const keepPreviousPro = sameUserAsBefore && previous.plan === 'pro' && !dbResult.plan;
-  if (keepPreviousPro) {
-    plan = 'pro';
-    // Keep showing sync warning for debugging, but do not downgrade capabilities.
-    if (!syncError) syncError = 'PROFILE_SYNC_SKIPPED_KEEP_PRO';
-  }
   writeMemberState({
     loggedIn: true,
     email: session.user.email ?? '',
-    plan,
-    syncError,
+    plan: 'free',
+    syncError: null,
     updatedAt: new Date().toISOString()
   });
 }
@@ -224,6 +84,7 @@ export function loginDemoUser() {
     ...current,
     loggedIn: true,
     email: current.email || DEFAULT_LOGIN_EMAIL,
+    plan: 'free',
     syncError: null,
     updatedAt: new Date().toISOString()
   });
