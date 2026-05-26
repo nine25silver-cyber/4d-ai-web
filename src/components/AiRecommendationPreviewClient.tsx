@@ -4,7 +4,6 @@ import Link from 'next/link';
 import type {ReactNode} from 'react';
 import {useEffect, useMemo, useState} from 'react';
 import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
-import {getSupabaseBrowserClient, hasSupabaseConfig} from '@/lib/supabase-browser';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
 import {
   addRewardCredit,
@@ -70,7 +69,7 @@ const packageTypes: PackageType[] = ['24包', '12包', '6包', '4包'];
 const lookbackOptions = ['10', '20', '30', '60', 'all'];
 const countOptions = ['3', '5', '8', '10'];
 
-export function AiRecommendationPreviewClient({locale, providerCode, providerName, providerShortName, coreDigits, recommendationNumbers, afterCoreSlot, labels}: Props) {
+export function AiRecommendationPreviewClient({locale, providerName, providerShortName, coreDigits, recommendationNumbers, afterCoreSlot, labels}: Props) {
   const [memberState, setMemberState] = useState<MemberState | null>(null);
   const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
   const [entitlementLoading, setEntitlementLoading] = useState(true);
@@ -81,29 +80,16 @@ export function AiRecommendationPreviewClient({locale, providerCode, providerNam
   const [packageType, setPackageType] = useState<PackageType>('24包');
   const [lookback, setLookback] = useState('30');
   const [resultCount, setResultCount] = useState('5');
-  const [supabaseNumbers, setSupabaseNumbers] = useState<string[]>([]);
   const liveRecommendations = useMemo(() => {
-    const fromProp = (recommendationNumbers ?? []).slice(0, 5);
-    if (fromProp.length > 0) return fromProp;
-    return supabaseNumbers.slice(0, 5);
-  }, [recommendationNumbers, supabaseNumbers]);
+    return (recommendationNumbers ?? []).slice(0, 5);
+  }, [recommendationNumbers]);
   const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
   const isUnlocked = isFormalPro || adUnlocked;
   const safeCoreDigits = useMemo(() => {
     if (!isUnlocked) return ['-', '-', '-', '-', '-'];
     if (coreDigits.length >= 5) return coreDigits.slice(0, 5);
-    const counts = new Map<string, number>();
-    for (const number of liveRecommendations) {
-      for (const digit of number) {
-        counts.set(digit, (counts.get(digit) ?? 0) + 1);
-      }
-    }
-    const fromRecommendations = Array.from(counts.entries())
-      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
-      .map(([digit]) => digit)
-      .slice(0, 5);
-    return [...fromRecommendations, ...coreDigits, '-', '-', '-', '-', '-'].slice(0, 5);
-  }, [coreDigits, isUnlocked, liveRecommendations]);
+    return [...coreDigits, '-', '-', '-', '-', '-'].slice(0, 5);
+  }, [coreDigits, isUnlocked]);
   const modeLabel = mode === 'aiGenerated' ? labels.aiGeneratedMode : mode === 'package' ? labels.packageMode : mode === 'cold' ? labels.coldMode : labels.hotMode;
   const generateButtonLabel = isUnlocked
     ? (locale === 'zh' ? '生成推荐' : locale === 'ms' ? 'Jana cadangan' : 'Generate recommendation')
@@ -111,51 +97,6 @@ export function AiRecommendationPreviewClient({locale, providerCode, providerNam
   const lockedAccessText = entitlementLoading
     ? (locale === 'zh' ? '正在确认会员权限；也可通过广告临时解锁。' : locale === 'ms' ? 'Sedang menyemak akses ahli; iklan masih boleh membuka akses sementara.' : 'Checking membership access; ad unlock remains available.')
     : (locale === 'zh' ? 'AI 完整推荐仅开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Cadangan AI penuh hanya untuk Pro atau buka sementara melalui iklan.' : 'Full AI recommendations are for Pro or temporary ad unlock.');
-
-  useEffect(() => {
-    async function loadFromSupabase() {
-      if (!hasSupabaseConfig()) return;
-      const supabase = getSupabaseBrowserClient();
-      if (!supabase) return;
-      const normalizeNumbers = (input: unknown): string[] => {
-        const raw = Array.isArray(input) ? input : [];
-        return raw
-          .map((item) => String(item ?? '').replace(/\D/g, '').slice(0, 4))
-          .filter((item) => item.length === 4)
-          .slice(0, 5);
-      };
-
-      // Preferred contract: exact strategy + target.
-      const primary = await supabase
-        .from('daily_recommendations')
-        .select('numbers')
-        .eq('provider_code', providerCode)
-        .eq('strategy', 'ai_composite_v1')
-        .eq('target', 'next_draw')
-        .order('created_at', {ascending: false})
-        .limit(1)
-        .maybeSingle();
-      const primaryNumbers = primary.error || !primary.data ? [] : normalizeNumbers(primary.data.numbers);
-      if (primaryNumbers.length > 0) {
-        setSupabaseNumbers(primaryNumbers);
-        return;
-      }
-
-      // Fallback: latest record for this provider regardless of strategy/target.
-      const fallback = await supabase
-        .from('daily_recommendations')
-        .select('numbers')
-        .eq('provider_code', providerCode)
-        .order('created_at', {ascending: false})
-        .limit(1)
-        .maybeSingle();
-      const fallbackNumbers = fallback.error || !fallback.data ? [] : normalizeNumbers(fallback.data.numbers);
-      if (fallbackNumbers.length > 0) {
-        setSupabaseNumbers(fallbackNumbers);
-      }
-    }
-    void loadFromSupabase();
-  }, [providerCode]);
   useEffect(() => {
     let active = true;
     const refreshEntitlement = async () => {

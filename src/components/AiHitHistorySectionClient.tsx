@@ -13,6 +13,11 @@ type Labels = {
   hitPrizePlaceholder: string;
   hitExpandLabel: string;
   hitCollapseLabel: string;
+  firstPrizeLabel: string;
+  secondPrizeLabel: string;
+  thirdPrizeLabel: string;
+  specialPrizeLabel: string;
+  consolationPrizeLabel: string;
   hitHistoryEyebrow: string;
   hitHistoryTitle: string;
   hitCountInlineLabel: string;
@@ -78,7 +83,12 @@ export function AiHitHistorySectionClient({providerCode, labels, initialHitCount
             hitResultLabel: labels.hitResultLabel,
             hitPrizePlaceholder: labels.hitPrizePlaceholder,
             hitExpandLabel: labels.hitExpandLabel,
-            hitCollapseLabel: labels.hitCollapseLabel
+            hitCollapseLabel: labels.hitCollapseLabel,
+            firstPrizeLabel: labels.firstPrizeLabel,
+            secondPrizeLabel: labels.secondPrizeLabel,
+            thirdPrizeLabel: labels.thirdPrizeLabel,
+            specialPrizeLabel: labels.specialPrizeLabel,
+            consolationPrizeLabel: labels.consolationPrizeLabel
           }}
         />
       </div>

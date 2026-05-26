@@ -93,6 +93,7 @@ export type AiRecommendationPayload = {
   providerCode: string;
   drawDate?: string;
   drawNo?: string;
+  coreDigits: string[];
   numbers: string[];
   generatedAt?: string;
 };
@@ -101,19 +102,11 @@ export type AiRecommendationState =
   | {ok: true; providerCode: string; url: string; payload: AiRecommendationPayload}
   | {ok: false; providerCode: string; url: string; reason: string};
 
-export type AiHitPrizeLabels = {
-  first: string;
-  second: string;
-  third: string;
-  special: string;
-  consolation: string;
-};
-
 const latestBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_LATEST_BASE_URL ?? 'https://data.4dai88.com/latest/providers';
 const historyBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_HISTORY_BASE_URL ?? 'https://data.4dai88.com/history';
 const historyTestBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_HISTORY_TEST_BASE_URL ?? 'https://data.4dai88.com/history_test';
 const aiHitHistoryBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_AI_HIT_HISTORY_BASE_URL ?? 'https://data.4dai88.com/ai_hit_history';
-const aiRecommendationBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_AI_RECOMMENDATION_BASE_URL ?? '';
+const aiRecommendationBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_AI_RECOMMENDATION_BASE_URL ?? 'https://data.4dai88.com/ai_recommendations';
 
 function parseJsonSafely(text: string): unknown | null {
   try {
@@ -153,6 +146,35 @@ function buildCandidateUrls(baseUrls: string[], providerCode: string): string[] 
 function normalizeNumbers(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.map((item) => String(item ?? '').trim()).filter(Boolean);
+}
+
+function normalizeAiTopDigitsFromValue(value: unknown): string[] {
+  const raw = Array.isArray(value)
+    ? value.map((item) => String(item ?? ''))
+    : typeof value === 'string'
+      ? value.split(/[,\s]+/)
+      : [];
+  const digits = raw
+    .flatMap((item) => item.replace(/\D/g, '').split(''))
+    .filter((item) => /^\d$/.test(item));
+  return Array.from(new Set(digits)).sort((left, right) => left.localeCompare(right)).slice(0, 5);
+}
+
+function normalizeAiTopDigitsFromRecord(map: Record<string, unknown>): string[] {
+  const sources = [
+    map.dynamicAiTopDigits,
+    map.dynamic_ai_top_digits,
+    map.aiTopDigits,
+    map.ai_top_digits,
+    map.aiDigits,
+    map.ai_digits,
+    map.core_digits
+  ];
+  for (const source of sources) {
+    const digits = normalizeAiTopDigitsFromValue(source);
+    if (digits.length > 0) return digits;
+  }
+  return [];
 }
 
 function normalizeStringRecord(value: unknown): Record<string, string> | undefined {
@@ -266,7 +288,7 @@ function normalizeAiHitHistory(providerCode: string, raw: unknown): AiHitHistory
   const records = rawRecords
     .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item))
     .map((item, recordIndex) => {
-      const aiDigits = normalizeNumbers(item.ai_digits ?? item.aiTopDigits ?? item.ai_top_digits).slice(0, 5);
+      const aiDigits = normalizeAiTopDigitsFromRecord(item).slice(0, 5);
       const rawMatches = Array.isArray(item.hit_matches ?? item.hitMatches) ? (item.hit_matches ?? item.hitMatches) as unknown[] : [];
       const hitMatches = rawMatches
         .filter((match): match is Record<string, unknown> => Boolean(match) && typeof match === 'object' && !Array.isArray(match))
@@ -299,6 +321,7 @@ function normalizeAiHitHistory(providerCode: string, raw: unknown): AiHitHistory
 function normalizeAiRecommendation(providerCode: string, raw: unknown): AiRecommendationPayload | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const map = raw as Record<string, unknown>;
+  const coreDigits = normalizeAiTopDigitsFromRecord(map);
   const candidates: unknown[] = [];
   if (Array.isArray(map.recommendations)) candidates.push(...map.recommendations);
   if (Array.isArray(map.numbers)) candidates.push(...map.numbers);
@@ -312,6 +335,7 @@ function normalizeAiRecommendation(providerCode: string, raw: unknown): AiRecomm
     providerCode: String(map.provider_code ?? map.providerCode ?? providerCode),
     drawDate: String(map.draw_date ?? map.drawDate ?? '').trim() || undefined,
     drawNo: String(map.draw_no ?? map.drawNo ?? '').trim() || undefined,
+    coreDigits,
     numbers,
     generatedAt: String(map.generated_at ?? map.generatedAt ?? '').trim() || undefined
   };
@@ -455,93 +479,4 @@ export async function fetchAiRecommendation(providerCode: string): Promise<AiRec
   } catch (error) {
     return {ok: false, providerCode, url, reason: error instanceof Error ? error.message : 'request_failed'};
   }
-}
-
-function normalize4d(value: unknown): string {
-  return String(value ?? '').replace(/\D/g, '').slice(0, 4);
-}
-
-function collectResultNumbers(payload: ProviderResultPayload, labels: AiHitPrizeLabels): Array<{number: string; prizeLabel: string}> {
-  return [
-    {number: normalize4d(payload.first_prize), prizeLabel: labels.first},
-    {number: normalize4d(payload.second_prize), prizeLabel: labels.second},
-    {number: normalize4d(payload.third_prize), prizeLabel: labels.third},
-    ...(payload.special_numbers ?? []).map((number) => ({number: normalize4d(number), prizeLabel: labels.special})),
-    ...(payload.consolation_numbers ?? []).map((number) => ({number: normalize4d(number), prizeLabel: labels.consolation}))
-  ].filter((item) => item.number.length === 4);
-}
-
-function deriveCoreDigitsFromDraw(payload: ProviderResultPayload): string[] {
-  const counts = new Map<string, number>(Array.from({length: 10}, (_, index) => [String(index), 0]));
-  for (const item of collectResultNumbers(payload, {first: '', second: '', third: '', special: '', consolation: ''})) {
-    for (const digit of item.number) counts.set(digit, (counts.get(digit) ?? 0) + 1);
-  }
-  return Array.from(counts.entries())
-    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
-    .slice(0, 5)
-    .map(([digit]) => digit);
-}
-
-function classifyComputedHits(payload: ProviderResultPayload, aiDigits: string[], labels: AiHitPrizeLabels): AiHitHistoryMatch[] {
-  const aiDigitSet = new Set(aiDigits);
-  const bestByNumber = new Map<string, AiHitHistoryMatch>();
-  for (const item of collectResultNumbers(payload, labels)) {
-    const digits = item.number.split('');
-    if (!digits.every((digit) => aiDigitSet.has(digit))) continue;
-    const activeDigits = new Set(digits);
-    const activeIndexes = aiDigits
-      .map((digit, index) => ({digit, index}))
-      .filter((entry) => activeDigits.has(entry.digit))
-      .map((entry) => entry.index);
-    if (!bestByNumber.has(item.number)) {
-      bestByNumber.set(item.number, {number: item.number, prizeLabel: item.prizeLabel, activeIndexes});
-    }
-  }
-  return Array.from(bestByNumber.values());
-}
-
-export async function computeAiHitHistoryFromCloudflareHistory(
-  providerCode: string,
-  labels: AiHitPrizeLabels,
-  options?: {limit?: number}
-): Promise<AiHitHistoryState> {
-  const index = await fetchBestAvailableHistoryIndex(providerCode);
-  if (!index.ok) return {ok: false, providerCode, url: index.url, reason: index.reason};
-  const limit = options?.limit ?? 100;
-  const dates = index.payload.dates.slice(0, limit + 1);
-  const dailyStates = await Promise.all(dates.map((date) => fetchHistoryDaily(providerCode, date)));
-  const draws = dailyStates
-    .filter((state): state is Extract<ProviderResultState, {ok: true}> => state.ok)
-    .map((state) => state.payload)
-    .filter((payload) => payload.draw_date)
-    .sort((left, right) => String(left.draw_date).localeCompare(String(right.draw_date)));
-  const pairs: Array<{source: ProviderResultPayload; target: ProviderResultPayload}> = [];
-  for (let index = 0; index < draws.length - 1; index += 1) {
-    pairs.push({source: draws[index], target: draws[index + 1]});
-  }
-  const targetPairs = pairs.slice(-limit).reverse();
-  let hitCount = 0;
-  const records = targetPairs.map((pair, recordIndex) => {
-    const aiDigits = deriveCoreDigitsFromDraw(pair.source);
-    const hitMatches = classifyComputedHits(pair.target, aiDigits, labels);
-    hitCount += hitMatches.length;
-    return {
-      id: pair.target.draw_date || `${providerCode}-${recordIndex}`,
-      drawDate: pair.target.draw_date || '----',
-      aiDigits,
-      hitMatches
-    };
-  });
-  return {
-    ok: true,
-    providerCode,
-    url: index.url,
-    payload: {
-      providerCode,
-      hitCount,
-      totalPeriods: records.length,
-      records,
-      generatedAt: new Date().toISOString()
-    }
-  };
 }

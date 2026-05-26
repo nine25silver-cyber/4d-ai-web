@@ -8,7 +8,7 @@ import {AiRecommendationPreviewClient} from '@/components/AiRecommendationPrevie
 import {AiProviderSwitcher} from '@/components/AiProviderSwitcher';
 import {getRegion, regions} from '@/lib/providers';
 import {buildMetadata} from '@/lib/seo';
-import {computeAiHitHistoryFromCloudflareHistory, fetchAiHitHistory, fetchAiRecommendation, fetchProviderLatest} from '@/lib/cloudflare';
+import {fetchAiHitHistory, fetchAiRecommendation, fetchProviderLatest} from '@/lib/cloudflare';
 import type {Locale} from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
@@ -32,27 +32,17 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
   const provider = region?.providers.find((item) => item.code === providerCode);
   if (!region || !provider) notFound();
   const t = await getTranslations({locale, namespace: 'AI'});
-  const resultT = await getTranslations({locale, namespace: 'Results'});
+  const prizeLabels = getAiHitPrizeLabels(locale);
   const [latest, hitHistory, recommendation] = await Promise.all([
     fetchProviderLatest(provider.code),
     fetchAiHitHistory(provider.code),
     fetchAiRecommendation(provider.code)
   ]);
-  const computedHitHistory = hitHistory.ok ? hitHistory : await computeAiHitHistoryFromCloudflareHistory(provider.code, {
-    first: resultT('firstPrize'),
-    second: resultT('secondPrize'),
-    third: resultT('thirdPrize'),
-    special: resultT('specialPrize'),
-    consolation: resultT('consolationPrize')
-  });
-  const resolvedHitHistory = hitHistory.ok ? hitHistory : computedHitHistory;
   const sourceDebug = hitHistory.ok
     ? `source=server_cloudflare_ai_hit_history url=${hitHistory.url}`
-    : computedHitHistory.ok
-      ? `source=server_cloudflare_history_compute server_hit_url=${hitHistory.url} server_hit_reason=${hitHistory.reason} url=${computedHitHistory.url}`
-      : `source=client_fallback_only server_hit_url=${hitHistory.url} server_hit_reason=${hitHistory.reason} server_compute_url=${computedHitHistory.url} server_compute_reason=${computedHitHistory.reason}`;
+    : `source=server_cloudflare_ai_hit_history_unavailable url=${hitHistory.url} reason=${hitHistory.reason}`;
   const signal = latest.ok ? buildSignalSnapshot(latest.payload) : null;
-  const hitHistoryRows: AiHitHistoryRow[] = resolvedHitHistory.ok ? resolvedHitHistory.payload.records.map((record) => ({
+  const hitHistoryRows: AiHitHistoryRow[] = hitHistory.ok ? hitHistory.payload.records.map((record) => ({
     id: record.id,
     date: record.drawDate,
     sortKey: record.drawDate || '----',
@@ -63,7 +53,7 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
   const hitHistoryPanel = (
     <AiHitHistorySectionClient
       providerCode={provider.code}
-      initialHitCount={resolvedHitHistory.ok ? resolvedHitHistory.payload.hitCount : null}
+      initialHitCount={hitHistory.ok ? hitHistory.payload.hitCount : null}
       rows={hitHistoryRows}
       displayCount={hitHistoryRows.length}
       sourceDebug={sourceDebug}
@@ -76,6 +66,11 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
         hitPrizePlaceholder: t('hitPrizePlaceholder'),
         hitExpandLabel: t('hitExpandLabel'),
         hitCollapseLabel: t('hitCollapseLabel'),
+        firstPrizeLabel: prizeLabels.first,
+        secondPrizeLabel: prizeLabels.second,
+        thirdPrizeLabel: prizeLabels.third,
+        specialPrizeLabel: prizeLabels.special,
+        consolationPrizeLabel: prizeLabels.consolation,
         hitHistoryEyebrow: t('hitHistoryEyebrow'),
         hitHistoryTitle: t('hitHistoryTitle'),
         hitCountInlineLabel: t('hitCountInlineLabel'),
@@ -122,9 +117,9 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
         <AiRecommendationPreviewClient
           locale={locale}
           providerCode={provider.code}
-          providerName={provider.name}
-          providerShortName={provider.shortName}
-          coreDigits={signal?.coreDigits ?? []}
+      providerName={provider.name}
+      providerShortName={provider.shortName}
+          coreDigits={recommendation.ok ? recommendation.payload.coreDigits : []}
           recommendationNumbers={recommendation.ok ? recommendation.payload.numbers : []}
           afterCoreSlot={hitHistoryPanel}
           labels={{
@@ -193,6 +188,34 @@ function SignalCard({label, value}: {label: string; value: string}) {
   );
 }
 
+function getAiHitPrizeLabels(locale: Locale) {
+  if (locale === 'zh') {
+    return {
+      first: '头奖',
+      second: '二奖',
+      third: '三奖',
+      special: '特别奖',
+      consolation: '安慰奖'
+    };
+  }
+  if (locale === 'ms') {
+    return {
+      first: 'Hadiah Pertama',
+      second: 'Hadiah Kedua',
+      third: 'Hadiah Ketiga',
+      special: 'Hadiah Khas',
+      consolation: 'Hadiah Saguhati'
+    };
+  }
+  return {
+    first: 'First Prize',
+    second: 'Second Prize',
+    third: 'Third Prize',
+    special: 'Special',
+    consolation: 'Consolation'
+  };
+}
+
 function buildSignalSnapshot(payload: {
   draw_date?: string;
   draw_no?: string;
@@ -217,10 +240,6 @@ function buildSignalSnapshot(payload: {
     drawDate: payload.draw_date ?? '',
     drawNo: payload.draw_no ?? '',
     numberCount: numbers.length,
-    digitCounts: Array.from(digitMap.entries()).map(([digit, count]) => ({digit, count})),
-    coreDigits: Array.from(digitMap.entries())
-      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
-      .slice(0, 5)
-      .map(([digit]) => digit)
+    digitCounts: Array.from(digitMap.entries()).map(([digit, count]) => ({digit, count}))
   };
 }

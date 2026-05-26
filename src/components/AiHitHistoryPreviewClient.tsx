@@ -11,6 +11,11 @@ type Labels = {
   hitPrizePlaceholder: string;
   hitExpandLabel: string;
   hitCollapseLabel: string;
+  firstPrizeLabel: string;
+  secondPrizeLabel: string;
+  thirdPrizeLabel: string;
+  specialPrizeLabel: string;
+  consolationPrizeLabel: string;
 };
 
 type Props = {
@@ -216,7 +221,7 @@ async function loadFromCloudflare(providerCode: string): Promise<{rows: AiHitHis
 
 function toCloudflareRow(item: Record<string, unknown>, index: number): AiHitHistoryRow {
   const drawDate = String(item.draw_date ?? item.drawDate ?? '').trim() || '----';
-  const aiDigitsRaw = normalizeDigits(item.ai_top_digits ?? item.aiTopDigits ?? item.ai_digits ?? item.aiDigits);
+  const aiDigitsRaw = normalizeDigitsFromRecord(item);
   const aiDigits = [...aiDigitsRaw, '--', '--', '--', '--', '--'].slice(0, 5);
   const rawMatches = Array.isArray(item.hit_matches ?? item.hitMatches) ? (item.hit_matches ?? item.hitMatches) as unknown[] : [];
   const hitMatches: AiHitHistoryMatch[] = rawMatches
@@ -242,6 +247,23 @@ function toCloudflareRow(item: Record<string, unknown>, index: number): AiHitHis
   };
 }
 
+function normalizeDigitsFromRecord(item: Record<string, unknown>): string[] {
+  const sources = [
+    item.dynamicAiTopDigits,
+    item.dynamic_ai_top_digits,
+    item.aiTopDigits,
+    item.ai_top_digits,
+    item.aiDigits,
+    item.ai_digits,
+    item.core_digits
+  ];
+  for (const source of sources) {
+    const digits = normalizeDigits(source);
+    if (digits.length > 0) return digits;
+  }
+  return [];
+}
+
 function normalizeDigits(raw: unknown): string[] {
   if (Array.isArray(raw) && raw.length > 0 && /^\d$/.test(String(raw[0] ?? '').trim())) {
     return raw
@@ -255,14 +277,6 @@ function normalizeDigits(raw: unknown): string[] {
   return raw
     .map((item) => String(item ?? '').trim())
     .filter((item) => /^\d$/.test(item));
-}
-
-function activeIndexes(aiDigits: string[], number: string): number[] {
-  const hits = new Set(number.split(''));
-  return aiDigits
-    .map((digit, index) => ({digit, index}))
-    .filter((item) => hits.has(item.digit))
-    .map((item) => item.index);
 }
 
 function mergeRows(primary: AiHitHistoryRow[], fallback: AiHitHistoryRow[]): AiHitHistoryRow[] {
@@ -354,7 +368,7 @@ function ExpandedHitDetails({labels, row}: {labels: Labels; row: AiHitHistoryRow
         </div>
         <div>
           <p className="text-xs font-black uppercase text-slate-500">{labels.hitResultLabel}</p>
-          <WinningNumbers activeHitIndex={activeHitIndex} matches={hitMatches} prizePlaceholder={labels.hitPrizePlaceholder} />
+          <WinningNumbers activeHitIndex={activeHitIndex} labels={labels} matches={hitMatches} />
         </div>
       </div>
     </div>
@@ -381,7 +395,7 @@ function RecommendationNumbers({activeHitIndex, activeIndexes, digits}: {activeH
   );
 }
 
-function WinningNumbers({activeHitIndex, matches, prizePlaceholder}: {activeHitIndex: number; matches: AiHitHistoryMatch[]; prizePlaceholder: string}) {
+function WinningNumbers({activeHitIndex, labels, matches}: {activeHitIndex: number; labels: Labels; matches: AiHitHistoryMatch[]}) {
   if (matches.length === 1 && matches[0]?.number === '----' && !matches[0]?.prizeLabel) {
     return (
       <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-600">
@@ -391,18 +405,42 @@ function WinningNumbers({activeHitIndex, matches, prizePlaceholder}: {activeHitI
   }
   return (
     <div className="mt-2 flex flex-wrap gap-2">
-      {matches.map((match, index) => (
-        <span
-          key={index}
-          className={`rounded-lg border px-3 py-2 text-sm font-black ${
-            activeHitIndex === index
-              ? 'ai-hit-sequence-flash border-amber-300 bg-amber-50 text-amber-950'
-              : 'border-slate-200 bg-slate-50 text-slate-400'
-          }`}
-        >
-          {match.number || '----'} {match.prizeLabel || prizePlaceholder}
-        </span>
-      ))}
+      {matches.map((match, index) => {
+        const prize = localizePrizeLabel(match.prizeLabel, labels);
+        const hideNumber = prize.kind === 'special' || prize.kind === 'consolation';
+        return (
+          <span
+            key={index}
+            className={`rounded-lg border px-3 py-2 text-sm font-black ${
+              activeHitIndex === index
+                ? 'ai-hit-sequence-flash border-amber-300 bg-amber-50 text-amber-950'
+                : 'border-slate-200 bg-slate-50 text-slate-400'
+            }`}
+          >
+            {hideNumber ? prize.label : `${match.number || '----'} ${prize.label}`}
+          </span>
+        );
+      })}
     </div>
   );
+}
+
+function localizePrizeLabel(rawLabel: string, labels: Labels): {label: string; kind: 'first' | 'second' | 'third' | 'special' | 'consolation' | 'unknown'} {
+  const normalized = rawLabel.trim().toLowerCase().replace(/[_-]+/g, ' ');
+  if (/^(first|1st)(\s+prize)?$/.test(normalized) || normalized.includes('头奖') || normalized.includes('hadiah pertama')) {
+    return {label: labels.firstPrizeLabel, kind: 'first'};
+  }
+  if (/^(second|2nd)(\s+prize)?$/.test(normalized) || normalized.includes('二奖') || normalized.includes('hadiah kedua')) {
+    return {label: labels.secondPrizeLabel, kind: 'second'};
+  }
+  if (/^(third|3rd)(\s+prize)?$/.test(normalized) || normalized.includes('三奖') || normalized.includes('hadiah ketiga')) {
+    return {label: labels.thirdPrizeLabel, kind: 'third'};
+  }
+  if (normalized.startsWith('special') || normalized.includes('special numbers') || normalized.includes('特别奖') || normalized.includes('hadiah khas')) {
+    return {label: labels.specialPrizeLabel, kind: 'special'};
+  }
+  if (normalized.startsWith('consolation') || normalized.includes('consolation numbers') || normalized.includes('安慰奖') || normalized.includes('hadiah saguhati')) {
+    return {label: labels.consolationPrizeLabel, kind: 'consolation'};
+  }
+  return {label: rawLabel.trim() || labels.hitPrizePlaceholder, kind: 'unknown'};
 }
