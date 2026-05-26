@@ -50,6 +50,33 @@ These URLs intentionally pair each provider with its correct region.
 - High-risk provider pages load with the correct region/provider pairing listed above.
 - API smoke test at `/api/latest/west-malaysia` returns JSON and does not expose secrets.
 
+## Membership / Pro Gate Checks
+
+- Header badge:
+  - Pro account should show Pro.
+  - Free account or missing entitlement row should not be treated as Pro.
+- Account page:
+  - Supabase entitlement panel shows Pro/Free, source, and status.
+  - Missing entitlement row falls back to Free.
+- AI:
+  - Pro account can access Pro AI content.
+  - Free account or missing entitlement row is gated.
+  - Reward/ad unlock remains temporary and separate from Pro membership.
+- Hot/Cold:
+  - Pro account can use Pro feature.
+  - Reward unlock can temporarily unlock the feature.
+  - Unlock/status panel stays compact without large duplicate prompts.
+- Package Ranking:
+  - Pro account can use package ranking.
+  - Reward unlock can temporarily unlock the feature.
+  - Unlocked state should not show locked prompt copy.
+- Search:
+  - Basic search remains free.
+  - Copy/download require Pro.
+- Thousand Hits:
+  - Basic search remains free.
+  - Copy/download require Pro.
+
 ## Stop Conditions
 
 - Stop if a smoke test suggests a provider data contract mismatch.

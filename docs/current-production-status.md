@@ -94,7 +94,7 @@ Important URLs:
 ## Known Remaining Work
 
 - UI large redesign can start later by page/phase
-- Possible cleanup: unused old `PackageRankingToolClient.tsx`, only after read-only confirmation
+- Old unused `PackageRankingToolClient.tsx` cleanup completed; current route uses `PackageRankingToolClientV2`
 - Further member-state simplification can be separate small phase
 - Search Console / Bing Webmaster sitemap submission
 - OG image / favicon / SEO Phase 2 later after UI wording stabilizes
