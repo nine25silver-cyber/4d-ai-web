@@ -79,6 +79,7 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
       }}
     />
   );
+
   return (
     <main className="container-shell py-8">
       <Link href={`/${locale}/ai/${region.slug}`} className="text-sm font-bold text-blue-800 hover:text-blue-900">{t('backToRegion')}</Link>
@@ -114,13 +115,13 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
           )}
         </article>
       </section>
-        <AiRecommendationPreviewClient
-          locale={locale}
-          providerCode={provider.code}
-      providerName={provider.name}
-      providerShortName={provider.shortName}
-          coreDigits={recommendation.ok ? recommendation.payload.coreDigits : []}
-          recommendationNumbers={recommendation.ok ? recommendation.payload.numbers : []}
+      <AiRecommendationPreviewClient
+        locale={locale}
+        providerCode={provider.code}
+        providerName={provider.name}
+        providerShortName={provider.shortName}
+        coreDigits={recommendation.ok ? recommendation.payload.coreDigits : []}
+        recommendationNumbers={recommendation.ok ? recommendation.payload.coreDigits : []}
           afterCoreSlot={hitHistoryPanel}
           labels={{
             appCoreDigitsTitle: t('appCoreDigitsTitle'),
