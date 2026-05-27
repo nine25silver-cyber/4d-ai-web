@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type {Locale} from '@/i18n/routing';
 import type {RegionConfig} from '@/lib/providers';
 import {ProviderLogoBadge} from '@/components/ProviderLogoBadge';
@@ -22,7 +21,7 @@ export function AiProviderSwitcher({locale, regions, currentProviderCode, title}
         {providerRows.map(({region, provider}) => {
           const active = provider.code === currentProviderCode;
           return (
-            <Link
+            <a
               key={provider.code}
               href={`/${locale}/ai/${region.slug}/${provider.code}`}
               className={`rounded-lg border px-2 py-2 text-center transition ${
@@ -35,7 +34,7 @@ export function AiProviderSwitcher({locale, regions, currentProviderCode, title}
                 <ProviderLogoBadge provider={provider} sizeClassName="size-9" active={active} />
               </span>
               <span className="mt-1.5 block truncate text-xs font-black text-slate-900">{provider.shortName}</span>
-            </Link>
+            </a>
           );
         })}
       </div>
