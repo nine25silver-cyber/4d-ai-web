@@ -201,12 +201,34 @@ export function AiRecommendationPreviewClient({locale, providerName, providerSho
             <h2 className="text-lg font-black text-slate-950">{labels.appCoreDigitsTitle}</h2>
             <span className="text-xs font-black text-blue-700">{labels.detailAnalysis}</span>
           </div>
-          <div className="mt-4 grid grid-cols-[1fr_1fr_1fr] items-center gap-2">
-            {safeCoreDigits.map((digit, index) => (
-              <div key={`${digit}-${index}`} className={`grid place-items-center rounded-2xl border font-black text-slate-950 ${index === 4 ? 'col-start-2 h-14 border-amber-300 bg-amber-50 text-2xl' : 'h-14 border-slate-300 bg-slate-50 text-2xl'}`}>
-                {digit}
-              </div>
-            ))}
+          <div className="relative mx-auto mt-5 grid aspect-square w-full max-w-[260px] grid-cols-3 grid-rows-3 place-items-center">
+            <span aria-hidden="true" className="absolute left-1/2 top-[22%] h-[56%] w-px -translate-x-1/2 bg-blue-200" />
+            <span aria-hidden="true" className="absolute left-[22%] top-1/2 h-px w-[56%] -translate-y-1/2 bg-blue-200" />
+            {safeCoreDigits.map((digit, index) => {
+              const positionClass = [
+                'col-start-2 row-start-1',
+                'col-start-1 row-start-2',
+                'col-start-3 row-start-2',
+                'col-start-2 row-start-3',
+                'col-start-2 row-start-2'
+              ][index];
+              const isCenter = index === 4;
+              const sizeClass = isCenter
+                ? 'size-12 text-2xl sm:size-14 sm:text-3xl'
+                : 'size-16 text-3xl sm:size-20 sm:text-4xl';
+              return (
+                <div
+                  key={`${digit}-${index}`}
+                  className={`relative z-10 grid place-items-center rounded-full border-2 font-black text-slate-950 shadow-sm ${sizeClass} ${
+                    isCenter
+                      ? 'border-blue-300 bg-blue-50'
+                      : 'border-blue-400 bg-white'
+                  } ${positionClass}`}
+                >
+                  {digit}
+                </div>
+              );
+            })}
           </div>
           <p className="mt-3 text-xs font-bold leading-5 text-slate-500">{labels.coreDigitsPreviewNote}</p>
         </section>
