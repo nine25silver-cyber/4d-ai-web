@@ -407,7 +407,6 @@ function WinningNumbers({activeHitIndex, labels, matches}: {activeHitIndex: numb
     <div className="mt-2 flex flex-wrap gap-2">
       {matches.map((match, index) => {
         const prize = localizePrizeLabel(match.prizeLabel, labels);
-        const hideNumber = prize.kind === 'special' || prize.kind === 'consolation';
         return (
           <span
             key={index}
@@ -417,7 +416,7 @@ function WinningNumbers({activeHitIndex, labels, matches}: {activeHitIndex: numb
                 : 'border-slate-200 bg-slate-50 text-slate-400'
             }`}
           >
-            {hideNumber ? prize.label : `${match.number || '----'} ${prize.label}`}
+            {`${match.number || '----'} ${prize.label}`}
           </span>
         );
       })}
