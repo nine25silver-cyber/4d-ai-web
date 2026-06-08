@@ -30,7 +30,7 @@ type SearchIndexPayload = {
   results?: SearchIndexResult[];
 };
 
-const SEARCH_TEST_BASE_URL = 'https://data.4dai88.com/search_test/v1/4d';
+const SEARCH_TEST_BASE_URL = 'https://data.4dai88.com/search/v1/4d';
 const DEFAULT_LIMIT = 300;
 const MAX_LIMIT = 300;
 const providersByCode = new Map(regions.flatMap((region) => region.providers).map((provider) => [provider.code, provider]));
