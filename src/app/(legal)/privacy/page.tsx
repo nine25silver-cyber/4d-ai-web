@@ -36,6 +36,17 @@ const sections = [
     ]
   },
   {
+    title: 'Account Deletion',
+    body: [
+      'Users may request deletion of their 4D AI account and associated personal data by contacting:',
+      '4dai88@gmail.com',
+      'Please include the email address associated with your account.',
+      "Upon verification of the request, we will delete the user's account and associated personal data within 30 days, unless retention is required by law or for legitimate business purposes.",
+      "Google Play subscription purchases are managed by Google Play and must be cancelled through the user's Google Play account.",
+      'Users may request full account deletion. Partial data deletion while retaining the account is not currently supported.'
+    ]
+  },
+  {
     title: 'Contact and Updates',
     body: [
       'Users may contact 4dai88@gmail.com for privacy questions or account-related requests.',
@@ -50,7 +61,7 @@ export default function PrivacyPage() {
       <article className="mx-auto max-w-3xl rounded border border-slate-200 bg-white p-8 shadow-sm">
         <p className="text-sm font-semibold uppercase tracking-normal text-blue-700">4D AI</p>
         <h1 className="mt-3 text-3xl font-bold">4D AI Privacy Policy</h1>
-        <p className="mt-2 text-sm text-slate-600">Last updated: 2026-06-15</p>
+        <p className="mt-2 text-sm text-slate-600">Last updated: 2026-06-24</p>
 
         <div className="mt-8 space-y-7">
           {sections.map((section) => (
