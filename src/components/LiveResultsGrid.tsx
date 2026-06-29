@@ -9,6 +9,7 @@ import {resultCardLabels} from '@/lib/result-labels';
 
 type Props = {
   regionSlug: string;
+  refreshRegionSlugs?: string[];
   providers: ProviderConfig[];
   initialResults: ProviderResultState[];
 };
@@ -48,11 +49,12 @@ function pollIntervalMs(now = new Date()) {
   return isInDrawWindow(now) ? POLL_MS_DRAW_WINDOW : POLL_MS_NORMAL;
 }
 
-export function LiveResultsGrid({regionSlug, providers, initialResults}: Props) {
+export function LiveResultsGrid({regionSlug, refreshRegionSlugs, providers, initialResults}: Props) {
   const t = useTranslations('Results');
   const [results, setResults] = useState(initialResults);
   const [lastChecked, setLastChecked] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const apiRegionSlugs = useMemo(() => refreshRegionSlugs?.length ? refreshRegionSlugs : [regionSlug], [refreshRegionSlugs, regionSlug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,12 +65,12 @@ export function LiveResultsGrid({regionSlug, providers, initialResults}: Props) 
       running = true;
       setIsRefreshing(true);
       try {
-        const response = await fetch(`/api/latest/${regionSlug}`, {cache: 'no-store'});
-        if (!response.ok) return;
-        const data = (await response.json()) as LatestApiResponse;
-        if (cancelled || !Array.isArray(data.results)) return;
-        setResults((current) => (sameResults(current, data.results ?? []) ? current : data.results ?? current));
-        setLastChecked(data.updatedAt ?? new Date().toISOString());
+        const responses = await Promise.all(apiRegionSlugs.map((slug) => fetch(`/api/latest/${slug}`, {cache: 'no-store'})));
+        const payloads = await Promise.all(responses.filter((response) => response.ok).map((response) => response.json() as Promise<LatestApiResponse>));
+        const nextResults = payloads.flatMap((data) => Array.isArray(data.results) ? data.results : []);
+        if (cancelled || nextResults.length === 0) return;
+        setResults((current) => (sameResults(current, nextResults) ? current : nextResults));
+        setLastChecked(payloads.find((data) => data.updatedAt)?.updatedAt ?? new Date().toISOString());
       } finally {
         running = false;
         if (!cancelled) setIsRefreshing(false);
@@ -87,17 +89,21 @@ export function LiveResultsGrid({regionSlug, providers, initialResults}: Props) 
       cancelled = true;
       if (timeoutId !== null) window.clearTimeout(timeoutId);
     };
-  }, [regionSlug]);
+  }, [apiRegionSlugs]);
 
   const resultMap = useMemo(() => new Map(results.map((result) => [result.providerCode, result])), [results]);
   const labels: ResultCardLabels = resultCardLabels(t);
 
   return (
     <section>
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {providers.map((provider) => {
           const result = resultMap.get(provider.code) ?? {ok: false as const, providerCode: provider.code, url: '', reason: 'not_requested'};
-          return <ResultCard key={provider.code} provider={provider} result={result} labels={labels} />;
+          return (
+            <div key={provider.code} data-result-provider={provider.code}>
+              <ResultCard provider={provider} result={result} labels={labels} />
+            </div>
+          );
         })}
       </div>
     </section>

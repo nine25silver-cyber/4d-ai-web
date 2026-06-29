@@ -1,6 +1,6 @@
 {
   "Nav": {
-    "results": "今日4D成绩",
+    "results": "最新成绩",
     "history": "历史记录",
     "ai": "AI推荐",
     "tools": "工具",
@@ -13,12 +13,12 @@
   },
   "Home": {
     "metaTitle": "4D AI - 马来西亚、柬埔寨、新加坡4D成绩",
-    "metaDescription": "按地区查看今日4D成绩，使用 Cloudflare 数据，并准备 AI 工具与会员功能。",
-    "headline": "按地区查看今日4D成绩，同时为搜索排名和 AI 推荐入口打好基础。",
+    "metaDescription": "按市场查看最新4D成绩，使用 Cloudflare 数据，并准备 AI 工具与会员功能。",
+    "headline": "按市场查看最新4D成绩，同时为搜索排名和 AI 推荐入口打好基础。",
     "intro": "第一版先做好公开最新成绩，之后再加入历史记录、AI推荐、热门冷门、收藏号码和会员订阅。",
     "primaryCta": "查看成绩",
     "pricingCta": "会员配套",
-    "regionsTitle": "今日4D成绩",
+    "regionsTitle": "最新成绩",
     "historyTitle": "历史记录",
     "historyText": "历史页面会读取 Cloudflare 数据。Jackpot 历史等资料完整后才显示。",
     "aiTitle": "AI推荐号码",
@@ -27,10 +27,10 @@
     "toolsText": "号码搜索、热门冷门、组合排名和收藏号码会围绕公开成绩页面逐步完善。"
   },
   "Results": {
-    "metaTitle": "{region} 今日4D成绩 - 4D AI",
-    "metaDescription": "查看 {region} 今日4D成绩，包括日期、期号、三大奖、特别号和安慰奖。",
-    "eyebrow": "今日4D成绩",
-    "title": "{region} 今日4D成绩",
+    "metaTitle": "{region} 最新4D成绩 - 4D AI",
+    "metaDescription": "查看 {region} 最新4D成绩，包括日期、期号、三大奖、特别号和安慰奖。",
+    "eyebrow": "最新成绩",
+    "title": "{region} 最新4D成绩",
     "intro": "Provider 卡片会直接读取 Cloudflare latest JSON。读取失败时显示清楚状态，不显示假数据。",
     "liveLabel": "Live 开奖",
     "liveText": "每15秒自动读取 Cloudflare provider JSON，新号码会自动显示。",
@@ -375,7 +375,7 @@
     "freePlan": "免费版",
     "freePrice": "RM 0",
     "freeBadge": "公开访问",
-    "freePoint1": "今日4D成绩页面",
+    "freePoint1": "最新4D成绩页面",
     "freePoint2": "基础历史入口页面",
     "freePoint3": "有限 AI 预览页面",
     "freePoint4": "部分 AI 和工具公开预览",

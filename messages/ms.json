@@ -1,6 +1,6 @@
 {
   "Nav": {
-    "results": "Keputusan 4D Hari Ini",
+    "results": "Keputusan Terkini",
     "history": "Sejarah",
     "ai": "AI",
     "tools": "Alat",
@@ -13,12 +13,12 @@
   },
   "Home": {
     "metaTitle": "4D AI - Keputusan 4D Malaysia, Kemboja dan Singapura",
-    "metaDescription": "Semak keputusan 4D hari ini mengikut wilayah dengan data Cloudflare dan asas untuk alat AI.",
-    "headline": "Keputusan 4D hari ini mengikut wilayah, disediakan untuk carian, AI discovery dan alat ahli.",
+    "metaDescription": "Semak keputusan 4D terkini mengikut pasaran dengan data Cloudflare dan asas untuk alat AI.",
+    "headline": "Keputusan 4D terkini mengikut pasaran, disediakan untuk carian, AI discovery dan alat ahli.",
     "intro": "Versi pertama memaparkan keputusan terkini dahulu, kemudian sejarah, cadangan AI, nombor panas/sejuk, kegemaran dan langganan.",
     "primaryCta": "Lihat Keputusan",
     "pricingCta": "Pelan Ahli",
-    "regionsTitle": "Keputusan 4D Hari Ini",
+    "regionsTitle": "Keputusan Terkini",
     "historyTitle": "Sejarah",
     "historyText": "Halaman sejarah akan menggunakan data Cloudflare dan menyembunyikan sejarah jackpot sehingga data lengkap.",
     "aiTitle": "Cadangan AI",
@@ -27,10 +27,10 @@
     "toolsText": "Carian nombor, panas/sejuk, ranking dan nombor kegemaran dibina berdasarkan halaman keputusan awam."
   },
   "Results": {
-    "metaTitle": "Keputusan 4D {region} Hari Ini - 4D AI",
+    "metaTitle": "Keputusan 4D {region} Terkini - 4D AI",
     "metaDescription": "Keputusan 4D {region} terkini dengan tarikh cabutan, nombor cabutan dan hadiah utama.",
-    "eyebrow": "Keputusan 4D Hari Ini",
-    "title": "Keputusan 4D {region} Hari Ini",
+    "eyebrow": "Keputusan Terkini",
+    "title": "Keputusan 4D {region} Terkini",
     "intro": "Kad provider membaca Cloudflare latest JSON secara terus. Jika gagal, status akan dipaparkan tanpa data palsu.",
     "liveLabel": "Live",
     "liveText": "Auto refresh setiap 15 saat daripada Cloudflare provider JSON.",
