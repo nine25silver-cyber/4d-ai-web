@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 
 type Labels = {
   locked: string;
@@ -99,9 +99,9 @@ export function AiHitHistoryPreviewClient({providerCode, labels, hitCount, rows,
     void loadFallback();
   }, [providerCode, serverRows.length]);
 
-  const mergedRows = mergeRows(serverRows, fallbackRows);
-  const displayRows = mergedRows.length > 0 ? mergedRows : previewRows;
-  const serverHitCount = serverRows.reduce((sum, row) => sum + row.hitMatches.length, 0);
+  const mergedRows = useMemo(() => mergeRows(serverRows, fallbackRows), [fallbackRows, serverRows]);
+  const displayRows = useMemo(() => mergedRows.length > 0 ? mergedRows : previewRows, [mergedRows]);
+  const serverHitCount = useMemo(() => serverRows.reduce((sum, row) => sum + row.hitMatches.length, 0), [serverRows]);
   useEffect(() => {
     if (!onResolvedPeriods) return;
     onResolvedPeriods(mergedRows.length);
@@ -122,7 +122,7 @@ export function AiHitHistoryPreviewClient({providerCode, labels, hitCount, rows,
     const stillExists = displayRows.some((row) => row.id === expandedId);
     if (!stillExists) setExpandedId(displayRows[0].id);
   }, [displayRows, expandedId]);
-  const fallbackHitCount = fallbackRows.reduce((sum, row) => sum + row.hitMatches.length, 0);
+  const fallbackHitCount = useMemo(() => fallbackRows.reduce((sum, row) => sum + row.hitMatches.length, 0), [fallbackRows]);
   const countText = typeof hitCount === 'number'
     ? `${hitCount}`
     : serverRows.length > 0
