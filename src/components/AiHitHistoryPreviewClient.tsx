@@ -45,6 +45,8 @@ export type AiHitHistoryMatch = {
   activeIndexes: number[];
 };
 
+const emptyRows: AiHitHistoryRow[] = [];
+
 const previewRows = Array.from({length: 6}, (_, index) => ({
   id: `preview-${index}`,
   date: '----',
@@ -72,7 +74,7 @@ export function AiHitHistoryPreviewClient({providerCode, labels, hitCount, rows,
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [fallbackRows, setFallbackRows] = useState<AiHitHistoryRow[]>([]);
   const [fallbackStateText, setFallbackStateText] = useState<string>('');
-  const serverRows = rows ?? [];
+  const serverRows = rows ?? emptyRows;
 
   useEffect(() => {
     async function loadFallback() {
