@@ -117,46 +117,12 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
       </section>
       <AiRecommendationPreviewClient
         locale={locale}
-        providerCode={provider.code}
-        providerName={provider.name}
-        providerShortName={provider.shortName}
         coreDigits={recommendation.ok ? recommendation.payload.coreDigits : []}
-        recommendationNumbers={recommendation.ok ? recommendation.payload.coreDigits : []}
           afterCoreSlot={hitHistoryPanel}
           labels={{
             appCoreDigitsTitle: t('appCoreDigitsTitle'),
             detailAnalysis: t('detailAnalysis'),
             coreDigitsPreviewNote: t('coreDigitsPreviewNote'),
-            modeTitle: t('modeTitle'),
-            aiGeneratedMode: t('aiGeneratedMode'),
-            packageMode: t('packageMode'),
-            coldMode: t('coldMode'),
-            hotMode: t('hotMode'),
-            packageTypeLabel: t('packageTypeLabel'),
-            lookbackLabel: t('lookbackLabel'),
-            resultCountLabel: t('resultCountLabel'),
-            allHistory: t('allHistory'),
-            generateLockedButton: t('generateLockedButton'),
-            summaryTitle: t('summaryTitle'),
-            providerLabel: t('providerLabel'),
-            favoriteLabel: t('favoriteLabel'),
-            basisLabel: t('basisLabel'),
-            explanationLabel: t('explanationLabel'),
-            basisPrefix: t('basisPrefix'),
-            explanationPrefix: t('explanationPrefix'),
-            locked: t('locked'),
-            lockedPanelText: t('lockedPanelText'),
-            previewAiHeadline: t('previewAiHeadline'),
-            previewPackageHeadline: t('previewPackageHeadline', {type: '{type}'}),
-            previewColdHeadline: t('previewColdHeadline'),
-            previewHotHeadline: t('previewHotHeadline'),
-            previewBasisLocked: t('previewBasisLocked'),
-            previewExplanationLocked: t('previewExplanationLocked'),
-            recommendationUnavailable: locale === 'zh'
-              ? '该 provider 的 AI 推荐号码尚未接入，请先完成 Cloudflare AI recommendation JSON。'
-              : locale === 'ms'
-                ? 'Data nombor cadangan AI sebenar untuk provider ini belum disambung. Sila sambung Cloudflare AI recommendation JSON dahulu.'
-                : 'Real AI recommendation number data is not connected for this provider yet. Please connect Cloudflare AI recommendation JSON first.',
             proRequiredTitle: locale === 'zh' ? '需要 Pro 权限' : locale === 'ms' ? 'Perlu akses Pro' : 'Pro access required',
             proRequiredDescription: locale === 'zh'
               ? '完整 AI 推荐号码与最近100期命中详情仅开放给 Pro 会员。'
