@@ -35,25 +35,25 @@ export function SiteHeader({locale}: {locale: Locale}) {
   ];
   return (
     <header className="sticky top-0 z-30 border-b border-[#2b2b2b] bg-black/95 backdrop-blur">
-      <div className="container-shell relative flex min-h-16 flex-nowrap items-center justify-between gap-3 py-2">
-        <div className="ml-20 flex shrink-0 items-center gap-4">
-          <Link href={`${base}/account`} className="shrink-0 flex items-center font-black text-white">
-            <span className="relative block h-14 w-[470px] overflow-hidden">
+      <div className="container-shell grid min-h-16 grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 py-2 md:grid-cols-[auto_1fr_auto]">
+        <div className="flex min-w-0 shrink-0 items-center">
+          <Link href={`${base}/account`} className="flex min-w-0 shrink-0 items-center font-black text-white">
+            <span className="relative block h-14 w-[150px] overflow-hidden sm:w-[220px] lg:w-[280px]">
               <Image
                 src="/brand/web-logo-horizontal.png"
                 alt="4D AI Malaysia Results"
                 fill
-                sizes="470px"
+                sizes="(min-width: 1024px) 280px, (min-width: 640px) 220px, 150px"
                 className="object-contain object-left"
                 priority
               />
             </span>
           </Link>
         </div>
-        <nav className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-1 text-base font-semibold text-white">
-          {nav.map((item) => <Link key={item.href} href={item.href} className="pointer-events-auto rounded px-3 py-2 hover:bg-white/10">{item.label}</Link>)}
+        <nav className="relative z-10 col-span-2 flex min-w-0 items-center justify-start gap-1 overflow-x-auto text-sm font-semibold text-white md:col-span-1 md:justify-center md:text-base">
+          {nav.map((item) => <Link key={item.href} href={item.href} className="relative z-10 shrink-0 rounded px-3 py-2 hover:bg-white/10">{item.label}</Link>)}
         </nav>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center justify-self-end">
           <HeaderAccountActions
             locale={locale}
             labels={{
