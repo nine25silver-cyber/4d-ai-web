@@ -17,7 +17,7 @@ export function AiProviderLogoGrid({locale, regions, title, text}: Props) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-xl font-black text-slate-950">{title}</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{text}</p>
+          {text ? <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{text}</p> : null}
         </div>
         <span className="rounded-full bg-[#eff6ff] px-3 py-1 text-xs font-black text-[#1e3a8a]">AI</span>
       </div>

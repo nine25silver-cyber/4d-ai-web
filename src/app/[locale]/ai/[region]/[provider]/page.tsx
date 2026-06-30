@@ -33,7 +33,7 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
   if (!region || !provider) notFound();
   const t = await getTranslations({locale, namespace: 'AI'});
   const prizeLabels = getAiHitPrizeLabels(locale);
-  const [latest, hitHistory, recommendation] = await Promise.all([
+  const [, hitHistory, recommendation] = await Promise.all([
     fetchProviderLatest(provider.code),
     fetchAiHitHistory(provider.code),
     fetchAiRecommendation(provider.code)
@@ -41,7 +41,6 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
   const sourceDebug = hitHistory.ok
     ? `source=server_cloudflare_ai_hit_history url=${hitHistory.url}`
     : `source=server_cloudflare_ai_hit_history_unavailable url=${hitHistory.url} reason=${hitHistory.reason}`;
-  const signal = latest.ok ? buildSignalSnapshot(latest.payload) : null;
   const hitHistoryRows: AiHitHistoryRow[] = hitHistory.ok ? hitHistory.payload.records.map((record) => ({
     id: record.id,
     date: record.drawDate,
@@ -86,7 +85,6 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
       <section className="mt-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-bold uppercase text-blue-800">{region.label}</p>
         <h1 className="mt-2 text-3xl font-black text-slate-950">{t('providerTitle', {provider: provider.name})}</h1>
-        <p className="mt-3 max-w-3xl text-slate-600">{t('providerIntro')}</p>
       </section>
       <AiProviderSwitcher
         locale={locale}
@@ -95,26 +93,6 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
         title={locale === 'zh' ? '切换 Provider' : locale === 'ms' ? 'Tukar Provider' : 'Switch Provider'}
       />
 
-      <section className="mt-6">
-        <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-bold uppercase text-blue-800">{t('signalSourceEyebrow')}</p>
-              <h2 className="mt-2 text-xl font-black text-slate-950">{t('signalSourceTitle')}</h2>
-            </div>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">{latest.ok ? t('sourceReady') : t('sourceUnavailable')}</span>
-          </div>
-          {signal ? (
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <SignalCard label={t('latestDrawDate')} value={signal.drawDate || '-'} />
-              <SignalCard label={t('latestDrawNo')} value={signal.drawNo || '-'} />
-              <SignalCard label={t('numbersScanned')} value={String(signal.numberCount)} />
-            </div>
-          ) : (
-            <p className="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-800">{t('sourceUnavailableText')}</p>
-          )}
-        </article>
-      </section>
       <AiRecommendationPreviewClient
         locale={locale}
         coreDigits={recommendation.ok ? recommendation.payload.coreDigits : []}
@@ -146,15 +124,6 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
   );
 }
 
-function SignalCard({label, value}: {label: string; value: string}) {
-  return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-      <div className="text-xs font-black uppercase text-slate-500">{label}</div>
-      <div className="mt-2 text-lg font-black text-slate-950">{value}</div>
-    </div>
-  );
-}
-
 function getAiHitPrizeLabels(locale: Locale) {
   if (locale === 'zh') {
     return {
@@ -180,33 +149,5 @@ function getAiHitPrizeLabels(locale: Locale) {
     third: 'Third Prize',
     special: 'Special',
     consolation: 'Consolation'
-  };
-}
-
-function buildSignalSnapshot(payload: {
-  draw_date?: string;
-  draw_no?: string;
-  first_prize?: string;
-  second_prize?: string;
-  third_prize?: string;
-  special_numbers?: string[];
-  consolation_numbers?: string[];
-}) {
-  const numbers = [
-    payload.first_prize,
-    payload.second_prize,
-    payload.third_prize,
-    ...(payload.special_numbers ?? []),
-    ...(payload.consolation_numbers ?? [])
-  ].map((item) => String(item ?? '').replace(/\D/g, '')).filter((item) => item.length === 4);
-  const digitMap = new Map<string, number>(Array.from({length: 10}, (_, index) => [String(index), 0]));
-  for (const number of numbers) {
-    for (const digit of number) digitMap.set(digit, (digitMap.get(digit) ?? 0) + 1);
-  }
-  return {
-    drawDate: payload.draw_date ?? '',
-    drawNo: payload.draw_no ?? '',
-    numberCount: numbers.length,
-    digitCounts: Array.from(digitMap.entries()).map(([digit, count]) => ({digit, count}))
   };
 }

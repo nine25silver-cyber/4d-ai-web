@@ -10,11 +10,9 @@ import {
   consumeRewardCredit,
   getFeatureUnlockRemainingMinutes,
   isFeatureUnlockedNow,
-  readRewardState,
   subscribeRewardState,
   unlockFeatureForMinutes
 } from '@/lib/reward-unlock';
-import {FeatureAccessStatusBar} from '@/components/FeatureAccessStatusBar';
 
 type Props = {
   locale: string;
@@ -35,9 +33,9 @@ export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot
   const [memberState, setMemberState] = useState<MemberState | null>(null);
   const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
   const [entitlementLoading, setEntitlementLoading] = useState(true);
-  const [rewardCredits, setRewardCredits] = useState(0);
   const [adUnlocked, setAdUnlocked] = useState(false);
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
+  const rewardCredits = 0;
   const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
   const isUnlocked = isFormalPro || adUnlocked;
   const safeCoreDigits = useMemo(() => {
@@ -69,16 +67,15 @@ export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot
       unsubscribe();
     };
   }, []);
+  void lockedAccessText;
   useEffect(() => {
     const update = () => {
-      setRewardCredits(readRewardState().ai_full ?? 0);
       const active = isFeatureUnlockedNow('ai_full');
       setAdUnlocked(active);
       setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes('ai_full'));
     };
     update();
-    return subscribeRewardState((state) => {
-      setRewardCredits(state.ai_full ?? 0);
+    return subscribeRewardState(() => {
       const active = isFeatureUnlockedNow('ai_full');
       setAdUnlocked(active);
       setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes('ai_full'));
@@ -105,17 +102,6 @@ export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot
   return (
     <section className="mt-6 flex flex-col gap-6">
       <div className="grid min-w-0 gap-5">
-        <FeatureAccessStatusBar
-          locale={locale}
-          locked={!isUnlocked}
-          credits={rewardCredits}
-          minutesLeft={unlockMinutesLeft}
-          showLogin={!memberState?.loggedIn}
-          onLogin={() => void loginUser(locale)}
-          onUnlock={unlockByRewardedAd}
-          proHref={`/${locale}/pricing`}
-          lockedText={lockedAccessText}
-        />
         <section className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-black text-slate-950">{labels.appCoreDigitsTitle}</h2>
@@ -156,7 +142,7 @@ export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot
           <section className="rounded-[22px] border border-amber-300 bg-amber-50 p-5 shadow-sm">
             <h3 className="text-lg font-black text-slate-950">{labels.proRequiredTitle}</h3>
             <p className="mt-2 text-sm font-bold leading-6 text-slate-700">{labels.proRequiredDescription}</p>
-            <p className="mt-2 text-xs font-bold text-amber-800">
+            <p className="hidden">
               {locale === 'zh'
                 ? `可用广告解锁次数：${rewardCredits}`
                 : locale === 'ms'
