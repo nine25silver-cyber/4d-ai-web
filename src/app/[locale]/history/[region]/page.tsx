@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type {Metadata} from 'next';
 import {notFound, redirect} from 'next/navigation';
 import {getTranslations} from 'next-intl/server';
+import {HistoryAdBanner} from '@/components/HistoryAdBanner';
 import {HistoryResultsGrid} from '@/components/HistoryResultsGrid';
 import {fetchHistoryDaily, fetchRegionHistoryLatest30} from '@/lib/cloudflare';
 import {regions, type ProviderConfig} from '@/lib/providers';
@@ -111,7 +112,7 @@ export default async function RegionHistoryPage({params}: {params: Promise<{loca
           ))}
         </div>
       </div>
-      <div className="my-6 rounded-lg border border-dashed border-slate-300 bg-white p-4 text-center text-sm font-semibold text-slate-500">{t('jackpotHiddenNote')}</div>
+      <HistoryAdBanner />
       <HistoryResultsGrid locale={locale} providers={providers} initialIndexes={states} initialResults={initialResults} />
     </main>
   );
