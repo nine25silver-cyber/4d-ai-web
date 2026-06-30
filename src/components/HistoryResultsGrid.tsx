@@ -17,7 +17,7 @@ type Props = {
 
 type ResultCache = Record<string, ProviderResultState>;
 
-const buttonBase = 'rounded-md border px-3 py-2 text-sm font-black transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400';
+const buttonBase = 'rounded-md border px-2 py-1.5 text-xs font-black transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400';
 
 function cacheKey(providerCode: string, date: string) {
   return `${providerCode}|${date}`;
@@ -95,8 +95,8 @@ export function HistoryResultsGrid({locale, providers, initialIndexes, initialRe
   const dialogDates = dialogIndex?.ok ? sortDatesNewestFirst(dialogIndex.payload.dates).slice(0, 30) : [];
 
   return (
-    <section>
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+    <section className="mt-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-4">
         {providers.map((provider) => {
           const indexState = indexMap.get(provider.code);
           const dates = indexState?.ok ? sortDatesNewestFirst(indexState.payload.dates).slice(0, 30) : [];
@@ -110,7 +110,7 @@ export function HistoryResultsGrid({locale, providers, initialIndexes, initialRe
 
           return (
             <div key={provider.code} data-history-provider={provider.code}>
-              <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
+              <div className="mb-1.5 grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 rounded-md border border-slate-200 bg-white p-1.5 shadow-sm">
                 <button
                   type="button"
                   disabled={!previousDate}
@@ -123,10 +123,10 @@ export function HistoryResultsGrid({locale, providers, initialIndexes, initialRe
                   type="button"
                   disabled={dates.length === 0}
                   onClick={() => setDialogProviderCode(provider.code)}
-                  className={`${buttonBase} min-w-32 border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100`}
+                  className={`${buttonBase} min-w-28 border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100`}
                   aria-label={`${fallbackText(locale, 'chooseDate')} ${provider.name}`}
                 >
-                  <span className="block text-[11px] font-bold uppercase text-blue-700">{fallbackText(locale, 'chooseDate')}</span>
+                  <span className="block text-[10px] font-bold uppercase leading-3 text-blue-700">{fallbackText(locale, 'chooseDate')}</span>
                   <span className="block">{selectedDate || '-'}</span>
                 </button>
                 <button
@@ -138,7 +138,7 @@ export function HistoryResultsGrid({locale, providers, initialIndexes, initialRe
                   {historyT('nextDraw')}
                 </button>
               </div>
-              <ResultCard provider={provider} result={result} labels={labels} />
+              <ResultCard provider={provider} result={result} labels={labels} compact />
             </div>
           );
         })}

@@ -88,32 +88,30 @@ export default async function RegionHistoryPage({params}: {params: Promise<{loca
     return Promise.all(dates.map((date) => fetchHistoryDaily(state.providerCode, date)));
   }))).flat();
   return (
-    <main className="container-shell py-8">
-      <div className="flex flex-col gap-5 border-b border-slate-200 pb-6">
+    <main className="container-shell pt-2 pb-6">
+      <div className="flex flex-col gap-2 border-b border-slate-200 pb-2">
         <div>
-          <p className="text-sm font-bold uppercase text-blue-800">{t('eyebrow')}</p>
-          <h1 className="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">{t('regionTitle', {region: market.label})}</h1>
-          <p className="mt-3 max-w-3xl text-slate-600">{t('regionIntro')}</p>
+          <h1 className="text-xl font-black text-slate-950 sm:text-2xl">{t('regionTitle', {region: market.label})}</h1>
         </div>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3" data-market-tabs>
+        <div className="flex flex-wrap gap-1.5 rounded-md border border-slate-200 bg-white p-1" data-market-tabs>
           {historyMarkets.map((tab) => (
             <Link
               key={tab.slug}
               href={`/${locale}/history/${tab.slug}`}
               data-market-card={tab.slug}
-              className={`rounded-lg border p-5 shadow-sm transition hover:border-blue-300 ${
+              className={`rounded-md border px-2.5 py-1.5 text-xs font-black transition hover:border-blue-300 ${
                 market.slug === tab.slug
                   ? 'border-blue-500 bg-blue-50 text-blue-950 ring-1 ring-blue-200'
                   : 'border-slate-200 bg-white text-slate-700 hover:bg-blue-50'
               }`}
             >
-              <h2 className="text-lg font-black">{tab.label}</h2>
+              {tab.label}
             </Link>
           ))}
         </div>
       </div>
-      <HistoryAdBanner />
       <HistoryResultsGrid locale={locale} providers={providers} initialIndexes={states} initialResults={initialResults} />
+      <HistoryAdBanner />
     </main>
   );
 }
