@@ -15,7 +15,6 @@ export function AiProviderSwitcher({locale, regions, currentProviderCode, title}
     <section className="mt-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-base font-black text-slate-950">{title}</h2>
-        <span className="rounded-full bg-[#eff6ff] px-2.5 py-1 text-[11px] font-black text-[#1e3a8a]">AI</span>
       </div>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-9">
         {providerRows.map(({region, provider}) => {

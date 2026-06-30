@@ -24,7 +24,6 @@ export default async function AiPage({params}: {params: Promise<{locale: Locale}
     <main className="container-shell py-10">
       <StructuredData data={{'@context': 'https://schema.org', '@type': 'WebPage', name: t('title'), url: siteUrl(`/${locale}/ai`), about: ['4D AI prediction', '4D number analysis', 'Malaysia 4D']}} />
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-bold uppercase text-blue-800">4D AI</p>
         <h1 className="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">{t('title')}</h1>
         <p className="mt-4 max-w-3xl text-slate-600">{t('intro')}</p>
       </section>

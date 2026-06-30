@@ -81,7 +81,6 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
 
   return (
     <main className="container-shell py-8">
-      <Link href={`/${locale}/ai/${region.slug}`} className="text-sm font-bold text-blue-800 hover:text-blue-900">{t('backToRegion')}</Link>
       <section className="mt-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-bold uppercase text-blue-800">{region.label}</p>
         <h1 className="mt-2 text-3xl font-black text-slate-950">{t('providerTitle', {provider: provider.name})}</h1>

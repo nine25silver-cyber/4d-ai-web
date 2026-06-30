@@ -19,7 +19,6 @@ export function AiProviderLogoGrid({locale, regions, title, text}: Props) {
           <h2 className="text-xl font-black text-slate-950">{title}</h2>
           {text ? <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{text}</p> : null}
         </div>
-        <span className="rounded-full bg-[#eff6ff] px-3 py-1 text-xs font-black text-[#1e3a8a]">AI</span>
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

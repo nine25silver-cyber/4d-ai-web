@@ -29,7 +29,7 @@ export function SiteHeader({locale}: {locale: Locale}) {
   const nav = [
     {href: `${base}/results/west-malaysia`, label: t('results')},
     {href: `${base}/history`, label: t('history')},
-    {href: `${base}/ai`, label: t('ai')},
+    {href: `${base}/ai/west-malaysia/magnum`, label: t('ai')},
     {href: `${base}/tools`, label: t('tools')},
     {href: `${base}/pricing`, label: t('pricing')}
   ];
