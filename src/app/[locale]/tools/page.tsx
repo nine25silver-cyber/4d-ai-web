@@ -9,7 +9,6 @@ export const dynamic = 'force-dynamic';
 const pageKey = 'Tools';
 const pagePath = 'tools';
 const toolCards = ['numberSearch', 'thousandHits', 'digitMap', 'hotCold', 'packageRanking', 'favorites'] as const;
-const workflowCards = ['cloudflare', 'membership', 'ads'] as const;
 
 function extraCardCopy(locale: Locale) {
   return {
@@ -45,46 +44,20 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
   const {locale} = await params;
   const t = await getTranslations({locale, namespace: pageKey});
   const extra = extraCardCopy(locale);
-  const languageTitle =
-    locale === 'zh' ? '语言设置' : locale === 'ms' ? 'Tetapan bahasa' : 'Language';
-  const languageHint =
-    locale === 'zh'
-      ? '默认会跟随设备语言，你也可以在这里手动切换。'
-      : locale === 'ms'
-        ? 'Secara lalai ikut bahasa peranti. Anda juga boleh tukar di sini.'
-        : 'By default it follows device language. You can also switch here.';
   return (
-    <main className="container-shell py-10">
-      <section className="mb-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase text-blue-700">4D AI</p>
-            <h2 className="mt-1 text-lg font-black text-slate-950">{languageTitle}</h2>
-            <p className="mt-1 text-sm text-slate-600">{languageHint}</p>
-          </div>
-          <div className="flex rounded-md border border-[#d8c68d] bg-[#f8f3df] p-1 text-sm font-semibold">
-            <Link href="/en/tools" className={`rounded px-3 py-1.5 ${locale === 'en' ? 'bg-[#ebc978] text-white' : 'text-[#1f2b44] hover:bg-[#efe6c8]'}`}>EN</Link>
-            <Link href="/zh/tools" className={`rounded px-3 py-1.5 ${locale === 'zh' ? 'bg-[#ebc978] text-white' : 'text-[#1f2b44] hover:bg-[#efe6c8]'}`}>中</Link>
-            <Link href="/ms/tools" className={`rounded px-3 py-1.5 ${locale === 'ms' ? 'bg-[#ebc978] text-white' : 'text-[#1f2b44] hover:bg-[#efe6c8]'}`}>MY</Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-slate-200 pb-8">
-        <p className="text-sm font-bold uppercase text-blue-700">4D AI</p>
-        <div className="mt-2 grid gap-5 lg:grid-cols-[1fr_320px] lg:items-end">
-          <div>
+    <main>
+      <section className="bg-white py-16 sm:py-20">
+        <div className="container-shell">
+          <p className="text-sm font-bold uppercase text-blue-700">4D AI</p>
+          <div className="mt-2 max-w-3xl">
             <h1 className="text-3xl font-black text-slate-950 sm:text-4xl">{t('title')}</h1>
-            <p className="mt-4 max-w-3xl text-slate-600">{t('intro')}</p>
-          </div>
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="text-xs font-black uppercase text-blue-700">{t('statusEyebrow')}</div>
-            <p className="mt-2 text-sm leading-6 text-slate-700">{t('statusText')}</p>
+            <p className="mt-4 text-slate-600">{t('intro')}</p>
           </div>
         </div>
       </section>
 
-      <section className="mt-8 grid gap-4 lg:grid-cols-2">
+      <section className="bg-slate-50 py-14 sm:py-16">
+        <div className="container-shell grid gap-4 lg:grid-cols-2">
         {toolCards.map((tool) => {
           const href = tool === 'favorites'
               ? `/${locale}/tools/favorites`
@@ -135,25 +108,6 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
             </article>
           );
         })}
-      </section>
-
-      <section className="mt-8 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-bold uppercase text-blue-700">{t('workflowEyebrow')}</p>
-            <h2 className="mt-2 text-2xl font-black text-slate-950">{t('workflowTitle')}</h2>
-          </div>
-          <Link href={`/${locale}/pricing`} className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:border-blue-300">
-            {t('pricingCta')}
-          </Link>
-        </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
-          {workflowCards.map((item) => (
-            <div key={item} className="rounded-lg bg-slate-50 p-4">
-              <h3 className="font-black text-slate-950">{t(`${item}Title`)}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{t(`${item}Text`)}</p>
-            </div>
-          ))}
         </div>
       </section>
     </main>

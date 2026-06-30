@@ -2,29 +2,13 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import {usePathname} from 'next/navigation';
 import {useTranslations} from 'next-intl';
-import {routing, type Locale} from '@/i18n/routing';
+import type {Locale} from '@/i18n/routing';
 import {HeaderAccountActions} from '@/components/HeaderAccountActions';
-
-const localeLabels: Record<Locale, string> = {
-  en: 'EN',
-  zh: '中',
-  ms: 'MY'
-};
-
-function localizedPath(pathname: string, locale: Locale) {
-  const segments = pathname.split('/').filter(Boolean);
-  if (segments.length > 0 && routing.locales.includes(segments[0] as Locale)) {
-    segments[0] = locale;
-    return `/${segments.join('/')}`;
-  }
-  return `/${locale}${pathname === '/' ? '' : pathname}`;
-}
+import {LanguageSelector} from '@/components/LanguageSelector';
 
 export function SiteHeader({locale}: {locale: Locale}) {
   const t = useTranslations('Nav');
-  const pathname = usePathname();
   const base = `/${locale}`;
   const nav = [
     {href: `${base}/results/west-malaysia`, label: t('results')},
@@ -52,8 +36,10 @@ export function SiteHeader({locale}: {locale: Locale}) {
         </div>
         <nav className="relative z-10 col-span-2 flex min-w-0 items-center justify-start gap-1 overflow-x-auto text-sm font-semibold text-white md:col-span-1 md:justify-center md:text-base">
           {nav.map((item) => <Link key={item.href} href={item.href} className="relative z-10 shrink-0 rounded px-3 py-2 hover:bg-white/10">{item.label}</Link>)}
+          <LanguageSelector locale={locale} className="ml-auto shrink-0 md:hidden" />
         </nav>
-        <div className="flex shrink-0 items-center justify-self-end">
+        <div className="flex shrink-0 items-center gap-2 justify-self-end">
+          <LanguageSelector locale={locale} className="hidden md:flex" />
           <HeaderAccountActions
             locale={locale}
             labels={{
