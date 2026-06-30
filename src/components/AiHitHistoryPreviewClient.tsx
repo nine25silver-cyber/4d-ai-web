@@ -25,8 +25,6 @@ type Props = {
   rows?: AiHitHistoryRow[];
   onResolvedCount?: (count: number | null) => void;
   onResolvedPeriods?: (periods: number) => void;
-  onDebugTopRows?: (rows: string[]) => void;
-  onDebugStatus?: (status: string) => void;
 };
 
 export type AiHitHistoryRow = {
@@ -70,9 +68,10 @@ function buildCandidateUrls(providerCode: string): string[] {
   return Array.from(dedup);
 }
 
-export function AiHitHistoryPreviewClient({providerCode, labels, hitCount, rows, onResolvedCount, onResolvedPeriods, onDebugTopRows, onDebugStatus}: Props) {
+export function AiHitHistoryPreviewClient({providerCode, labels, hitCount, rows, onResolvedCount, onResolvedPeriods}: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [fallbackRows, setFallbackRows] = useState<AiHitHistoryRow[]>([]);
+  const [fallbackHitCount, setFallbackHitCount] = useState<number | null>(null);
   const [fallbackStateText, setFallbackStateText] = useState<string>('');
   const serverRows = rows ?? emptyRows;
 
@@ -81,21 +80,20 @@ export function AiHitHistoryPreviewClient({providerCode, labels, hitCount, rows,
       if (!providerCode) return;
       if (serverRows.length > 0) {
         setFallbackRows([]);
+        setFallbackHitCount(null);
         setFallbackStateText('');
-        onDebugStatus?.(`client_bypass=server_rows rows=${serverRows.length}`);
         return;
       }
       setFallbackStateText('Loading latest 100 records...');
       const fromCloudflare = await loadFromCloudflare(providerCode);
       if (fromCloudflare.rows.length > 0) {
         setFallbackRows(fromCloudflare.rows);
-        const status = `client_cloudflare=ok rows=${fromCloudflare.rows.length}`;
+        setFallbackHitCount(fromCloudflare.hitCount);
         setFallbackStateText(`Loaded ${fromCloudflare.rows.length} records (Cloudflare)`);
-        onDebugStatus?.(status);
         return;
       }
-      onDebugStatus?.(`client_cloudflare=failed reason=${fromCloudflare.reason}`);
       setFallbackRows([]);
+      setFallbackHitCount(null);
       setFallbackStateText('Cloudflare hit history temporarily unavailable');
     }
     void loadFallback();
@@ -103,19 +101,10 @@ export function AiHitHistoryPreviewClient({providerCode, labels, hitCount, rows,
 
   const mergedRows = useMemo(() => mergeRows(serverRows, fallbackRows), [fallbackRows, serverRows]);
   const displayRows = useMemo(() => mergedRows.length > 0 ? mergedRows : previewRows, [mergedRows]);
-  const serverHitCount = useMemo(() => serverRows.reduce((sum, row) => sum + row.hitMatches.length, 0), [serverRows]);
   useEffect(() => {
     if (!onResolvedPeriods) return;
     onResolvedPeriods(mergedRows.length);
   }, [mergedRows.length, onResolvedPeriods]);
-  useEffect(() => {
-    if (!onDebugTopRows) return;
-    onDebugTopRows(
-      mergedRows.slice(0, 5).map((row, index) =>
-        `${index + 1}. ${row.debugMeta ?? `draw_date=${row.date}`} | sortKey=${row.sortKey ?? '----'}`
-      )
-    );
-  }, [mergedRows, onDebugTopRows]);
   useEffect(() => {
     if (displayRows.length === 0) {
       setExpandedId(null);
@@ -124,12 +113,9 @@ export function AiHitHistoryPreviewClient({providerCode, labels, hitCount, rows,
     const stillExists = displayRows.some((row) => row.id === expandedId);
     if (!stillExists) setExpandedId(displayRows[0].id);
   }, [displayRows, expandedId]);
-  const fallbackHitCount = useMemo(() => fallbackRows.reduce((sum, row) => sum + row.hitMatches.length, 0), [fallbackRows]);
   const countText = typeof hitCount === 'number'
     ? `${hitCount}`
-    : serverRows.length > 0
-      ? `${serverHitCount}`
-    : fallbackRows.length > 0
+    : typeof fallbackHitCount === 'number'
       ? `${fallbackHitCount}`
       : labels.hitCountPendingValue;
   useEffect(() => {
@@ -138,16 +124,12 @@ export function AiHitHistoryPreviewClient({providerCode, labels, hitCount, rows,
       onResolvedCount(hitCount);
       return;
     }
-    if (serverRows.length > 0) {
-      onResolvedCount(serverHitCount);
-      return;
-    }
-    if (fallbackRows.length > 0) {
+    if (typeof fallbackHitCount === 'number') {
       onResolvedCount(fallbackHitCount);
       return;
     }
     onResolvedCount(null);
-  }, [fallbackHitCount, fallbackRows.length, hitCount, onResolvedCount, serverHitCount, serverRows.length]);
+  }, [fallbackHitCount, hitCount, onResolvedCount]);
 
   return (
     <div className="mt-5 space-y-3">
@@ -188,7 +170,7 @@ export function AiHitHistoryPreviewClient({providerCode, labels, hitCount, rows,
   );
 }
 
-async function loadFromCloudflare(providerCode: string): Promise<{rows: AiHitHistoryRow[]; reason: string}> {
+async function loadFromCloudflare(providerCode: string): Promise<{rows: AiHitHistoryRow[]; hitCount: number | null; reason: string}> {
   const candidateUrls = buildCandidateUrls(providerCode);
   let lastReason = 'request_failed';
   const cacheBuster = Math.floor(Date.now() / 10000).toString();
@@ -201,6 +183,7 @@ async function loadFromCloudflare(providerCode: string): Promise<{rows: AiHitHis
         continue;
       }
       const json = await response.json() as Record<string, unknown>;
+      const hitCount = normalizeRootNumber(json.hit_count ?? json.hitCount);
       const records = Array.isArray(json.records) ? json.records : [];
       const mappedRows = records
         .map((item, index) => toCloudflareRow(item as Record<string, unknown>, index))
@@ -211,6 +194,7 @@ async function loadFromCloudflare(providerCode: string): Promise<{rows: AiHitHis
       }
       return {
         rows: mappedRows,
+        hitCount,
         reason: `ok@${requestUrl}`
       };
     } catch (error) {
@@ -218,7 +202,11 @@ async function loadFromCloudflare(providerCode: string): Promise<{rows: AiHitHis
       lastReason = `${message}@${url}`;
     }
   }
-  return {rows: [], reason: lastReason};
+  return {rows: [], hitCount: null, reason: lastReason};
+}
+
+function normalizeRootNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
 function toCloudflareRow(item: Record<string, unknown>, index: number): AiHitHistoryRow {

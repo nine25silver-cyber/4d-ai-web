@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import type {ReactNode} from 'react';
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
 import {
@@ -17,7 +17,13 @@ import {
 type Props = {
   locale: string;
   coreDigits: string[];
-  afterCoreSlot?: ReactNode;
+  top3ExpertDigits: string[];
+  expertStats?: {
+    top3Expert: ExpertHitStats;
+    allRound: ExpertHitStats;
+  } | null;
+  top3HistorySlot?: ReactNode;
+  allRoundHistorySlot?: ReactNode;
   labels: {
     appCoreDigitsTitle: string;
     detailAnalysis: string;
@@ -42,22 +48,45 @@ type Props = {
   };
 };
 
-export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot, labels}: Props) {
+type ExpertMode = 'top3_expert' | 'all_round';
+
+type ExpertHitStats = {
+  top3Hits: number | null;
+  specialHits: number | null;
+  consoHits: number | null;
+  totalHits: number | null;
+};
+
+type ExpertCardCopy = {
+  sectionTitle: string;
+  top3ExpertTitle: string;
+  allRoundTitle: string;
+  recordWindow: string;
+  top3Match: string;
+  specialMatch: string;
+  consoMatch: string;
+  coreDigits: string;
+  totalMatch: string;
+  timesUnit: string;
+  viewRecords: string;
+};
+
+export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDigits, expertStats, top3HistorySlot, allRoundHistorySlot, labels}: Props) {
   const [memberState, setMemberState] = useState<MemberState | null>(null);
   const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
   const [entitlementLoading, setEntitlementLoading] = useState(true);
   const [adUnlocked, setAdUnlocked] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [selectedExpertMode, setSelectedExpertMode] = useState<ExpertMode>('top3_expert');
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
+  const recordsRef = useRef<HTMLDivElement | null>(null);
   const rewardCredits = 0;
   const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
   const isUnlocked = isFormalPro || adUnlocked;
-  const safeCoreDigits = useMemo(() => {
-    if (!isUnlocked) return ['-', '-', '-', '-', '-'];
-    if (coreDigits.length >= 5) return coreDigits.slice(0, 5);
-    return [...coreDigits, '-', '-', '-', '-', '-'].slice(0, 5);
-  }, [coreDigits, isUnlocked]);
-  const guideDigits = useMemo(() => safeCoreDigits.filter((digit) => /^\d$/.test(digit)), [safeCoreDigits]);
+  const allRoundDigits = useMemo(() => toFiveDigits(coreDigits), [coreDigits]);
+  const top3Digits = useMemo(() => toFiveDigits(top3ExpertDigits), [top3ExpertDigits]);
+  const guideDigits = useMemo(() => allRoundDigits.filter((digit) => /^\d$/.test(digit)), [allRoundDigits]);
+  const expertCopy = useMemo(() => getExpertCardCopy(locale), [locale]);
   const lockedAccessText = entitlementLoading
     ? (locale === 'zh' ? '正在确认会员权限；也可通过广告临时解锁。' : locale === 'ms' ? 'Sedang menyemak akses ahli; iklan masih boleh membuka akses sementara.' : 'Checking membership access; ad unlock remains available.')
     : (locale === 'zh' ? 'AI 完整推荐仅开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Cadangan AI penuh hanya untuk Pro atau buka sementara melalui iklan.' : 'Full AI recommendations are for Pro or temporary ad unlock.');
@@ -114,12 +143,18 @@ export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot
       setUnlockMinutesLeft(30);
     }
   }
+  function showRecords(mode: ExpertMode) {
+    setSelectedExpertMode(mode);
+    window.setTimeout(() => {
+      recordsRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
+    }, 0);
+  }
   return (
     <section className="mt-6 flex flex-col gap-6">
       <div className="grid min-w-0 gap-5">
         <section className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-black text-slate-950">{labels.appCoreDigitsTitle}</h2>
+            <h2 className="text-lg font-black text-slate-950">{expertCopy.sectionTitle}</h2>
             <button
               type="button"
               onClick={() => setGuideOpen((current) => !current)}
@@ -130,38 +165,28 @@ export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot
             </button>
           </div>
           {guideOpen ? <CoreDigitsGuide digits={guideDigits} labels={labels} /> : null}
-          <div className="relative mx-auto mt-5 grid aspect-square w-full max-w-[260px] grid-cols-3 grid-rows-3 place-items-center">
-            <span aria-hidden="true" className="absolute left-1/2 top-[22%] h-[56%] w-px -translate-x-1/2 bg-blue-200" />
-            <span aria-hidden="true" className="absolute left-[22%] top-1/2 h-px w-[56%] -translate-y-1/2 bg-blue-200" />
-            {safeCoreDigits.map((digit, index) => {
-              const positionClass = [
-                'col-start-2 row-start-1',
-                'col-start-1 row-start-2',
-                'col-start-3 row-start-2',
-                'col-start-2 row-start-3',
-                'col-start-2 row-start-2'
-              ][index];
-              const isCenter = index === 4;
-              const sizeClass = isCenter
-                ? 'size-12 text-2xl sm:size-14 sm:text-3xl'
-                : 'size-16 text-3xl sm:size-20 sm:text-4xl';
-              return (
-                <div
-                  key={`${digit}-${index}`}
-                  className={`relative z-10 grid place-items-center rounded-full border-2 font-black text-slate-950 shadow-sm ${sizeClass} ${
-                    isCenter
-                      ? 'border-blue-300 bg-blue-50'
-                      : 'border-blue-400 bg-white'
-                  } ${positionClass}`}
-                >
-                  {digit}
-                </div>
-              );
-            })}
+          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+            <ExpertRecommendationCard
+              title={expertCopy.top3ExpertTitle}
+              digits={top3Digits}
+              stats={expertStats?.top3Expert ?? null}
+              copy={expertCopy}
+              onViewRecords={() => showRecords('top3_expert')}
+            />
+            <ExpertRecommendationCard
+              title={expertCopy.allRoundTitle}
+              digits={allRoundDigits}
+              stats={expertStats?.allRound ?? null}
+              copy={expertCopy}
+              onViewRecords={() => showRecords('all_round')}
+            />
           </div>
           <p className="mt-3 text-xs font-bold leading-5 text-slate-500">{labels.coreDigitsPreviewNote}</p>
         </section>
-        {isUnlocked ? afterCoreSlot : (
+        <div id="ai-hit-history-details" ref={recordsRef}>
+          {selectedExpertMode === 'top3_expert' ? top3HistorySlot : allRoundHistorySlot}
+        </div>
+        {!isUnlocked ? (
           <section className="rounded-[22px] border border-amber-300 bg-amber-50 p-5 shadow-sm">
             <h3 className="text-lg font-black text-slate-950">{labels.proRequiredTitle}</h3>
             <p className="mt-2 text-sm font-bold leading-6 text-slate-700">{labels.proRequiredDescription}</p>
@@ -195,11 +220,111 @@ export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot
               </Link>
             </div>
           </section>
-        )}
+        ) : null}
 
       </div>
     </section>
   );
+}
+
+function ExpertRecommendationCard({title, digits, stats, copy, onViewRecords}: {title: string; digits: string[]; stats: ExpertHitStats | null; copy: ExpertCardCopy; onViewRecords: () => void}) {
+  const metricRows = [
+    {label: copy.top3Match, value: stats?.top3Hits ?? null},
+    {label: copy.specialMatch, value: stats?.specialHits ?? null},
+    {label: copy.consoMatch, value: stats?.consoHits ?? null}
+  ];
+  const totalText = formatExpertCount(stats?.totalHits ?? null);
+  return (
+    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-xl font-black text-slate-950">{title}</h3>
+          <p className="mt-1 text-sm font-black text-blue-800">{copy.recordWindow}</p>
+        </div>
+        <button type="button" onClick={onViewRecords} className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-black text-blue-800 hover:bg-blue-100">
+          {copy.viewRecords}
+        </button>
+      </div>
+      <div className="mt-5 grid gap-3">
+        {metricRows.map((row) => (
+          <div key={row.label} className="flex items-center justify-between gap-4 rounded-md border border-slate-100 bg-slate-50 px-3 py-2">
+            <span className="text-sm font-black text-slate-700">{row.label}</span>
+            <span className="text-2xl font-black text-slate-950">{formatExpertCount(row.value)}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 rounded-md border border-blue-100 bg-blue-50 p-3">
+        <p className="text-sm font-black text-slate-700">{copy.coreDigits}</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {digits.map((digit, index) => (
+            <span key={`${digit}-${index}`} className="grid size-10 place-items-center rounded-full border border-blue-300 bg-white text-lg font-black text-blue-950">
+              {digit}
+            </span>
+          ))}
+        </div>
+      </div>
+      <p className="mt-5 rounded-md bg-slate-950 px-3 py-3 text-center text-base font-black text-white">
+        {copy.totalMatch} {totalText}{totalText === '--' ? '' : ` ${copy.timesUnit}`}
+      </p>
+    </article>
+  );
+}
+
+function toFiveDigits(digits: string[]) {
+  const normalized = digits
+    .map((digit) => String(digit ?? '').replace(/\D/g, '').slice(0, 1))
+    .filter(Boolean);
+  return [...normalized, '-', '-', '-', '-', '-'].slice(0, 5);
+}
+
+function formatExpertCount(value: number | null) {
+  return typeof value === 'number' && Number.isFinite(value) ? `${value}` : '--';
+}
+
+function getExpertCardCopy(locale: string): ExpertCardCopy {
+  if (locale === 'zh') {
+    return {
+      sectionTitle: 'AI专家推荐',
+      top3ExpertTitle: 'Top3专家',
+      allRoundTitle: '全方位专家',
+      recordWindow: '100期分析记录',
+      top3Match: 'Top3匹配',
+      specialMatch: '特别奖匹配',
+      consoMatch: '安慰奖匹配',
+      coreDigits: '4+1核心数字',
+      totalMatch: '最近100期四配',
+      timesUnit: '次',
+      viewRecords: '查看完整结果记录'
+    };
+  }
+  if (locale === 'ms') {
+    return {
+      sectionTitle: 'Cadangan Pakar AI',
+      top3ExpertTitle: 'Pakar Top3',
+      allRoundTitle: 'Pakar Menyeluruh',
+      recordWindow: 'Analisis 100 cabutan',
+      top3Match: 'Padanan Top3',
+      specialMatch: 'Padanan Khas',
+      consoMatch: 'Padanan Saguhati',
+      coreDigits: 'Digit teras 4+1',
+      totalMatch: 'Jumlah 4 padanan 100 cabutan',
+      timesUnit: 'kali',
+      viewRecords: 'Lihat rekod penuh'
+    };
+  }
+  return {
+    sectionTitle: 'AI Expert Recommendations',
+    top3ExpertTitle: 'Top3 Expert',
+    allRoundTitle: 'All-round Expert',
+    recordWindow: '100-draw analysis record',
+    top3Match: 'Top3 matches',
+    specialMatch: 'Special matches',
+    consoMatch: 'Consolation matches',
+    coreDigits: '4+1 core digits',
+    totalMatch: 'Recent 100-draw total',
+    timesUnit: 'times',
+    viewRecords: 'View full result history'
+  };
 }
 
 function CoreDigitsGuide({digits, labels}: {digits: string[]; labels: Props['labels']}) {

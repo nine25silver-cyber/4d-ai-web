@@ -89,11 +89,31 @@ export type AiHitHistoryState =
   | {ok: true; providerCode: string; url: string; payload: AiHitHistoryPayload}
   | {ok: false; providerCode: string; url: string; reason: string};
 
+export type AiExpertHitStats = {
+  top3Hits: number | null;
+  specialHits: number | null;
+  consoHits: number | null;
+  totalHits: number | null;
+};
+
+export type AiHitHistoryReplayPayload = {
+  providerCode: string;
+  totalPeriods: number | null;
+  allRound: AiExpertHitStats;
+  top3Expert: AiExpertHitStats;
+  generatedAt?: string;
+};
+
+export type AiHitHistoryReplayState =
+  | {ok: true; providerCode: string; url: string; payload: AiHitHistoryReplayPayload}
+  | {ok: false; providerCode: string; url: string; reason: string};
+
 export type AiRecommendationPayload = {
   providerCode: string;
   drawDate?: string;
   drawNo?: string;
   coreDigits: string[];
+  top3ExpertDigits: string[];
   numbers: string[];
   generatedAt?: string;
 };
@@ -106,6 +126,9 @@ const latestBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_LATEST_BASE_URL ?? 'htt
 const historyBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_HISTORY_BASE_URL ?? 'https://data.4dai88.com/history_test';
 const historyTestBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_HISTORY_TEST_BASE_URL ?? 'https://data.4dai88.com/history_test';
 const aiHitHistoryBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_AI_HIT_HISTORY_BASE_URL ?? 'https://data.4dai88.com/ai_hit_history';
+const aiHitHistoryReplayBaseUrl = (process.env.CLOUDFLARE_AI_HIT_HISTORY_REPLAY_BASE_URL && process.env.CLOUDFLARE_AI_HIT_HISTORY_REPLAY_BASE_URL.trim().length > 0
+  ? process.env.CLOUDFLARE_AI_HIT_HISTORY_REPLAY_BASE_URL
+  : process.env.NEXT_PUBLIC_CLOUDFLARE_AI_HIT_HISTORY_REPLAY_BASE_URL) ?? 'https://data.4dai88.com/ai_hit_history_replay';
 const aiRecommendationBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_AI_RECOMMENDATION_BASE_URL && process.env.NEXT_PUBLIC_CLOUDFLARE_AI_RECOMMENDATION_BASE_URL.trim().length > 0
   ? process.env.NEXT_PUBLIC_CLOUDFLARE_AI_RECOMMENDATION_BASE_URL
   : 'https://data.4dai88.com/ai_recommendations';
@@ -159,7 +182,7 @@ function normalizeAiTopDigitsFromValue(value: unknown): string[] {
   const digits = raw
     .flatMap((item) => item.replace(/\D/g, '').split(''))
     .filter((item) => /^\d$/.test(item));
-  return Array.from(new Set(digits)).sort((left, right) => left.localeCompare(right)).slice(0, 5);
+  return Array.from(new Set(digits)).slice(0, 5);
 }
 
 function normalizeAiTopDigitsFromRecord(map: Record<string, unknown>): string[] {
@@ -313,9 +336,48 @@ function normalizeAiHitHistory(providerCode: string, raw: unknown): AiHitHistory
     .filter((record) => record.aiDigits.length > 0 || record.hitMatches.length > 0);
   return {
     providerCode: String(map.provider_code ?? map.providerCode ?? providerCode),
-    hitCount: Number.isFinite(Number(map.hit_count ?? map.hitCount)) ? Number(map.hit_count ?? map.hitCount) : null,
+    hitCount: normalizeRootNumber(map.hit_count ?? map.hitCount),
     totalPeriods: Number.isFinite(Number(map.total_periods ?? map.totalPeriods)) ? Number(map.total_periods ?? map.totalPeriods) : null,
     records,
+    generatedAt: String(map.generated_at ?? map.generatedAt ?? '').trim() || undefined
+  };
+}
+
+function normalizeRootNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function normalizeRootCount(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  return Math.trunc(value);
+}
+
+function sumCounts(parts: Array<number | null>): number | null {
+  return parts.every((part): part is number => typeof part === 'number')
+    ? parts.reduce((sum, part) => sum + part, 0)
+    : null;
+}
+
+function normalizeAiExpertHitStats(map: Record<string, unknown>, prefix: 'all_round' | 'top3_expert', camelPrefix: 'allRound' | 'top3Expert'): AiExpertHitStats {
+  const top3Hits = normalizeRootCount(map[`${prefix}_top3_total_hits`] ?? map[`${camelPrefix}Top3TotalHits`]);
+  const specialHits = normalizeRootCount(map[`${prefix}_special_total_hits`] ?? map[`${camelPrefix}SpecialTotalHits`]);
+  const consoHits = normalizeRootCount(map[`${prefix}_conso_total_hits`] ?? map[`${camelPrefix}ConsoTotalHits`]);
+  return {
+    top3Hits,
+    specialHits,
+    consoHits,
+    totalHits: sumCounts([top3Hits, specialHits, consoHits])
+  };
+}
+
+function normalizeAiHitHistoryReplay(providerCode: string, raw: unknown): AiHitHistoryReplayPayload | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const map = raw as Record<string, unknown>;
+  return {
+    providerCode: String(map.provider_code ?? map.providerCode ?? providerCode),
+    totalPeriods: normalizeRootCount(map.total_periods ?? map.totalPeriods),
+    allRound: normalizeAiExpertHitStats(map, 'all_round', 'allRound'),
+    top3Expert: normalizeAiExpertHitStats(map, 'top3_expert', 'top3Expert'),
     generatedAt: String(map.generated_at ?? map.generatedAt ?? '').trim() || undefined
   };
 }
@@ -324,6 +386,7 @@ function normalizeAiRecommendation(providerCode: string, raw: unknown): AiRecomm
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const map = raw as Record<string, unknown>;
   const coreDigits = normalizeAiTopDigitsFromRecord(map);
+  const top3ExpertDigits = normalizeTop3ExpertDigits(map);
   const candidates: unknown[] = [];
   if (Array.isArray(map.recommendations)) candidates.push(...map.recommendations);
   if (Array.isArray(map.numbers)) candidates.push(...map.numbers);
@@ -338,9 +401,23 @@ function normalizeAiRecommendation(providerCode: string, raw: unknown): AiRecomm
     drawDate: String(map.draw_date ?? map.drawDate ?? '').trim() || undefined,
     drawNo: String(map.draw_no ?? map.drawNo ?? '').trim() || undefined,
     coreDigits,
+    top3ExpertDigits,
     numbers,
     generatedAt: String(map.generated_at ?? map.generatedAt ?? '').trim() || undefined
   };
+}
+
+function normalizeTop3ExpertDigits(map: Record<string, unknown>): string[] {
+  const strategies = Array.isArray(map.experimentalStrategies ?? map.experimental_strategies)
+    ? (map.experimentalStrategies ?? map.experimental_strategies) as unknown[]
+    : [];
+  const strategy = strategies.find((item): item is Record<string, unknown> =>
+    Boolean(item) &&
+    typeof item === 'object' &&
+    !Array.isArray(item) &&
+    String((item as Record<string, unknown>).id ?? '').trim() === 'top3_expert'
+  );
+  return strategy ? normalizeAiTopDigitsFromValue(strategy.digits) : [];
 }
 
 export async function fetchProviderLatest(providerCode: string, options?: {cache?: 'revalidate' | 'no-store'}): Promise<ProviderResultState> {
@@ -453,6 +530,43 @@ export async function fetchAiHitHistory(providerCode: string): Promise<AiHitHist
         continue;
       }
       const payload = normalizeAiHitHistory(providerCode, decoded);
+      if (!payload) {
+        lastReason = 'invalid_json_shape';
+        continue;
+      }
+      return {ok: true, providerCode, url, payload};
+    } catch (error) {
+      lastReason = compactErrorReason(error);
+    }
+  }
+  return {ok: false, providerCode, url: lastUrl, reason: lastReason};
+}
+
+export async function fetchAiHitHistoryReplay(providerCode: string): Promise<AiHitHistoryReplayState> {
+  const candidates = buildCandidateUrls([
+    process.env.CLOUDFLARE_AI_HIT_HISTORY_REPLAY_BASE_URL ?? '',
+    process.env.NEXT_PUBLIC_CLOUDFLARE_AI_HIT_HISTORY_REPLAY_BASE_URL ?? '',
+    aiHitHistoryReplayBaseUrl
+  ], providerCode);
+  if (candidates.length === 0) {
+    return {ok: false, providerCode, url: '', reason: 'not_configured'};
+  }
+  let lastUrl = candidates[0] ?? '';
+  let lastReason = 'request_failed';
+  for (const url of candidates) {
+    lastUrl = url;
+    try {
+      const response = await fetch(url, {cache: 'no-store', headers: {accept: 'application/json'}});
+      if (!response.ok) {
+        lastReason = `status_${response.status}`;
+        continue;
+      }
+      const decoded = parseJsonSafely(await response.text());
+      if (!decoded) {
+        lastReason = 'invalid_json';
+        continue;
+      }
+      const payload = normalizeAiHitHistoryReplay(providerCode, decoded);
       if (!payload) {
         lastReason = 'invalid_json_shape';
         continue;
