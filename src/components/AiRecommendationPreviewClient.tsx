@@ -27,7 +27,6 @@ type Props = {
   labels: {
     appCoreDigitsTitle: string;
     detailAnalysis: string;
-    coreDigitsPreviewNote: string;
     coreDigitsGuideAction: string;
     coreDigitsGuideTitle: string;
     coreDigitsGuideBody: string;
@@ -150,22 +149,22 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
     }, 0);
   }
   return (
-    <section className="mt-6 flex flex-col gap-6">
-      <div className="grid min-w-0 gap-5">
-        <section className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-black text-slate-950">{expertCopy.sectionTitle}</h2>
+    <section className="mt-2 flex flex-col gap-3">
+      <div className="grid min-w-0 gap-3">
+        <section className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-black text-slate-950">{expertCopy.sectionTitle}</h2>
             <button
               type="button"
               onClick={() => setGuideOpen((current) => !current)}
               aria-expanded={guideOpen}
-              className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-800 hover:bg-blue-100"
+              className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-black text-blue-800 hover:bg-blue-100"
             >
               {labels.coreDigitsGuideAction}
             </button>
           </div>
           {guideOpen ? <CoreDigitsGuide digits={guideDigits} labels={labels} /> : null}
-          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <div className="mt-2 grid gap-2.5 lg:grid-cols-2">
             <ExpertRecommendationCard
               title={expertCopy.top3ExpertTitle}
               digits={top3Digits}
@@ -181,13 +180,12 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
               onViewRecords={() => showRecords('all_round')}
             />
           </div>
-          <p className="mt-3 text-xs font-bold leading-5 text-slate-500">{labels.coreDigitsPreviewNote}</p>
         </section>
         <div id="ai-hit-history-details" ref={recordsRef}>
           {selectedExpertMode === 'top3_expert' ? top3HistorySlot : allRoundHistorySlot}
         </div>
         {!isUnlocked ? (
-          <section className="rounded-[22px] border border-amber-300 bg-amber-50 p-5 shadow-sm">
+          <section className="rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-sm">
             <h3 className="text-lg font-black text-slate-950">{labels.proRequiredTitle}</h3>
             <p className="mt-2 text-sm font-bold leading-6 text-slate-700">{labels.proRequiredDescription}</p>
             <p className="hidden">
@@ -235,35 +233,35 @@ function ExpertRecommendationCard({title, digits, stats, copy, onViewRecords}: {
   ];
   const totalText = formatExpertCount(stats?.totalHits ?? null);
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <article className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-1.5">
         <div>
-          <h3 className="text-xl font-black text-slate-950">{title}</h3>
-          <p className="mt-1 text-sm font-black text-blue-800">{copy.recordWindow}</p>
+          <h3 className="text-base font-black text-slate-950">{title}</h3>
+          <p className="text-[11px] font-black leading-4 text-blue-800">{copy.recordWindow}</p>
         </div>
-        <button type="button" onClick={onViewRecords} className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-black text-blue-800 hover:bg-blue-100">
+        <button type="button" onClick={onViewRecords} className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[11px] font-black leading-4 text-blue-800 hover:bg-blue-100">
           {copy.viewRecords}
         </button>
       </div>
-      <div className="mt-5 grid gap-3">
+      <div className="mt-2 grid gap-1.5">
         {metricRows.map((row) => (
-          <div key={row.label} className="flex items-center justify-between gap-4 rounded-md border border-slate-100 bg-slate-50 px-3 py-2">
-            <span className="text-sm font-black text-slate-700">{row.label}</span>
-            <span className="text-2xl font-black text-slate-950">{formatExpertCount(row.value)}</span>
+          <div key={row.label} className="flex items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50 px-2 py-1">
+            <span className="text-xs font-black text-slate-700">{row.label}</span>
+            <span className="text-lg font-black leading-6 text-slate-950">{formatExpertCount(row.value)}</span>
           </div>
         ))}
       </div>
-      <div className="mt-5 rounded-md border border-blue-100 bg-blue-50 p-3">
-        <p className="text-sm font-black text-slate-700">{copy.coreDigits}</p>
-        <div className="mt-2 flex flex-wrap gap-2">
+      <div className="mt-2 rounded-md border border-blue-100 bg-blue-50 p-2">
+        <p className="text-xs font-black text-slate-700">{copy.coreDigits}</p>
+        <div className="mt-1 flex flex-wrap gap-1">
           {digits.map((digit, index) => (
-            <span key={`${digit}-${index}`} className="grid size-10 place-items-center rounded-full border border-blue-300 bg-white text-lg font-black text-blue-950">
+            <span key={`${digit}-${index}`} className="grid size-7 place-items-center rounded-full border border-blue-300 bg-white text-sm font-black text-blue-950">
               {digit}
             </span>
           ))}
         </div>
       </div>
-      <p className="mt-5 rounded-md bg-slate-950 px-3 py-3 text-center text-base font-black text-white">
+      <p className="mt-2 rounded-md bg-slate-950 px-2.5 py-1.5 text-center text-xs font-black leading-5 text-white">
         {copy.totalMatch} {totalText}{totalText === '--' ? '' : ` ${copy.timesUnit}`}
       </p>
     </article>

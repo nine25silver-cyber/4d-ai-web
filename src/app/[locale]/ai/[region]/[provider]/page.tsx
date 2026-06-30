@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {getTranslations} from 'next-intl/server';
@@ -87,64 +86,68 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
   );
 
   return (
-    <main className="container-shell py-8">
-      <section className="mt-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-bold uppercase text-blue-800">{region.label}</p>
-        <h1 className="mt-2 text-3xl font-black text-slate-950">{t('providerTitle', {provider: provider.name})}</h1>
-      </section>
-      <AiProviderSwitcher
-        locale={locale}
-        regions={regions}
-        currentProviderCode={provider.code}
-        title={locale === 'zh' ? '\u5207\u6362 Provider' : locale === 'ms' ? 'Tukar Provider' : 'Switch Provider'}
-      />
-
-      <AiRecommendationPreviewClient
-        locale={locale}
-        coreDigits={recommendation.ok ? recommendation.payload.coreDigits : []}
-        top3ExpertDigits={recommendation.ok ? recommendation.payload.top3ExpertDigits : []}
-        expertStats={hitHistoryReplay.ok ? {
-          top3Expert: hitHistoryReplay.payload.top3Expert,
-          allRound: hitHistoryReplay.payload.allRound
-        } : null}
-        top3HistorySlot={top3HistoryPanel}
-        allRoundHistorySlot={allRoundHistoryPanel}
-        labels={{
-          appCoreDigitsTitle: t('appCoreDigitsTitle'),
-          detailAnalysis: t('detailAnalysis'),
-          coreDigitsPreviewNote: t('coreDigitsPreviewNote'),
-          coreDigitsGuideAction: t('coreDigitsGuideAction'),
-          coreDigitsGuideTitle: t('coreDigitsGuideTitle'),
-          coreDigitsGuideBody: t('coreDigitsGuideBody'),
-          coreDigitsGuideNotReady: t('coreDigitsGuideNotReady'),
-          coreDigitsGuideExampleLabel: t('coreDigitsGuideExampleLabel'),
-          coreDigitsGuideCombinationNote: t('coreDigitsGuideCombinationNote'),
-          coreDigitsGuideSampleTitle: t('coreDigitsGuideSampleTitle'),
-          coreDigitsGuideSampleUsing2: t('coreDigitsGuideSampleUsing2'),
-          coreDigitsGuideSampleUsing3: t('coreDigitsGuideSampleUsing3'),
-          coreDigitsGuideSampleUsing4: t('coreDigitsGuideSampleUsing4'),
-          coreDigitsGuideNumberPrefix: t('coreDigitsGuideNumberPrefix'),
-          coreDigitsGuideImportantTitle: t('coreDigitsGuideImportantTitle'),
-          coreDigitsGuideImportantBody: t('coreDigitsGuideImportantBody'),
-          proRequiredTitle: locale === 'zh' ? '\u9700\u8981 Pro \u6743\u9650' : locale === 'ms' ? 'Perlu akses Pro' : 'Pro access required',
-          proRequiredDescription: locale === 'zh'
-            ? '\u5b8c\u6574 AI \u63a8\u8350\u53f7\u7801\u4e0e\u6700\u8fd1100\u671f\u547d\u4e2d\u8be6\u60c5\u4ec5\u5f00\u653e\u7ed9 Pro \u4f1a\u5458\u3002'
-            : locale === 'ms'
-              ? 'Nombor cadangan AI penuh dan butiran hit 100 cabutan hanya untuk ahli Pro.'
-              : 'Full AI recommendation numbers and 100-draw hit details are available for Pro members only.',
-          login: locale === 'zh' ? '\u7acb\u5373\u767b\u5f55' : locale === 'ms' ? 'Log masuk' : 'Login now',
-          goPro: locale === 'zh' ? '\u5347\u7ea7 Pro' : locale === 'ms' ? 'Upgrade Pro' : 'Upgrade Pro'
-        }}
-      />
-
-      <section className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-5">
-        <h2 className="text-lg font-black text-slate-950">{t('howItWorksTitle')}</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">{t('howItWorksText')}</p>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link href={`/${locale}/pricing`} className="rounded-md border border-blue-300 bg-white px-4 py-2 text-sm font-black text-blue-900 hover:bg-blue-100">{t('goPro')}</Link>
-          <span className="rounded-md border border-blue-300 bg-white px-4 py-2 text-sm font-bold text-blue-800">{t('watchAd')}</span>
+    <main className="container-shell pt-2 pb-6">
+      <div className="grid gap-3 md:grid-cols-[200px_minmax(0,1fr)] md:items-start">
+        <div className="hidden md:block">
+          <AiProviderSwitcher
+            locale={locale}
+            regions={regions}
+            currentProviderCode={provider.code}
+            title={locale === 'zh' ? '\u5207\u6362 Provider' : locale === 'ms' ? 'Tukar Provider' : 'Switch Provider'}
+            variant="sidebar"
+          />
         </div>
-      </section>
+        <div className="min-w-0">
+          <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+            <h1 className="text-2xl font-black text-slate-950">{t('providerTitle', {provider: provider.name})}</h1>
+          </section>
+          <div className="block md:hidden">
+            <AiProviderSwitcher
+              locale={locale}
+              regions={regions}
+              currentProviderCode={provider.code}
+              title={locale === 'zh' ? '\u5207\u6362 Provider' : locale === 'ms' ? 'Tukar Provider' : 'Switch Provider'}
+            />
+          </div>
+
+          <AiRecommendationPreviewClient
+            locale={locale}
+            coreDigits={recommendation.ok ? recommendation.payload.coreDigits : []}
+            top3ExpertDigits={recommendation.ok ? recommendation.payload.top3ExpertDigits : []}
+            expertStats={hitHistoryReplay.ok ? {
+              top3Expert: hitHistoryReplay.payload.top3Expert,
+              allRound: hitHistoryReplay.payload.allRound
+            } : null}
+            top3HistorySlot={top3HistoryPanel}
+            allRoundHistorySlot={allRoundHistoryPanel}
+            labels={{
+              appCoreDigitsTitle: t('appCoreDigitsTitle'),
+              detailAnalysis: t('detailAnalysis'),
+              coreDigitsGuideAction: t('coreDigitsGuideAction'),
+              coreDigitsGuideTitle: t('coreDigitsGuideTitle'),
+              coreDigitsGuideBody: t('coreDigitsGuideBody'),
+              coreDigitsGuideNotReady: t('coreDigitsGuideNotReady'),
+              coreDigitsGuideExampleLabel: t('coreDigitsGuideExampleLabel'),
+              coreDigitsGuideCombinationNote: t('coreDigitsGuideCombinationNote'),
+              coreDigitsGuideSampleTitle: t('coreDigitsGuideSampleTitle'),
+              coreDigitsGuideSampleUsing2: t('coreDigitsGuideSampleUsing2'),
+              coreDigitsGuideSampleUsing3: t('coreDigitsGuideSampleUsing3'),
+              coreDigitsGuideSampleUsing4: t('coreDigitsGuideSampleUsing4'),
+              coreDigitsGuideNumberPrefix: t('coreDigitsGuideNumberPrefix'),
+              coreDigitsGuideImportantTitle: t('coreDigitsGuideImportantTitle'),
+              coreDigitsGuideImportantBody: t('coreDigitsGuideImportantBody'),
+              proRequiredTitle: locale === 'zh' ? '\u9700\u8981 Pro \u6743\u9650' : locale === 'ms' ? 'Perlu akses Pro' : 'Pro access required',
+              proRequiredDescription: locale === 'zh'
+                ? '\u5b8c\u6574 AI \u63a8\u8350\u53f7\u7801\u4e0e\u6700\u8fd1100\u671f\u547d\u4e2d\u8be6\u60c5\u4ec5\u5f00\u653e\u7ed9 Pro \u4f1a\u5458\u3002'
+                : locale === 'ms'
+                  ? 'Nombor cadangan AI penuh dan butiran hit 100 cabutan hanya untuk ahli Pro.'
+                  : 'Full AI recommendation numbers and 100-draw hit details are available for Pro members only.',
+              login: locale === 'zh' ? '\u7acb\u5373\u767b\u5f55' : locale === 'ms' ? 'Log masuk' : 'Login now',
+              goPro: locale === 'zh' ? '\u5347\u7ea7 Pro' : locale === 'ms' ? 'Upgrade Pro' : 'Upgrade Pro'
+            }}
+          />
+        </div>
+      </div>
     </main>
   );
 }
