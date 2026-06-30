@@ -17,7 +17,7 @@ export type ResultCardLabels = {
   datePending: string;
 };
 
-type Props = {provider: ProviderConfig; result: ProviderResultState; labels: ResultCardLabels};
+type Props = {provider: ProviderConfig; result: ProviderResultState; labels: ResultCardLabels; compact?: boolean};
 type NumberCell = {label?: string; number: string};
 type TopPrizeCell = {label: string; number?: string; slot?: string};
 const providersWithoutGridLabels = new Set(['da_ma_cai', 'singapore', 'sarawak']);
@@ -85,23 +85,23 @@ function rowsFor(items: NumberCell[]) {
   return rows;
 }
 
-function PoolSection({title, items, showBottomBorder}: {title: string; items: NumberCell[]; showBottomBorder?: boolean}) {
+function PoolSection({title, items, showBottomBorder, compact}: {title: string; items: NumberCell[]; showBottomBorder?: boolean; compact?: boolean}) {
   if (items.length === 0) return <span className="text-sm text-slate-500">Not available</span>;
   const rows = rowsFor(items);
   return (
     <section className={`border-x border-t ${showBottomBorder ? 'border-b' : ''} ${tableBorder}`}>
-      <h3 className={`${tableHeader} ${tableText} border-b ${tableBorder} py-1 text-center text-[15px] font-black`}>
+      <h3 className={`${tableHeader} ${tableText} border-b ${tableBorder} text-center font-black ${compact ? 'py-0 text-[12px] leading-4' : 'py-1 text-[15px]'}`}>
         {title}
       </h3>
       <div>
         {rows.map((row, rowIndex) => (
           <div key={rowIndex} className={`grid grid-cols-5 ${rowIndex > 0 ? `border-t ${tableBorder}` : ''}`}>
             {row.map((item, columnIndex) => (
-              <div key={`${rowIndex}-${columnIndex}-${item?.number ?? 'empty'}`} className={`relative grid h-[30px] place-items-center bg-white px-1 ${columnIndex > 0 ? `border-l ${tableBorder}` : ''}`}>
+              <div key={`${rowIndex}-${columnIndex}-${item?.number ?? 'empty'}`} className={`relative grid place-items-center bg-white px-1 ${compact ? 'h-[21px]' : 'h-[30px]'} ${columnIndex > 0 ? `border-l ${tableBorder}` : ''}`}>
                 {item ? (
                   <>
-                    {item.label ? <span className={`absolute left-[3px] top-[3px] text-[6px] font-black leading-none ${tableAccent}`}>{item.label}</span> : null}
-                    <span className={`result-number max-w-full truncate text-[14px] font-extrabold ${item.number === '----' ? 'text-slate-400' : tableText}`}>{item.number}</span>
+                    {item.label ? <span className={`absolute left-[2px] top-[2px] font-black leading-none ${compact ? 'text-[5px]' : 'text-[6px]'} ${tableAccent}`}>{item.label}</span> : null}
+                    <span className={`result-number max-w-full truncate font-extrabold ${compact ? 'text-[12px]' : 'text-[14px]'} ${item.number === '----' ? 'text-slate-400' : tableText}`}>{item.number}</span>
                   </>
                 ) : null}
               </div>
@@ -113,17 +113,17 @@ function PoolSection({title, items, showBottomBorder}: {title: string; items: Nu
   );
 }
 
-function TopPrizeTable({items}: {items: TopPrizeCell[]}) {
+function TopPrizeTable({items, compact}: {items: TopPrizeCell[]; compact?: boolean}) {
   return (
     <section className={`border-x border-t ${tableBorder}`}>
       {items.map((item, index) => (
         <div key={item.label} className={`grid grid-cols-[13fr_9fr] ${index > 0 ? `border-t ${tableBorder}` : ''}`}>
-          <div className={`${tableHeader} ${tableText} grid h-[34px] place-items-center text-[18px] font-black`}>
+          <div className={`${tableHeader} ${tableText} grid place-items-center font-black ${compact ? 'h-[25px] text-[15px]' : 'h-[34px] text-[18px]'}`}>
             {item.label}
           </div>
-          <div className={`relative grid h-[34px] place-items-center border-l bg-white ${tableBorder}`}>
-            {item.slot ? <span className={`absolute left-[5px] top-[3px] text-[7px] font-black leading-none ${tableAccent}`}>{item.slot}</span> : null}
-            <span className={`result-number max-w-full truncate px-5 text-[18px] font-black ${tableText}`}>{item.number || '----'}</span>
+          <div className={`relative grid place-items-center border-l bg-white ${compact ? 'h-[25px]' : 'h-[34px]'} ${tableBorder}`}>
+            {item.slot ? <span className={`absolute left-[4px] top-[2px] font-black leading-none ${compact ? 'text-[6px]' : 'text-[7px]'} ${tableAccent}`}>{item.slot}</span> : null}
+            <span className={`result-number max-w-full truncate px-3 font-black ${compact ? 'text-[15px]' : 'text-[18px]'} ${tableText}`}>{item.number || '----'}</span>
           </div>
         </div>
       ))}
@@ -131,7 +131,7 @@ function TopPrizeTable({items}: {items: TopPrizeCell[]}) {
   );
 }
 
-export function ResultCard({provider, result, labels}: Props) {
+export function ResultCard({provider, result, labels, compact}: Props) {
   const logoSrc = providerLogoByCode[provider.code];
   const bannerTheme = providerBannerThemeByCode[provider.code] ?? {
     bg: tableHeader,
@@ -140,17 +140,17 @@ export function ResultCard({provider, result, labels}: Props) {
   };
   if (!result.ok) {
     return (
-      <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <article className={`rounded-lg border border-slate-200 bg-white shadow-sm ${compact ? 'p-2' : 'p-4'}`}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             {logoSrc ? (
-              <span className="relative h-10 w-16 overflow-hidden rounded border border-slate-200 bg-white">
+              <span className={`relative overflow-hidden rounded border border-slate-200 bg-white ${compact ? 'h-8 w-12' : 'h-10 w-16'}`}>
                 <Image src={logoSrc} alt={`${provider.name} logo`} fill sizes="64px" className="object-contain p-1" />
               </span>
             ) : null}
             <div>
-              <h2 className="text-lg font-bold text-slate-950">{provider.name}</h2>
-              <p className="text-sm text-slate-500">{labels.providerResult}</p>
+              <h2 className={`font-bold text-slate-950 ${compact ? 'text-base' : 'text-lg'}`}>{provider.name}</h2>
+              <p className={`${compact ? 'text-xs' : 'text-sm'} text-slate-500`}>{labels.providerResult}</p>
             </div>
           </div>
           <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">{labels.unavailable}</span>
@@ -172,24 +172,24 @@ export function ResultCard({provider, result, labels}: Props) {
   ];
   return (
     <article className={`overflow-hidden rounded-lg border bg-white shadow-sm ${tableBorder}`}>
-      <div className={`flex flex-wrap items-start justify-between gap-3 border-b ${tableBorder} ${bannerTheme.bg} p-3`}>
-        <div className="flex items-start gap-3">
+      <div className={`flex flex-wrap items-start justify-between border-b ${tableBorder} ${bannerTheme.bg} ${compact ? 'gap-1.5 p-1.5' : 'gap-3 p-3'}`}>
+        <div className={`flex items-start ${compact ? 'gap-1.5' : 'gap-3'}`}>
           {logoSrc ? (
-            <span className="relative h-12 w-20 overflow-hidden rounded border border-slate-200 bg-white">
-              <Image src={logoSrc} alt={`${provider.name} logo`} fill sizes="80px" className="object-contain p-1" />
+            <span className={`relative overflow-hidden rounded border border-slate-200 bg-white ${compact ? 'h-8 w-14' : 'h-12 w-20'}`}>
+              <Image src={logoSrc} alt={`${provider.name} logo`} fill sizes={compact ? '56px' : '80px'} className="object-contain p-1" />
             </span>
           ) : null}
           <div>
-            <h2 className={`text-lg font-black ${bannerTheme.text}`}>{provider.name}</h2>
-            <p className={`text-sm font-semibold ${bannerTheme.muted}`}>{labels.drawLabel} {payload.draw_no || '-'} | {payload.draw_date || labels.datePending}</p>
+            <h2 className={`font-black ${compact ? 'text-[15px] leading-4' : 'text-lg'} ${bannerTheme.text}`}>{provider.name}</h2>
+            <p className={`font-semibold ${compact ? 'text-[11px] leading-3' : 'text-sm'} ${bannerTheme.muted}`}>{labels.drawLabel} {payload.draw_no || '-'} | {payload.draw_date || labels.datePending}</p>
           </div>
         </div>
       </div>
-      <div className="p-3">
+      <div className={compact ? 'p-1.5' : 'p-3'}>
         <div className="overflow-hidden rounded-md border-b border-[#D6E0EA]">
-          <TopPrizeTable items={topPrizeItems} />
-          <PoolSection title={labels.specialPrize} items={specialItems} />
-          <PoolSection title={labels.consolationPrize} items={consolationItems} showBottomBorder />
+          <TopPrizeTable items={topPrizeItems} compact={compact} />
+          <PoolSection title={labels.specialPrize} items={specialItems} compact={compact} />
+          <PoolSection title={labels.consolationPrize} items={consolationItems} showBottomBorder compact={compact} />
         </div>
       </div>
     </article>

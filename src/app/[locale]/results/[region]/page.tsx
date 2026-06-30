@@ -78,32 +78,31 @@ export default async function RegionResultsPage({params}: {params: Promise<{loca
     distribution: {'@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: result.url}
   }));
   return (
-    <main className="container-shell py-8">
+    <main className="container-shell pt-2 pb-6">
       <StructuredData data={jsonLd} />
-      <div className="flex flex-col gap-5 border-b border-slate-200 pb-6">
+      <div className="flex flex-col gap-2 border-b border-slate-200 pb-2">
         <div>
-          <p className="text-sm font-bold uppercase tracking-wide text-blue-700">{t('eyebrow')}</p>
-          <h1 className="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">{t('title', {region: activeMarket.label})}</h1>
+          <h1 className="mt-0.5 text-xl font-black text-slate-950 sm:text-2xl">{t('title', {region: activeMarket.label})}</h1>
         </div>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3" data-market-tabs>
+        <div className="flex flex-wrap gap-1.5 rounded-md border border-slate-200 bg-white p-1" data-market-tabs>
           {latestResultMarkets.map((market) => (
             <Link
               key={market.id}
               href={`/${locale}/results/${market.hrefRegion}`}
               data-market-card={market.id}
-              className={`rounded-lg border p-5 shadow-sm transition hover:border-blue-300 ${
+              className={`rounded-md border px-2.5 py-1.5 text-xs font-black transition hover:border-blue-300 ${
                 activeMarket.id === market.id
                   ? 'border-blue-500 bg-blue-50 text-blue-950 ring-1 ring-blue-200'
                   : 'border-slate-200 bg-white text-slate-700 hover:bg-blue-50'
               }`}
             >
-              <h2 className="text-lg font-black">{market.label}</h2>
+              {market.label}
             </Link>
           ))}
         </div>
       </div>
-      <div className="my-6 rounded-lg border border-dashed border-slate-300 bg-white p-4 text-center text-sm font-semibold text-slate-500">Ad slot placeholder for free users</div>
       <LiveResultsGrid regionSlug={region.slug} refreshRegionSlugs={[...activeMarket.refreshRegions]} providers={providers} initialResults={results} />
+      <div className="my-4 rounded-md border border-dashed border-slate-300 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-500">Ad slot placeholder for free users</div>
     </main>
   );
 }

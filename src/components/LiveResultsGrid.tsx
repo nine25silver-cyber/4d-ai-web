@@ -23,6 +23,12 @@ function sameResults(previous: ProviderResultState[], next: ProviderResultState[
   return JSON.stringify(previous) === JSON.stringify(next);
 }
 
+function mergeResults(previous: ProviderResultState[], next: ProviderResultState[]) {
+  const merged = new Map(previous.map((result) => [result.providerCode, result]));
+  next.forEach((result) => merged.set(result.providerCode, result));
+  return Array.from(merged.values());
+}
+
 const POLL_MS_DRAW_WINDOW = 10_000;
 const POLL_MS_NORMAL = 30_000;
 const DRAW_WINDOW_MINUTES = 75;
@@ -49,6 +55,20 @@ function pollIntervalMs(now = new Date()) {
   return isInDrawWindow(now) ? POLL_MS_DRAW_WINDOW : POLL_MS_NORMAL;
 }
 
+async function fetchLatestRegion(slug: string): Promise<LatestApiResponse | null> {
+  try {
+    const response = await fetch(`/api/latest/${slug}`, {cache: 'no-store'});
+    if (!response.ok) return null;
+    return await response.json() as LatestApiResponse;
+  } catch {
+    return null;
+  }
+}
+
+function settledPayloads(results: PromiseSettledResult<LatestApiResponse | null>[]) {
+  return results.flatMap((result) => result.status === 'fulfilled' && result.value !== null ? [result.value] : []);
+}
+
 export function LiveResultsGrid({regionSlug, refreshRegionSlugs, providers, initialResults}: Props) {
   const t = useTranslations('Results');
   const [results, setResults] = useState(initialResults);
@@ -65,22 +85,30 @@ export function LiveResultsGrid({regionSlug, refreshRegionSlugs, providers, init
       running = true;
       setIsRefreshing(true);
       try {
-        const responses = await Promise.all(apiRegionSlugs.map((slug) => fetch(`/api/latest/${slug}`, {cache: 'no-store'})));
-        const payloads = await Promise.all(responses.filter((response) => response.ok).map((response) => response.json() as Promise<LatestApiResponse>));
+        const payloads = settledPayloads(await Promise.allSettled(apiRegionSlugs.map((slug) => fetchLatestRegion(slug))));
         const nextResults = payloads.flatMap((data) => Array.isArray(data.results) ? data.results : []);
         if (cancelled || nextResults.length === 0) return;
-        setResults((current) => (sameResults(current, nextResults) ? current : nextResults));
+        setResults((current) => {
+          const mergedResults = mergeResults(current, nextResults);
+          return sameResults(current, mergedResults) ? current : mergedResults;
+        });
         setLastChecked(payloads.find((data) => data.updatedAt)?.updatedAt ?? new Date().toISOString());
+      } catch {
+        return;
       } finally {
         running = false;
         if (!cancelled) setIsRefreshing(false);
       }
     }
 
-    refresh();
+    void refresh();
     let timeoutId: number | null = null;
     const loop = async () => {
-      await refresh();
+      try {
+        await refresh();
+      } catch {
+        // Keep the polling cadence even if an unexpected client error escapes refresh.
+      }
       if (cancelled) return;
       timeoutId = window.setTimeout(loop, pollIntervalMs());
     };
@@ -95,13 +123,13 @@ export function LiveResultsGrid({regionSlug, refreshRegionSlugs, providers, init
   const labels: ResultCardLabels = resultCardLabels(t);
 
   return (
-    <section>
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+    <section className="mt-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-4">
         {providers.map((provider) => {
           const result = resultMap.get(provider.code) ?? {ok: false as const, providerCode: provider.code, url: '', reason: 'not_requested'};
           return (
             <div key={provider.code} data-result-provider={provider.code}>
-              <ResultCard provider={provider} result={result} labels={labels} />
+              <ResultCard provider={provider} result={result} labels={labels} compact />
             </div>
           );
         })}
