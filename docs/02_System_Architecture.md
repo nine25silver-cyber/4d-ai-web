@@ -26,26 +26,41 @@ Related Documents:
                    User
                      │
                      ▼
-             Cloudflare Pages
+         Cloudflare CDN + Edge Network
                      │
                      ▼
-              Next.js Website
-             /                \
-            /                  \
-           ▼                    ▼
-Cloudflare Provider JSON    Supabase
-           │                    │
-           ▼                    ▼
- Latest Results         Auth / Subscription
-           │                    │
-           └────────────┬────────────┘
-                        │
-                    Backend
-                        │
-                 Railway Polling
-                        │
-                  Lottery Providers
+      Cloudflare Workers (OpenNext)
+                     │
+                     ▼
+            Next.js Application
+             ┌───────────────┐
+             │               │
+             ▼               ▼
+ Cloudflare Provider JSON   Supabase
+             │               │
+             ▼               ▼
+      Latest Results    Auth / Subscription
 ```
+
+---
+
+# Deployment Runtime
+
+Production Runtime:
+
+Cloudflare Workers (OpenNext)
+
+Build Tool:
+
+opennextjs-cloudflare
+
+Deploy Command:
+
+npm run cf:deploy
+
+Deployment Configuration:
+
+wrangler.toml
 
 ---
 

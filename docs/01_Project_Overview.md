@@ -67,7 +67,7 @@ Web 与 Flutter App 共用用户帐号及部分数据，但两个前端必须独
 
 ## Deployment
 
-- Cloudflare Pages
+- Cloudflare Workers (OpenNext)
 
 ## Source Control
 
@@ -106,17 +106,20 @@ C:\Users\William\Documents\4d AI safe backup 2026-05-10\4d-polling
                     User
                       │
                       ▼
-              Cloudflare Pages
+      Cloudflare CDN + Edge Network
                       │
                       ▼
-                Next.js Website
-             ┌────────┴────────┐
-             │                 │
-             ▼                 ▼
-     Cloudflare JSON     Supabase Auth
-             │                 │
-             ▼                 ▼
-      Lottery Results      User Account
+   Cloudflare Workers (OpenNext)
+                      │
+                      ▼
+          Next.js Application
+             ┌───────────────┐
+             │               │
+             ▼               ▼
+ Cloudflare Provider JSON   Supabase
+             │               │
+             ▼               ▼
+      Latest Results    Auth / Subscription
 ```
 
 ---
@@ -278,7 +281,7 @@ Push
 
 ↓
 
-Cloudflare Pages Deployment
+Cloudflare Workers Deployment (OpenNext)
 
 ↓
 
