@@ -22,6 +22,19 @@ type Props = {
     appCoreDigitsTitle: string;
     detailAnalysis: string;
     coreDigitsPreviewNote: string;
+    coreDigitsGuideAction: string;
+    coreDigitsGuideTitle: string;
+    coreDigitsGuideBody: string;
+    coreDigitsGuideNotReady: string;
+    coreDigitsGuideExampleLabel: string;
+    coreDigitsGuideCombinationNote: string;
+    coreDigitsGuideSampleTitle: string;
+    coreDigitsGuideSampleUsing2: string;
+    coreDigitsGuideSampleUsing3: string;
+    coreDigitsGuideSampleUsing4: string;
+    coreDigitsGuideNumberPrefix: string;
+    coreDigitsGuideImportantTitle: string;
+    coreDigitsGuideImportantBody: string;
     proRequiredTitle: string;
     proRequiredDescription: string;
     login: string;
@@ -34,6 +47,7 @@ export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot
   const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
   const [entitlementLoading, setEntitlementLoading] = useState(true);
   const [adUnlocked, setAdUnlocked] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
   const rewardCredits = 0;
   const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
@@ -43,6 +57,7 @@ export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot
     if (coreDigits.length >= 5) return coreDigits.slice(0, 5);
     return [...coreDigits, '-', '-', '-', '-', '-'].slice(0, 5);
   }, [coreDigits, isUnlocked]);
+  const guideDigits = useMemo(() => safeCoreDigits.filter((digit) => /^\d$/.test(digit)), [safeCoreDigits]);
   const lockedAccessText = entitlementLoading
     ? (locale === 'zh' ? '正在确认会员权限；也可通过广告临时解锁。' : locale === 'ms' ? 'Sedang menyemak akses ahli; iklan masih boleh membuka akses sementara.' : 'Checking membership access; ad unlock remains available.')
     : (locale === 'zh' ? 'AI 完整推荐仅开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Cadangan AI penuh hanya untuk Pro atau buka sementara melalui iklan.' : 'Full AI recommendations are for Pro or temporary ad unlock.');
@@ -105,8 +120,16 @@ export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot
         <section className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-black text-slate-950">{labels.appCoreDigitsTitle}</h2>
-            <span className="text-xs font-black text-blue-700">{labels.detailAnalysis}</span>
+            <button
+              type="button"
+              onClick={() => setGuideOpen((current) => !current)}
+              aria-expanded={guideOpen}
+              className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-800 hover:bg-blue-100"
+            >
+              {labels.coreDigitsGuideAction}
+            </button>
           </div>
+          {guideOpen ? <CoreDigitsGuide digits={guideDigits} labels={labels} /> : null}
           <div className="relative mx-auto mt-5 grid aspect-square w-full max-w-[260px] grid-cols-3 grid-rows-3 place-items-center">
             <span aria-hidden="true" className="absolute left-1/2 top-[22%] h-[56%] w-px -translate-x-1/2 bg-blue-200" />
             <span aria-hidden="true" className="absolute left-[22%] top-1/2 h-px w-[56%] -translate-y-1/2 bg-blue-200" />
@@ -177,4 +200,56 @@ export function AiRecommendationPreviewClient({locale, coreDigits, afterCoreSlot
       </div>
     </section>
   );
+}
+
+function CoreDigitsGuide({digits, labels}: {digits: string[]; labels: Props['labels']}) {
+  return (
+    <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm font-bold leading-6 text-slate-700">
+      <h3 className="text-base font-black text-slate-950">{labels.coreDigitsGuideTitle}</h3>
+      <p className="mt-2 whitespace-pre-line">{labels.coreDigitsGuideBody}</p>
+      {digits.length === 0 ? (
+        <p className="mt-3 text-slate-600">{labels.coreDigitsGuideNotReady}</p>
+      ) : (
+        <>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="text-slate-600">{labels.coreDigitsGuideExampleLabel}</span>
+            {digits.map((digit) => (
+              <span key={digit} className="rounded-full border border-blue-200 bg-white px-3 py-1 text-blue-900">{digit}</span>
+            ))}
+          </div>
+          <p className="mt-3 whitespace-pre-line">{labels.coreDigitsGuideCombinationNote}</p>
+          <div className="mt-3">
+            <p className="font-black text-slate-950">{labels.coreDigitsGuideSampleTitle}</p>
+            <pre className="mt-2 whitespace-pre-wrap rounded-md border border-blue-100 bg-white p-3 font-sans text-xs leading-5 text-slate-700">{coreDigitSampleNumbers(digits, labels)}</pre>
+          </div>
+          <div className="mt-3">
+            <p className="font-black text-slate-950">{labels.coreDigitsGuideImportantTitle}</p>
+            <p className="mt-1 whitespace-pre-line">{labels.coreDigitsGuideImportantBody}</p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function coreDigitExamples(digits: string[], digitCount: number) {
+  if (digits.length === 0) return [];
+  const pool = Array.from({length: digitCount}, (_, index) => digits[index % digits.length]);
+  const [a, b = a, c = a, d = a] = pool;
+  if (digitCount === 2) return [`${a}${a}${b}${b}`, `${b}${b}${a}${a}`, `${a}${b}${a}${b}`];
+  if (digitCount === 3) return [`${a}${a}${b}${c}`, `${b}${b}${c}${a}`, `${c}${a}${b}${c}`];
+  if (digitCount === 4) return [`${a}${b}${c}${d}`, `${b}${c}${d}${a}`, `${c}${d}${a}${b}`];
+  return [];
+}
+
+function coreDigitExampleLines(digits: string[], digitCount: number, numberPrefix: string) {
+  return coreDigitExamples(digits, digitCount).map((number) => `${numberPrefix} ${number}`).join('\n');
+}
+
+function coreDigitSampleNumbers(digits: string[], labels: Props['labels']) {
+  return [
+    `${labels.coreDigitsGuideSampleUsing2}\n\n${coreDigitExampleLines(digits, 2, labels.coreDigitsGuideNumberPrefix)}`,
+    `${labels.coreDigitsGuideSampleUsing3}\n\n${coreDigitExampleLines(digits, 3, labels.coreDigitsGuideNumberPrefix)}`,
+    `${labels.coreDigitsGuideSampleUsing4}\n\n${coreDigitExampleLines(digits, 4, labels.coreDigitsGuideNumberPrefix)}`
+  ].join('\n\n');
 }
