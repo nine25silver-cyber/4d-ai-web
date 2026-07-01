@@ -1,5 +1,4 @@
 import {NextResponse} from 'next/server';
-import {fetchHistoryDaily, fetchHistoryLatest30, type ProviderResultPayload} from '@/lib/cloudflare';
 import {regions} from '@/lib/providers';
 
 type HitRow = {
@@ -7,128 +6,138 @@ type HitRow = {
   providerName: string;
   drawDate: string;
   drawNo: string;
+  prizeType: PrizeType;
   prize: string;
   number: string;
 };
 
+type SearchMode = 'exact' | 'boxed';
+type PrizeType = 'first' | 'second' | 'third' | 'special' | 'consolation';
+
+type SearchIndexResult = {
+  provider_code?: string;
+  draw_date?: string;
+  draw_no?: string;
+  matched_last3?: string;
+  number?: string;
+  position?: number;
+  prize_type?: string;
+  prize_rank?: number;
+  source_type?: string;
+};
+
+type SearchIndexPayload = {
+  count?: number;
+  results?: SearchIndexResult[];
+};
+
+const searchBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_SEARCH_BASE_URL ?? 'https://data.4dai88.com/search/v1';
+const DEFAULT_LIMIT = 300;
+const MAX_LIMIT = 300;
 const providersByCode = new Map(regions.flatMap((region) => region.providers).map((provider) => [provider.code, provider]));
-const rangeYears = new Map([
-  ['1y', 1],
-  ['2y', 2],
-  ['3y', 3],
-  ['5y', 5],
-  ['10y', 10],
-  ['15y', 15],
-  ['20y', 20],
-  ['30y', 30]
-]);
-
-function normalizeDate(value: string | null) {
-  const date = String(value ?? '').trim();
-  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : '';
-}
-
-function dateYearsAgo(years: number) {
-  const date = new Date();
-  date.setFullYear(date.getFullYear() - years);
-  return date.toISOString().slice(0, 10);
-}
-
-function rangeToFromDate(range: string) {
-  const years = rangeYears.get(range);
-  return years ? dateYearsAgo(years) : '';
-}
 
 function normalizeNumber(value: string) {
   const number = value.replace(/\D/g, '').slice(0, 4);
   return number.length === 4 ? number : '';
 }
 
-function inRange(date: string, fromDate: string, toDate: string) {
-  if (fromDate && date < fromDate) return false;
-  if (toDate && date > toDate) return false;
-  return true;
+function normalizeTarget(value: string | null) {
+  return String(value ?? '').replace(/\D/g, '').slice(0, 3);
 }
 
-function candidateRows(payload: ProviderResultPayload): Array<{prize: string; number: string}> {
-  return [
-    {prize: 'Top3', number: payload.first_prize ?? ''},
-    {prize: 'Top3', number: payload.second_prize ?? ''},
-    {prize: 'Top3', number: payload.third_prize ?? ''},
-    ...(payload.special_numbers ?? []).map((number) => ({prize: 'Special', number})),
-    ...(payload.consolation_numbers ?? []).map((number) => ({prize: 'Consolation', number}))
-  ]
-    .map((row) => ({...row, number: normalizeNumber(row.number)}))
-    .filter((row) => row.number.length === 4);
+function boxedKey(value: string) {
+  return value.split('').sort().join('');
 }
 
-function matches(number: string, target: string, mode: 'exact' | 'boxed') {
-  if (mode === 'exact') return number.includes(target);
-  const sortedTarget = target.split('').sort().join('');
-  for (let start = 0; start <= 1; start += 1) {
-    const chunk = number.slice(start, start + 3);
-    if (chunk.length !== 3) continue;
-    if (chunk.split('').sort().join('') === sortedTarget) return true;
-  }
-  return false;
+function resultLimit(value: string | null) {
+  const parsed = Number.parseInt(value ?? '', 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_LIMIT;
+  return Math.min(parsed, MAX_LIMIT);
+}
+
+function searchIndexUrl(target: string, mode: SearchMode) {
+  const pathMode = mode === 'boxed' ? 'boxed' : 'exact';
+  const key = mode === 'boxed' ? boxedKey(target) : target;
+  return `${searchBaseUrl.replace(/\/$/, '')}/3d/${pathMode}/${encodeURIComponent(key)}.json`;
+}
+
+async function fetchSearchIndex(target: string, mode: SearchMode): Promise<SearchIndexPayload> {
+  const response = await fetch(searchIndexUrl(target, mode), {
+    cache: 'no-store',
+    headers: {Accept: 'application/json'}
+  });
+  if (response.status === 404) return {count: 0, results: []};
+  if (!response.ok) throw new Error(`search_index_fetch_failed_${response.status}`);
+  const payload = (await response.json()) as SearchIndexPayload;
+  return {
+    count: typeof payload.count === 'number' ? payload.count : 0,
+    results: Array.isArray(payload.results) ? payload.results : []
+  };
+}
+
+function prizeType(row: SearchIndexResult): PrizeType {
+  const rawPrizeType = String(row.prize_type ?? '').trim();
+  if (rawPrizeType === 'special') return 'special';
+  if (rawPrizeType === 'consolation') return 'consolation';
+  if (rawPrizeType === 'second') return 'second';
+  if (rawPrizeType === 'third') return 'third';
+  return 'first';
+}
+
+function prizeLabel(value: PrizeType) {
+  if (value === 'special') return 'Special';
+  if (value === 'consolation') return 'Consolation';
+  if (value === 'second') return '2nd';
+  if (value === 'third') return '3rd';
+  return '1st';
+}
+
+function toHitRow(row: SearchIndexResult): HitRow | null {
+  const providerCode = String(row.provider_code ?? '').trim();
+  const provider = providersByCode.get(providerCode);
+  const number = normalizeNumber(String(row.number ?? ''));
+  if (!provider || number.length !== 4) return null;
+  const type = prizeType(row);
+  return {
+    providerCode,
+    providerName: provider.name,
+    drawDate: String(row.draw_date ?? '').trim(),
+    drawNo: String(row.draw_no ?? '').trim(),
+    prizeType: type,
+    prize: prizeLabel(type),
+    number
+  };
 }
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const target = String(url.searchParams.get('target') ?? '').replace(/\D/g, '').slice(0, 3);
-  const mode: 'exact' = 'exact';
-  const range = 'all';
-  const fromDate = '';
-  const toDate = normalizeDate(url.searchParams.get('to'));
+  const target = normalizeTarget(url.searchParams.get('target'));
+  const mode: SearchMode = url.searchParams.get('mode') === 'boxed' ? 'boxed' : 'exact';
+  const limit = resultLimit(url.searchParams.get('limit'));
   const providerCodes = (url.searchParams.get('providers') ?? '')
     .split(',')
     .map((item) => item.trim())
     .filter((item) => providersByCode.has(item));
-  const selectedProviders = providerCodes.length > 0 ? providerCodes : Array.from(providersByCode.keys());
-  const rows: HitRow[] = [];
-  let drawCount = 0;
 
   if (target.length !== 3) {
-    return NextResponse.json({target, mode, rows: [], drawCount, error: 'target_must_be_3_digits'}, {headers: {'Cache-Control': 'no-store'}});
+    return NextResponse.json({target, mode, rows: [], drawCount: 0, error: 'target_must_be_3_digits'}, {headers: {'Cache-Control': 'no-store'}});
   }
 
-  await Promise.all(
-    selectedProviders.map(async (providerCode) => {
-      const provider = providersByCode.get(providerCode);
-      const index = await fetchHistoryLatest30(providerCode);
-      if (!index.ok) return;
-      const dates = index.payload.dates.filter((date) => inRange(date, fromDate, toDate)).slice(0, 30);
-      for (const date of dates) {
-        const daily = await fetchHistoryDaily(providerCode, date);
-        if (!daily.ok) continue;
-        drawCount += 1;
-        for (const candidate of candidateRows(daily.payload)) {
-          if (!matches(candidate.number, target, mode)) continue;
-          rows.push({
-            providerCode,
-            providerName: provider?.name ?? providerCode,
-            drawDate: daily.payload.draw_date ?? '',
-            drawNo: daily.payload.draw_no ?? '',
-            prize: candidate.prize,
-            number: candidate.number
-          });
-        }
-      }
-    })
-  );
-
-  rows.sort((left, right) => right.drawDate.localeCompare(left.drawDate) || left.providerName.localeCompare(right.providerName));
+  const providerFilter = providerCodes.length > 0 ? new Set(providerCodes) : null;
+  const payload = await fetchSearchIndex(target, mode);
+  const rows = (payload.results ?? [])
+    .map(toHitRow)
+    .filter((row): row is HitRow => row !== null)
+    .filter((row) => (providerFilter ? providerFilter.has(row.providerCode) : true))
+    .sort((left, right) => right.drawDate.localeCompare(left.drawDate) || left.providerName.localeCompare(right.providerName));
 
   return NextResponse.json(
     {
       target,
       mode,
-      range,
-      from: fromDate,
-      to: toDate,
-      drawCount,
+      drawCount: rows.length,
       resultCount: rows.length,
-      rows: rows.slice(0, 300)
+      rows: rows.slice(0, limit)
     },
     {headers: {'Cache-Control': 'no-store'}}
   );
