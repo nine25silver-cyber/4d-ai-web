@@ -2,15 +2,15 @@ import {NextResponse} from 'next/server';
 import {regions} from '@/lib/providers';
 
 type SearchMode = 'exact' | 'boxed';
-type PrizeType = 'top3' | 'special' | 'consolation';
+type PrizeType = 'first' | 'second' | 'third' | 'special' | 'consolation';
 
 type MatchRow = {
   providerCode: string;
   providerName: string;
   drawDate: string;
   drawNo: string;
-  prize: 'top3' | 'special' | 'consolation';
-  label: string;
+  prize: PrizeType;
+  prizeType: PrizeType;
   number: string;
 };
 
@@ -30,9 +30,9 @@ type SearchIndexPayload = {
   results?: SearchIndexResult[];
 };
 
-const SEARCH_TEST_BASE_URL = 'https://data.4dai88.com/search/v1/4d';
-const DEFAULT_LIMIT = 300;
-const MAX_LIMIT = 300;
+const searchBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_SEARCH_BASE_URL ?? 'https://data.4dai88.com/search/v1';
+const DEFAULT_LIMIT = 5000;
+const MAX_LIMIT = 5000;
 const providersByCode = new Map(regions.flatMap((region) => region.providers).map((provider) => [provider.code, provider]));
 
 function normalizeNumber(value: string) {
@@ -51,7 +51,7 @@ function resultLimit(value: string | null) {
 
 function searchIndexUrl(target: string, mode: SearchMode) {
   const path = mode === 'boxed' ? `boxed/${boxedKey(target)}` : `exact/${target}`;
-  return `${SEARCH_TEST_BASE_URL}/${path}.json`;
+  return `${searchBaseUrl.replace(/\/$/, '')}/4d/${path}.json`;
 }
 
 async function fetchSearchIndex(target: string, mode: SearchMode): Promise<SearchIndexPayload> {
@@ -69,19 +69,12 @@ async function fetchSearchIndex(target: string, mode: SearchMode): Promise<Searc
 }
 
 function prizeType(value: string | undefined): PrizeType {
+  if (value === 'first') return 'first';
+  if (value === 'second') return 'second';
+  if (value === 'third') return 'third';
   if (value === 'special') return 'special';
   if (value === 'consolation') return 'consolation';
-  return 'top3';
-}
-
-function prizeLabel(row: SearchIndexResult) {
-  const type = prizeType(row.prize_type);
-  const position = typeof row.position === 'number' && Number.isFinite(row.position) ? row.position : 0;
-  if (type === 'special') return `S${position || ''}`.trim();
-  if (type === 'consolation') return `C${position || ''}`.trim();
-  if (row.prize_type === 'second') return '2nd';
-  if (row.prize_type === 'third') return '3rd';
-  return '1st';
+  return 'first';
 }
 
 function toMatchRow(row: SearchIndexResult): MatchRow | null {
@@ -89,13 +82,14 @@ function toMatchRow(row: SearchIndexResult): MatchRow | null {
   const provider = providersByCode.get(providerCode);
   const number = normalizeNumber(String(row.number ?? ''));
   if (!provider || number.length !== 4) return null;
+  const normalizedPrize = prizeType(row.prize_type);
   return {
     providerCode,
     providerName: provider.name,
     drawDate: String(row.draw_date ?? '').trim(),
     drawNo: String(row.draw_no ?? '').trim(),
-    prize: prizeType(row.prize_type),
-    label: prizeLabel(row),
+    prize: normalizedPrize,
+    prizeType: normalizedPrize,
     number
   };
 }

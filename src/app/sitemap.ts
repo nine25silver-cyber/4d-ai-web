@@ -9,7 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/history',
     '/ai',
     '/tools',
-    '/tools/search',
+    '/tools/4d-search',
     '/tools/hot-cold',
     '/tools/package-ranking',
     '/tools/thousand-hits',
