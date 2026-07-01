@@ -80,7 +80,7 @@ wrangler.toml
 
 位置：
 
-C:\Users\William\Documents\4D AI Web
+C:\Users\William\Documents\4d AI Web
 
 ---
 

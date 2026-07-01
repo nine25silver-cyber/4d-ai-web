@@ -84,7 +84,7 @@ Web 与 Flutter App 共用用户帐号及部分数据，但两个前端必须独
 
 ## Web
 
-C:\Users\William\Documents\4D AI Web
+C:\Users\William\Documents\4d AI Web
 
 ## Flutter App
 

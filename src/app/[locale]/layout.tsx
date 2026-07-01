@@ -26,28 +26,20 @@ export default async function LocaleLayout({children, params}: {children: React.
         ? 'Beta awam: Sesetengah ciri akan terus ditambah baik.'
         : 'Public beta: Some features may continue to improve.';
   return (
-    <html lang={typedLocale}>
-      <head>
-        <link rel="icon" href="/brand/web-logo.png" />
-        <link rel="apple-touch-icon" href="/brand/web-logo.png" />
-      </head>
-      <body>
-        <NextIntlClientProvider locale={typedLocale} messages={messages}>
-          <SiteHeader locale={typedLocale} />
-          <div className="border-b border-amber-200 bg-amber-50 text-amber-900">
-            <div className="container-shell py-2 text-center text-sm font-medium">
-              {betaNotice}
-            </div>
-          </div>
-          {children}
-          <footer className="mt-16 border-t border-slate-200 bg-white py-8 text-sm text-slate-500">
-            <div className="container-shell flex flex-wrap items-center justify-between gap-3">
-              <p>© 4D AI. Public result pages are provided for information only.</p>
-              <p>Responsible gaming notice applies.</p>
-            </div>
-          </footer>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider locale={typedLocale} messages={messages}>
+      <SiteHeader locale={typedLocale} />
+      <div className="border-b border-amber-200 bg-amber-50 text-amber-900">
+        <div className="container-shell py-2 text-center text-sm font-medium">
+          {betaNotice}
+        </div>
+      </div>
+      {children}
+      <footer className="mt-16 border-t border-slate-200 bg-white py-8 text-sm text-slate-500">
+        <div className="container-shell flex flex-wrap items-center justify-between gap-3">
+          <p>© 4D AI. Public result pages are provided for information only.</p>
+          <p>Responsible gaming notice applies.</p>
+        </div>
+      </footer>
+    </NextIntlClientProvider>
   );
 }
