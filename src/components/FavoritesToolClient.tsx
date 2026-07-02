@@ -87,8 +87,8 @@ function validateLotto(values: string[], upperBound: number) {
 }
 
 function validatePackage(packageType: PackageType, rawDigits: string) {
-  const digits = rawDigits.replace(/\s+/g, '');
-  if (!/^\d{4}$/.test(digits)) return '';
+  if (!/^\d{4}$/.test(rawDigits)) return '';
+  const digits = rawDigits;
   const counts = new Map<string, number>();
   for (const digit of digits) counts.set(digit, (counts.get(digit) ?? 0) + 1);
   const signature = Array.from(counts.values()).sort((left, right) => left - right).join(',');
@@ -224,7 +224,7 @@ export function FavoritesToolClient({labels}: Props) {
               </div>
               <label className="mt-4 block">
                 <span className="text-sm font-black text-slate-800">{labels.inputLabel}</span>
-                <input inputMode="numeric" maxLength={4} value={digits} onChange={(event) => setDigits(event.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="1234" className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-lg font-black tracking-[0.2em] text-slate-950 outline-none focus:border-blue-500" />
+                <input inputMode="numeric" maxLength={12} value={digits} onChange={(event) => setDigits(event.target.value)} placeholder="1234" className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-lg font-black tracking-[0.2em] text-slate-950 outline-none focus:border-blue-500" />
               </label>
             </div>
           ) : (

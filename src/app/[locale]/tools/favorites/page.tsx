@@ -20,6 +20,7 @@ export async function generateMetadata({params}: {params: Promise<{locale: Local
 export default async function FavoritesToolPage({params}: {params: Promise<{locale: Locale}>}) {
   const {locale} = await params;
   const t = await getTranslations({locale, namespace: 'Tools'});
+  const rawLabel = (key: string) => t.raw(key) as string;
 
   return (
     <main className="container-shell py-10">
@@ -45,16 +46,16 @@ export default async function FavoritesToolPage({params}: {params: Promise<{loca
           savedTitle: t('favoritesSavedTitle'),
           addButton: t('favoriteAddButton'),
           clearButton: t('favoriteClearButton'),
-          clearConfirm: t('favoriteClearConfirm'),
+          clearConfirm: rawLabel('favoriteClearConfirm'),
           inputLabel: t('favoriteInputLabel'),
           packageTypeLabel: t('favoritePackageTypeLabel'),
           lottoInputLabel: t('favoriteLottoInputLabel'),
           saveButton: t('favoriteSaveButton'),
           cancelButton: t('favoriteCancelButton'),
           duplicateText: t('favoriteDuplicateText'),
-          limitText: t('favoriteLimitText'),
+          limitText: rawLabel('favoriteLimitText'),
           invalidText: t('favoriteInvalidText'),
-          emptyText: t('favoritesEmptyText'),
+          emptyText: rawLabel('favoritesEmptyText'),
           savedText: t('favoriteSavedText'),
           deleteButton: t('favoriteDeleteButton'),
           syncNoteTitle: t('favoritesSyncNoteTitle'),
