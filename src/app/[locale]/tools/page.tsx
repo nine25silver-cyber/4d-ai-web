@@ -8,11 +8,11 @@ export const dynamic = 'force-dynamic';
 const pagePath = 'tools';
 
 type FeaturedTool = 'ai' | 'packageRanking';
-type StandardTool = 'thousandHits' | 'numberSearch' | 'digitMap' | 'hotCold' | 'cold4d' | 'favorites' | 'history' | 'account';
+type StandardTool = 'thousandHits' | 'numberSearch' | 'digitMap' | 'hotCold' | 'cold4d' | 'luckyNumber' | 'favorites' | 'history' | 'account';
 type ComingSoonTool = 'moreAi' | 'more3d' | 'moreAnalytics';
 
 const featuredTools: FeaturedTool[] = ['ai', 'packageRanking'];
-const standardTools: StandardTool[] = ['thousandHits', 'numberSearch', 'digitMap', 'hotCold', 'cold4d', 'favorites', 'history', 'account'];
+const standardTools: StandardTool[] = ['thousandHits', 'numberSearch', 'digitMap', 'hotCold', 'cold4d', 'luckyNumber', 'favorites', 'history', 'account'];
 const comingSoonTools: ComingSoonTool[] = ['moreAi', 'more3d', 'moreAnalytics'];
 
 const featuredIcons: Record<FeaturedTool, string> = {
@@ -26,6 +26,7 @@ const standardIcons: Record<StandardTool, string> = {
   digitMap: 'MAP',
   hotCold: 'HOT',
   cold4d: 'COLD',
+  luckyNumber: 'LUCK',
   favorites: 'FAV',
   history: 'HIS',
   account: 'ID'
@@ -37,6 +38,7 @@ const standardIconStyles: Record<StandardTool, string> = {
   digitMap: 'bg-violet-50 text-violet-700',
   hotCold: 'bg-rose-50 text-rose-700',
   cold4d: 'bg-sky-50 text-sky-700',
+  luckyNumber: 'bg-lime-50 text-lime-700',
   favorites: 'bg-pink-50 text-pink-700',
   history: 'bg-slate-50 text-slate-700',
   account: 'bg-emerald-50 text-emerald-700'
@@ -82,6 +84,11 @@ function localizedCopy(locale: Locale) {
         : locale === 'ms'
           ? {title: '4D Sejuk', subtitle: 'Nombor frekuensi terendah'}
           : {title: 'Cold 4D', subtitle: 'Lowest frequency numbers'},
+      luckyNumber: locale === 'zh'
+        ? {title: '我的幸运数字', subtitle: '生成 4D、6D 与积宝幸运号码'}
+        : locale === 'ms'
+          ? {title: 'Nombor Bertuah Saya', subtitle: 'Jana nombor bertuah 4D, 6D dan jackpot'}
+          : {title: 'My Lucky Number', subtitle: 'Generate 4D, 6D and jackpot lucky numbers'},
       favorites: locale === 'zh'
         ? {title: '我的收藏号码', subtitle: '查看已收藏的4D、6D与积宝号码'}
         : locale === 'ms'
@@ -124,6 +131,7 @@ function getStandardHref(locale: Locale, tool: StandardTool) {
   if (tool === 'digitMap') return `/${locale}/tools/digit-map`;
   if (tool === 'hotCold') return `/${locale}/tools/hot-cold?mode=hot`;
   if (tool === 'cold4d') return `/${locale}/tools/hot-cold?mode=cold`;
+  if (tool === 'luckyNumber') return `/${locale}/tools/lucky-number`;
   if (tool === 'favorites') return `/${locale}/tools/favorites`;
   if (tool === 'history') return `/${locale}/history`;
   return `/${locale}/account`;
