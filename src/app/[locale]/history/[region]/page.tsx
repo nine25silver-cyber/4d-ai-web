@@ -77,16 +77,16 @@ export default async function RegionHistoryPage({params}: {params: Promise<{loca
   if (providers.length === 0) notFound();
   const t = await getTranslations({locale, namespace: 'History'});
   const states = await fetchRegionHistoryLatest30(providers.map((provider) => provider.code));
-  const initialResults = (await Promise.all(states.map(async (state) => {
+  const initialResults = await Promise.all(states.map(async (state) => {
     if (!state.ok) {
-      return [{ok: false as const, providerCode: state.providerCode, url: state.url, reason: state.reason}];
+      return {ok: false as const, providerCode: state.providerCode, url: state.url, reason: state.reason};
     }
-    const dates = sortDatesNewestFirst(state.payload.dates).slice(0, 30);
-    if (dates.length === 0) {
-      return [{ok: false as const, providerCode: state.providerCode, url: state.url, reason: 'no_dates'}];
+    const latestDate = sortDatesNewestFirst(state.payload.dates)[0];
+    if (!latestDate) {
+      return {ok: false as const, providerCode: state.providerCode, url: state.url, reason: 'no_dates'};
     }
-    return Promise.all(dates.map((date) => fetchHistoryDaily(state.providerCode, date)));
-  }))).flat();
+    return fetchHistoryDaily(state.providerCode, latestDate);
+  }));
   return (
     <main className="container-shell pt-2 pb-6">
       <div className="flex flex-col gap-2 border-b border-slate-200 pb-2">
