@@ -39,7 +39,7 @@ export type DisplayPayload = {
 
 export type ProviderResultState =
   | {ok: true; providerCode: string; url: string; payload: ProviderResultPayload}
-  | {ok: false; providerCode: string; url: string; reason: string};
+  | {ok: false; providerCode: string; url: string; reason: string; requestedDate?: string};
 
 export type HistoryIndexEntry = {
   draw_date: string;
@@ -487,16 +487,16 @@ export async function fetchHistoryDaily(providerCode: string, date: string): Pro
   const safeDate = date.trim();
   const url = `${historyBaseUrl.replace(/\/$/, '')}/${providerCode}/${safeDate}.json`;
   try {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(safeDate)) return {ok: false, providerCode, url, reason: 'invalid_date'};
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(safeDate)) return {ok: false, providerCode, url, reason: 'invalid_date', requestedDate: safeDate};
     const response = await fetch(url, {next: {revalidate: 300}, headers: {accept: 'application/json'}});
-    if (!response.ok) return {ok: false, providerCode, url, reason: `status_${response.status}`};
+    if (!response.ok) return {ok: false, providerCode, url, reason: `status_${response.status}`, requestedDate: safeDate};
     const decoded = parseJsonSafely(await response.text());
-    if (!decoded) return {ok: false, providerCode, url, reason: 'invalid_json'};
+    if (!decoded) return {ok: false, providerCode, url, reason: 'invalid_json', requestedDate: safeDate};
     const payload = normalizeProviderPayload(providerCode, decoded);
-    if (!payload) return {ok: false, providerCode, url, reason: 'invalid_json_shape'};
+    if (!payload) return {ok: false, providerCode, url, reason: 'invalid_json_shape', requestedDate: safeDate};
     return {ok: true, providerCode, url, payload};
   } catch (error) {
-    return {ok: false, providerCode, url, reason: error instanceof Error ? error.message : 'request_failed'};
+    return {ok: false, providerCode, url, reason: error instanceof Error ? error.message : 'request_failed', requestedDate: safeDate};
   }
 }
 

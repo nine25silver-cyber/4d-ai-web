@@ -1,9 +1,9 @@
 'use client';
 
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {ResultCard, type ResultCardLabels} from '@/components/ResultCard';
-import type {HistoryLatest30State, ProviderResultState} from '@/lib/cloudflare';
+import type {HistoryLatest30State, ProviderResultPayload, ProviderResultState} from '@/lib/cloudflare';
 import type {Locale} from '@/i18n/routing';
 import type {ProviderConfig} from '@/lib/providers';
 import {resultCardLabels} from '@/lib/result-labels';
@@ -18,9 +18,53 @@ type Props = {
 type ResultCache = Record<string, ProviderResultState>;
 
 const buttonBase = 'rounded-md border px-2 py-1.5 text-xs font-black transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400';
+const publicHistoryBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_HISTORY_BASE_URL ?? 'https://data.4dai88.com/history_test';
 
 function cacheKey(providerCode: string, date: string) {
   return `${providerCode}|${date}`;
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.map((item) => String(item ?? '').trim()).filter(Boolean) : [];
+}
+
+function normalizeProviderPayload(providerCode: string, raw: unknown): ProviderResultPayload | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const map = raw as Record<string, unknown>;
+  return {
+    provider_code: String(map.provider_code ?? providerCode),
+    draw_date: String(map.draw_date ?? ''),
+    draw_no: String(map.draw_no ?? ''),
+    phase: String(map.phase ?? ''),
+    status: String(map.status ?? ''),
+    has_result: map.has_result === true,
+    first_prize: String(map.first_prize ?? ''),
+    second_prize: String(map.second_prize ?? ''),
+    third_prize: String(map.third_prize ?? ''),
+    special_numbers: normalizeStringArray(map.special_numbers),
+    consolation_numbers: normalizeStringArray(map.consolation_numbers),
+    updated_at: String(map.updated_at ?? ''),
+    generated_at: String(map.generated_at ?? ''),
+    source_type: String(map.source_type ?? '')
+  };
+}
+
+async function fetchHistoryDailyFromPublicJson(providerCode: string, date: string): Promise<ProviderResultState> {
+  const safeDate = date.trim();
+  const base = publicHistoryBaseUrl.replace(/\/$/, '');
+  const url = `${base}/${encodeURIComponent(providerCode)}/${encodeURIComponent(safeDate)}.json`;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(safeDate)) return {ok: false, providerCode, url, reason: 'invalid_date', requestedDate: safeDate};
+  try {
+    const response = await fetch(url, {cache: 'no-store', headers: {accept: 'application/json'}});
+    if (!response.ok) return {ok: false, providerCode, url, reason: `status_${response.status}`, requestedDate: safeDate};
+    const decoded = await response.json().catch(() => null);
+    if (!decoded) return {ok: false, providerCode, url, reason: 'invalid_json', requestedDate: safeDate};
+    const payload = normalizeProviderPayload(providerCode, decoded);
+    if (!payload) return {ok: false, providerCode, url, reason: 'invalid_json_shape', requestedDate: safeDate};
+    return {ok: true, providerCode, url, payload};
+  } catch (error) {
+    return {ok: false, providerCode, url, reason: error instanceof Error ? error.message : 'request_failed', requestedDate: safeDate};
+  }
 }
 
 function sortDatesNewestFirst(dates: string[]) {
@@ -44,7 +88,7 @@ function initialSelectedDates(indexes: HistoryLatest30State[], results: Provider
 function initialResultCache(results: ProviderResultState[]) {
   const cache: ResultCache = {};
   for (const result of results) {
-    const date = result.ok ? result.payload.draw_date : undefined;
+    const date = result.ok ? result.payload.draw_date : result.requestedDate;
     if (date) cache[cacheKey(result.providerCode, date)] = result;
   }
   return cache;
@@ -81,7 +125,8 @@ export function HistoryResultsGrid({locale, providers, initialIndexes, initialRe
   const labels: ResultCardLabels = resultCardLabels(resultsT);
   const indexMap = useMemo(() => new Map(initialIndexes.map((state) => [state.providerCode, state])), [initialIndexes]);
   const [selectedDateByProvider, setSelectedDateByProvider] = useState(() => initialSelectedDates(initialIndexes, initialResults));
-  const [resultCache] = useState<ResultCache>(() => initialResultCache(initialResults));
+  const [resultCache, setResultCache] = useState<ResultCache>(() => initialResultCache(initialResults));
+  const [loadingKeys, setLoadingKeys] = useState<Record<string, true>>({});
   const [dialogProviderCode, setDialogProviderCode] = useState<string | null>(null);
 
   function selectDate(providerCode: string, date: string) {
@@ -94,6 +139,25 @@ export function HistoryResultsGrid({locale, providers, initialIndexes, initialRe
   const dialogIndex = dialogProviderCode ? indexMap.get(dialogProviderCode) : undefined;
   const dialogDates = dialogIndex?.ok ? sortDatesNewestFirst(dialogIndex.payload.dates).slice(0, 30) : [];
 
+  useEffect(() => {
+    providers.forEach((provider) => {
+      const selectedDate = selectedDateByProvider[provider.code];
+      if (!selectedDate) return;
+      const key = cacheKey(provider.code, selectedDate);
+      if (resultCache[key] || loadingKeys[key]) return;
+      setLoadingKeys((current) => ({...current, [key]: true}));
+      void fetchHistoryDailyFromPublicJson(provider.code, selectedDate).then((result) => {
+        setResultCache((current) => ({...current, [key]: result}));
+      }).finally(() => {
+        setLoadingKeys((current) => {
+          const next = {...current};
+          delete next[key];
+          return next;
+        });
+      });
+    });
+  }, [loadingKeys, providers, resultCache, selectedDateByProvider]);
+
   return (
     <section className="mt-2">
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-4">
@@ -104,8 +168,9 @@ export function HistoryResultsGrid({locale, providers, initialIndexes, initialRe
           const selectedIndex = selectedDate ? dates.indexOf(selectedDate) : -1;
           const previousDate = selectedIndex >= 0 && selectedIndex < dates.length - 1 ? dates[selectedIndex + 1] : undefined;
           const nextDate = selectedIndex > 0 ? dates[selectedIndex - 1] : undefined;
+          const selectedKey = selectedDate ? cacheKey(provider.code, selectedDate) : '';
           const result = selectedDate
-            ? resultCache[cacheKey(provider.code, selectedDate)] ?? {ok: false as const, providerCode: provider.code, url: '', reason: 'history_result_not_cached'}
+            ? resultCache[selectedKey] ?? {ok: false as const, providerCode: provider.code, url: '', reason: loadingKeys[selectedKey] ? 'loading_history_result' : 'history_result_pending', requestedDate: selectedDate}
             : {ok: false as const, providerCode: provider.code, url: indexState?.url ?? '', reason: indexState?.ok ? 'no_dates' : indexState?.reason ?? 'not_requested'};
 
           return (
