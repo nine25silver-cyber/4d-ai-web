@@ -17,7 +17,7 @@ type Props = {
 
 type ResultCache = Record<string, ProviderResultState>;
 
-const buttonBase = 'rounded-md border px-2 py-1.5 text-xs font-black transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400';
+const buttonBase = 'rounded border px-2 py-1 text-[11px] font-black leading-4 transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400';
 const publicHistoryBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_HISTORY_BASE_URL ?? 'https://data.4dai88.com/history_test';
 
 function cacheKey(providerCode: string, date: string) {
@@ -175,7 +175,7 @@ export function HistoryResultsGrid({locale, providers, initialIndexes, initialRe
 
           return (
             <div key={provider.code} data-history-provider={provider.code}>
-              <div className="mb-1.5 grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 rounded-md border border-slate-200 bg-white p-1.5 shadow-sm">
+              <div className="mb-1 grid grid-cols-[1fr_auto_1fr] items-center gap-1 rounded border border-slate-200 bg-white p-1 shadow-sm">
                 <button
                   type="button"
                   disabled={!previousDate}
@@ -188,11 +188,11 @@ export function HistoryResultsGrid({locale, providers, initialIndexes, initialRe
                   type="button"
                   disabled={dates.length === 0}
                   onClick={() => setDialogProviderCode(provider.code)}
-                  className={`${buttonBase} min-w-28 border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100`}
+                  className={`${buttonBase} min-w-24 border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100`}
                   aria-label={`${fallbackText(locale, 'chooseDate')} ${provider.name}`}
                 >
-                  <span className="block text-[10px] font-bold uppercase leading-3 text-blue-700">{fallbackText(locale, 'chooseDate')}</span>
-                  <span className="block">{selectedDate || '-'}</span>
+                  <span className="block text-[9px] font-bold uppercase leading-3 text-blue-700">{fallbackText(locale, 'chooseDate')}</span>
+                  <span className="block text-[11px] leading-4">{selectedDate || '-'}</span>
                 </button>
                 <button
                   type="button"
