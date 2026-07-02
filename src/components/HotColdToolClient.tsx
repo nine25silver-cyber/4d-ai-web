@@ -72,20 +72,12 @@ type Props = {
     range20y: string;
     rangeAll: string;
     providerSelectTitle: string;
-    providerSelectText: string;
     calculating: string;
     noTrendYet: string;
     trendError: string;
-    summaryTitle: string;
-    drawsScanned: string;
-    numbersScanned: string;
     hotNumbersTitle: string;
     coldNumbersTitle: string;
-    digitFrequencyTitle: string;
-    providerSummaryTitle: string;
     timesLabel: string;
-    latestDateLabel: string;
-    providersLabel: string;
     noTrendResults: string;
   };
 };
@@ -101,6 +93,7 @@ export function HotColdToolClient({locale, providers, initialTrendKind, labels}:
   const [range, setRange] = useState<TrendRange>('all');
   const [selectedProviderCode, setSelectedProviderCode] = useState(defaultProvider?.code ?? '');
   const [top3Only, setTop3Only] = useState(false);
+  const [rangeMenuOpen, setRangeMenuOpen] = useState(false);
   const [providerMenuOpen, setProviderMenuOpen] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [trend, setTrend] = useState<TrendResponse | null>(null);
@@ -134,7 +127,6 @@ export function HotColdToolClient({locale, providers, initialTrendKind, labels}:
   const top3ToggleLabel = locale === 'zh' ? '只显示第一、二、三奖' : locale === 'ms' ? 'Hanya hadiah pertama, kedua dan ketiga' : 'First, second and third prize only';
   const top3OffText = locale === 'zh' ? '关闭：包含特别奖与安慰奖' : locale === 'ms' ? 'Tutup: termasuk hadiah khas dan saguhati' : 'Off: includes special and consolation prizes';
   const top3OnText = locale === 'zh' ? '开启：只统计头奖、二奖、三奖' : locale === 'ms' ? 'Buka: kira hadiah pertama, kedua dan ketiga sahaja' : 'On: counts first, second and third prize only';
-  const rangeSummaryLabel = locale === 'zh' ? '范围说明' : locale === 'ms' ? 'Ringkasan julat' : 'Range summary';
 
   useEffect(() => {
     let active = true;
@@ -229,6 +221,7 @@ export function HotColdToolClient({locale, providers, initialTrendKind, labels}:
     }
   }
 
+  const allYearsLabel = locale === 'zh' ? '全部年份' : locale === 'ms' ? 'Semua tahun' : 'All years';
   const ranges: Array<{value: TrendRange; label: string}> = [
     {value: '1y', label: labels.range1y},
     {value: '2y', label: labels.range2y},
@@ -237,7 +230,7 @@ export function HotColdToolClient({locale, providers, initialTrendKind, labels}:
     {value: '10y', label: labels.range10y},
     {value: '15y', label: labels.range15y},
     {value: '20y', label: labels.range20y},
-    {value: 'all', label: labels.rangeAll}
+    {value: 'all', label: allYearsLabel}
   ];
   const rangeLabel = ranges.find((item) => item.value === range)?.label ?? range;
   const prizeScopeText = top3Only ? top3OnText : top3OffText;
@@ -248,31 +241,43 @@ export function HotColdToolClient({locale, providers, initialTrendKind, labels}:
     <section className="mt-8 grid items-start gap-5 xl:grid-cols-[420px_1fr]">
       <form className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <section>
-          <h2 className="text-sm font-black text-slate-800">{labels.rangeLabel}</h2>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {ranges.map((item) => {
-              const active = range === item.value;
-              return (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => setRange(item.value)}
-                  aria-pressed={active}
-                  disabled={!canUseTrend}
-                  className={`min-h-[42px] rounded-md border px-2 py-2 text-sm font-black transition ${
-                    active ? 'border-blue-700 bg-blue-800 text-white shadow-sm' : 'border-slate-300 bg-white text-slate-800 hover:border-blue-400 hover:bg-blue-50'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setRangeMenuOpen((open) => !open)}
+              disabled={!canUseTrend}
+              aria-expanded={rangeMenuOpen}
+              className="flex min-h-[48px] w-full items-center justify-between gap-3 rounded-md border border-slate-300 bg-white px-3 py-2 text-left transition hover:border-blue-400 disabled:opacity-60"
+            >
+              <span className="text-sm font-black text-slate-950">{rangeLabel}</span>
+              <span className="text-lg font-black text-slate-500" aria-hidden="true">⌄</span>
+            </button>
+            {rangeMenuOpen ? (
+              <div className="absolute z-20 mt-2 w-full rounded-md border border-slate-200 bg-white p-1 shadow-lg">
+                {ranges.map((item) => {
+                  const active = range === item.value;
+                  return (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => {
+                        setRange(item.value);
+                        setRangeMenuOpen(false);
+                      }}
+                      aria-pressed={active}
+                      className={`flex w-full items-center rounded px-3 py-2 text-left text-sm font-black transition ${active ? 'bg-blue-50 text-blue-950' : 'text-slate-800 hover:bg-slate-50'}`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
         </section>
 
         <section className="mt-5">
           <h2 className="text-sm font-black text-slate-800">{labels.providerSelectTitle}</h2>
-          <p className="mt-1 text-xs font-semibold text-slate-500">{labels.providerSelectText}</p>
           <div className="relative mt-3">
             <button
               type="button"
@@ -370,61 +375,14 @@ export function HotColdToolClient({locale, providers, initialTrendKind, labels}:
           </div>
         </div>
         {status === 'idle' ? <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-600 shadow-sm">{labels.noTrendYet}</div> : null}
+        {status === 'loading' ? <p className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm font-bold text-blue-900">{labels.calculating}</p> : null}
         {trend ? (
           <>
-            <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <h2 className="text-sm font-black text-slate-950">{rangeSummaryLabel}</h2>
-              <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-                {selectedProvider?.name ?? '-'} | {rangeLabel} | {prizeScopeText} | {labels.drawsScanned}: {trend.drawCount} | {labels.numbersScanned}: {trend.numberCount}
-              </p>
-            </section>
-
-            <div className="grid gap-3 md:grid-cols-3">
-              <SummaryCard title={labels.summaryTitle} value={`${trend.providerSummaries.length}`} detail={labels.providersLabel} />
-              <SummaryCard title={labels.drawsScanned} value={`${trend.drawCount}`} detail={rangeLabel} />
-              <SummaryCard title={labels.numbersScanned} value={`${trend.numberCount}`} detail="4D" />
-            </div>
-
-            {status === 'loading' ? <p className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm font-bold text-blue-900">{labels.calculating}</p> : null}
             <TrendList title={resultTitle} items={resultItems} labels={labels} emptyText={labels.noTrendResults} />
-
-            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-black text-slate-950">{labels.digitFrequencyTitle}</h2>
-              <div className="mt-4 grid grid-cols-5 gap-2 md:grid-cols-10">
-                {trend.digitCounts.map((item) => (
-                  <div key={item.digit} className="rounded-md border border-slate-200 bg-slate-50 p-3 text-center">
-                    <div className="text-xl font-black text-slate-950">{item.digit}</div>
-                    <div className="mt-1 text-xs font-bold text-slate-500">{item.count}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-black text-slate-950">{labels.providerSummaryTitle}</h2>
-              <div className="mt-4 grid gap-2 md:grid-cols-2">
-                {trend.providerSummaries.map((provider) => (
-                  <div key={provider.providerCode} className="rounded-md border border-slate-200 bg-slate-50 p-3">
-                    <div className="font-black text-slate-950">{provider.providerName}</div>
-                    <div className="mt-1 text-xs font-bold text-slate-500">{labels.drawsScanned}: {provider.drawCount} | {labels.numbersScanned}: {provider.numberCount}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
           </>
         ) : null}
       </section>
     </section>
-  );
-}
-
-function SummaryCard({title, value, detail}: {title: string; value: string; detail: string}) {
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="text-xs font-black uppercase text-blue-800">{title}</div>
-      <div className="mt-2 text-2xl font-black text-slate-950">{value}</div>
-      <div className="mt-1 text-xs font-bold text-slate-500">{detail}</div>
-    </div>
   );
 }
 
@@ -440,8 +398,6 @@ function TrendList({title, items, labels, emptyText}: {title: string; items: Tre
               <div className="text-xl font-black tracking-[0.18em] text-slate-950">{item.number}</div>
               <div className="rounded bg-blue-100 px-2 py-1 text-xs font-black text-blue-800">{item.count} {labels.timesLabel}</div>
             </div>
-            <div className="mt-2 text-xs font-bold text-slate-500">{labels.latestDateLabel}: {item.latestDate || '-'}</div>
-            <div className="mt-1 text-xs font-bold text-slate-500">{labels.providersLabel}: {item.providers.join(', ') || '-'}</div>
           </div>
         ))}
       </div>
