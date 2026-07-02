@@ -1,4 +1,5 @@
 import {NextResponse} from 'next/server';
+import {getCloudflareContext} from '@opennextjs/cloudflare';
 
 type DictionaryTextSection = {
   labelEn: string;
@@ -32,12 +33,22 @@ type RemoteDictionaryPayload = {
   entries?: RemoteDictionaryEntry[];
 };
 
+type DictionaryApiBinding = {
+  fetch: typeof fetch;
+};
+
 const dictionaryBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_DICTIONARY_BASE_URL ?? 'https://data.4dai88.com/dictionary/v1';
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 40;
 const sectionOrder = ['magnum', 'toto', 'damacai', 'tpk'];
 const brokenDictionaryImageHost = 'assets.4dai88.com';
 const legacyDictionaryImageBaseUrl = 'https://4dno.org/images/dictionaries';
+
+function responseHeaders() {
+  return {
+    'Cache-Control': 'no-store'
+  };
+}
 
 function normalizeQuery(value: string | null) {
   return String(value ?? '').trim().slice(0, 32);
@@ -129,15 +140,31 @@ function searchUrl(query: string, limit: number) {
   return `${rootUrl()}/search?q=${encodeURIComponent(query)}&limit=${limit}`;
 }
 
-async function fetchDictionaryUrl(url: string): Promise<RemoteDictionaryPayload> {
-  const response = await fetch(url, {
+function getDictionaryBinding(): DictionaryApiBinding | undefined {
+  try {
+    const {env} = getCloudflareContext();
+    return (env as CloudflareEnv & {DICTIONARY_API?: DictionaryApiBinding}).DICTIONARY_API;
+  } catch {
+    return undefined;
+  }
+}
+
+async function fetchDictionaryUrl(url: string, dictionaryApi?: DictionaryApiBinding): Promise<RemoteDictionaryPayload> {
+  const request = new Request(url, {
     cache: 'no-store',
     headers: {Accept: 'application/json'}
   });
-  if (response.status === 404) return {ok: true, entries: []};
+  // Production uses the Worker Service Binding to avoid same-zone public fetch routing issues.
+  // The public URL fallback is only for local Next dev, where Cloudflare bindings are absent.
+  const response = dictionaryApi ? await dictionaryApi.fetch(request) : await fetch(request);
+  if (response.status === 404) {
+    return {ok: true, entries: []};
+  }
   if (!response.ok) throw new Error(`dictionary_fetch_failed_${response.status}`);
   const payload = (await response.json()) as RemoteDictionaryPayload;
-  if (payload.ok === false) return {ok: true, entries: []};
+  if (payload.ok === false) {
+    return {ok: true, entries: []};
+  }
   return payload;
 }
 
@@ -156,9 +183,9 @@ function threeDigitTargets(digits: string) {
   return Array.from(targets);
 }
 
-async function fetchNumberEntries(digits: string, limit: number) {
+async function fetchNumberEntries(digits: string, limit: number, dictionaryApi?: DictionaryApiBinding) {
   const targets = digits.length === 4 ? [digits, ...threeDigitTargets(digits)] : [digits];
-  const entries = (await Promise.all(targets.map(async (target) => entriesFromPayload(await fetchDictionaryUrl(numberUrl(target)), 1)))).flat();
+  const entries = (await Promise.all(targets.map(async (target) => entriesFromPayload(await fetchDictionaryUrl(numberUrl(target), dictionaryApi), 1)))).flat();
   const byNumber = new Map<string, DictionaryEntry>();
   for (const entry of entries) {
     if (!byNumber.has(entry.number)) byNumber.set(entry.number, entry);
@@ -166,25 +193,26 @@ async function fetchNumberEntries(digits: string, limit: number) {
   return Array.from(byNumber.values()).slice(0, limit);
 }
 
-async function fetchKeywordEntries(query: string, limit: number) {
-  return entriesFromPayload(await fetchDictionaryUrl(searchUrl(query, limit)), limit);
+async function fetchKeywordEntries(query: string, limit: number, dictionaryApi?: DictionaryApiBinding) {
+  return entriesFromPayload(await fetchDictionaryUrl(searchUrl(query, limit), dictionaryApi), limit);
 }
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const query = normalizeQuery(url.searchParams.get('query') ?? url.searchParams.get('q'));
   const limit = normalizeLimit(url.searchParams.get('limit'));
+  const dictionaryApi = getDictionaryBinding();
 
   if (!query) {
-    return NextResponse.json({query, entries: [], count: 0}, {headers: {'Cache-Control': 'no-store'}});
+    return NextResponse.json({query, entries: [], count: 0}, {headers: responseHeaders()});
   }
 
   const digits = normalizeDigits(query);
   const isNumberQuery = digits.length === query.length && /^\d{1,4}$/.test(digits);
-  const entries = isNumberQuery ? await fetchNumberEntries(digits, limit) : await fetchKeywordEntries(query, limit);
+  const entries = isNumberQuery ? await fetchNumberEntries(digits, limit, dictionaryApi) : await fetchKeywordEntries(query, limit, dictionaryApi);
 
   return NextResponse.json(
     {query, entries, count: entries.length},
-    {headers: {'Cache-Control': 'no-store'}}
+    {headers: responseHeaders()}
   );
 }

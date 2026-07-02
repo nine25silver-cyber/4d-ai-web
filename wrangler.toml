@@ -4,6 +4,10 @@ main = ".open-next/worker.js"
 compatibility_date = "2025-05-25"
 compatibility_flags = ["nodejs_compat"]
 
+[[services]]
+binding = "DICTIONARY_API"
+service = "4dai88-dictionary-api"
+
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
