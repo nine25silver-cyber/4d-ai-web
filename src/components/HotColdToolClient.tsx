@@ -20,8 +20,12 @@ import {ProviderLogoBadge} from '@/components/ProviderLogoBadge';
 type TrendNumber = {
   number: string;
   count: number;
+  rank?: number;
   providers: string[];
   latestDate: string;
+  latestDrawNo?: string;
+  distanceDays?: number | null;
+  distanceDraws?: number | null;
 };
 
 type DigitCount = {
@@ -38,19 +42,25 @@ type ProviderSummary = {
 
 type TrendResponse = {
   range: string;
+  mode: TrendKind;
   from: string;
   to: string;
   drawCount: number;
   numberCount: number;
+  top3Only: boolean;
   hotNumbers: TrendNumber[];
   coldNumbers: TrendNumber[];
   digitCounts: DigitCount[];
   providerSummaries: ProviderSummary[];
 };
 
+type TrendKind = 'hot' | 'cold';
+type TrendRange = '1y' | '2y' | '3y' | '5y' | '10y' | '15y' | '20y' | 'all';
+
 type Props = {
   locale: Locale;
   providers: ProviderConfig[];
+  initialTrendKind: TrendKind;
   labels: {
     rangeLabel: string;
     range1y: string;
@@ -60,15 +70,9 @@ type Props = {
     range10y: string;
     range15y: string;
     range20y: string;
-    range30y: string;
     rangeAll: string;
     providerSelectTitle: string;
     providerSelectText: string;
-    selectedProviders: string;
-    selectAll: string;
-    clearAll: string;
-    hotSearchButton: string;
-    coldSearchButton: string;
     calculating: string;
     noTrendYet: string;
     trendError: string;
@@ -86,24 +90,23 @@ type Props = {
   };
 };
 
-type TrendKind = 'hot' | 'cold';
-type TrendRange = '1y' | '2y' | '3y' | '5y' | '10y' | '15y' | '20y' | '30y' | 'all';
-
-export function HotColdToolClient({locale, providers, labels}: Props) {
+export function HotColdToolClient({locale, providers, initialTrendKind, labels}: Props) {
+  const defaultProvider = providers.find((provider) => provider.code === 'magnum') ?? providers[0];
   const [memberState, setMemberState] = useState<MemberState | null>(null);
   const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
   const [entitlementLoading, setEntitlementLoading] = useState(true);
   const [rewardCredits, setRewardCredits] = useState(0);
   const [adUnlocked, setAdUnlocked] = useState(false);
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
-  const [range, setRange] = useState<TrendRange>('1y');
-  const [trendKind, setTrendKind] = useState<TrendKind>('hot');
-  const [selected, setSelected] = useState(() => new Set(providers.map((provider) => provider.code)));
+  const [range, setRange] = useState<TrendRange>('all');
+  const [selectedProviderCode, setSelectedProviderCode] = useState(defaultProvider?.code ?? '');
+  const [top3Only, setTop3Only] = useState(false);
+  const [providerMenuOpen, setProviderMenuOpen] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [trend, setTrend] = useState<TrendResponse | null>(null);
-  const selectedNames = useMemo(
-    () => providers.filter((provider) => selected.has(provider.code)).map((provider) => provider.shortName).join(', '),
-    [providers, selected]
+  const selectedProvider = useMemo(
+    () => providers.find((provider) => provider.code === selectedProviderCode) ?? defaultProvider,
+    [defaultProvider, providers, selectedProviderCode]
   );
   const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
   const canUseTrend = isFormalPro || adUnlocked;
@@ -128,6 +131,11 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
   const compactLockedAccessText = entitlementLoading
     ? (locale === 'zh' ? '正在确认会员权限；也可通过广告临时解锁。' : locale === 'ms' ? 'Sedang menyemak akses ahli; iklan masih boleh membuka akses sementara.' : 'Checking membership access; ad unlock remains available.')
     : (locale === 'zh' ? '热门/冷门走势开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Trend panas/sejuk untuk ahli Pro, atau buka sementara melalui iklan.' : 'Hot/Cold trends are for Pro, or temporary ad unlock.');
+  const top3ToggleLabel = locale === 'zh' ? '只显示第一、二、三奖' : locale === 'ms' ? 'Hanya hadiah pertama, kedua dan ketiga' : 'First, second and third prize only';
+  const top3OffText = locale === 'zh' ? '关闭：包含特别奖与安慰奖' : locale === 'ms' ? 'Tutup: termasuk hadiah khas dan saguhati' : 'Off: includes special and consolation prizes';
+  const top3OnText = locale === 'zh' ? '开启：只统计头奖、二奖、三奖' : locale === 'ms' ? 'Buka: kira hadiah pertama, kedua dan ketiga sahaja' : 'On: counts first, second and third prize only';
+  const rangeSummaryLabel = locale === 'zh' ? '范围说明' : locale === 'ms' ? 'Ringkasan julat' : 'Range summary';
+
   useEffect(() => {
     let active = true;
     const refreshEntitlement = async () => {
@@ -149,6 +157,7 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
       unsubscribe();
     };
   }, []);
+
   useEffect(() => {
     const update = () => {
       setRewardCredits(readRewardState().hot_cold ?? 0);
@@ -164,6 +173,7 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
       setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes('hot_cold'));
     });
   }, []);
+
   useEffect(() => {
     const timer = window.setInterval(() => {
       const active = isFeatureUnlockedNow('hot_cold');
@@ -172,6 +182,43 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
     }, 30_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!canUseTrend || !selectedProviderCode) {
+      setStatus('idle');
+      setTrend(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    const calculateTrend = async () => {
+      setStatus('loading');
+      const params = new URLSearchParams({
+        mode: initialTrendKind,
+        range,
+        provider: selectedProviderCode,
+        top3Only: String(top3Only)
+      });
+      try {
+        const response = await fetch(`/api/hot-cold?${params.toString()}`, {cache: 'no-store', signal: controller.signal});
+        if (!response.ok) {
+          setStatus('error');
+          setTrend(null);
+          return;
+        }
+        setTrend((await response.json()) as TrendResponse);
+        setStatus('done');
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setStatus('error');
+          setTrend(null);
+        }
+      }
+    };
+
+    void calculateTrend();
+    return () => controller.abort();
+  }, [canUseTrend, initialTrendKind, range, selectedProviderCode, top3Only]);
 
   function unlockByRewardedAd() {
     addRewardCredit('hot_cold', 1);
@@ -182,15 +229,6 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
     }
   }
 
-  function toggle(code: string) {
-    setSelected((current) => {
-      const next = new Set(current);
-      if (next.has(code)) next.delete(code);
-      else next.add(code);
-      return next;
-    });
-  }
-
   const ranges: Array<{value: TrendRange; label: string}> = [
     {value: '1y', label: labels.range1y},
     {value: '2y', label: labels.range2y},
@@ -199,31 +237,12 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
     {value: '10y', label: labels.range10y},
     {value: '15y', label: labels.range15y},
     {value: '20y', label: labels.range20y},
-    {value: '30y', label: labels.range30y},
     {value: 'all', label: labels.rangeAll}
   ];
-
-  async function calculateTrend(nextKind: TrendKind) {
-    if (!canUseTrend) {
-      setStatus('idle');
-      setTrend(null);
-      return;
-    }
-    setTrendKind(nextKind);
-    setStatus('loading');
-    const params = new URLSearchParams({
-      range,
-      providers: Array.from(selected).join(',')
-    });
-    const response = await fetch(`/api/hot-cold?${params.toString()}`, {cache: 'no-store'});
-    if (!response.ok) {
-      setStatus('error');
-      setTrend(null);
-      return;
-    }
-    setTrend((await response.json()) as TrendResponse);
-    setStatus('done');
-  }
+  const rangeLabel = ranges.find((item) => item.value === range)?.label ?? range;
+  const prizeScopeText = top3Only ? top3OnText : top3OffText;
+  const resultTitle = initialTrendKind === 'hot' ? labels.hotNumbersTitle : labels.coldNumbersTitle;
+  const resultItems = trend ? (initialTrendKind === 'hot' ? trend.hotNumbers : trend.coldNumbers) : [];
 
   return (
     <section className="mt-8 grid items-start gap-5 xl:grid-cols-[420px_1fr]">
@@ -252,43 +271,71 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
         </section>
 
         <section className="mt-5">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-black text-slate-800">{labels.providerSelectTitle}</h2>
-              <p className="mt-1 text-xs font-semibold text-slate-500">{labels.providerSelectText}</p>
-            </div>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => setSelected(new Set(providers.map((provider) => provider.code)))} className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-black text-slate-700 hover:border-blue-300">
-                {labels.selectAll}
-              </button>
-              <button type="button" onClick={() => setSelected(new Set())} className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-black text-slate-700 hover:border-blue-300">
-                {labels.clearAll}
-              </button>
-            </div>
+          <h2 className="text-sm font-black text-slate-800">{labels.providerSelectTitle}</h2>
+          <p className="mt-1 text-xs font-semibold text-slate-500">{labels.providerSelectText}</p>
+          <div className="relative mt-3">
+            <button
+              type="button"
+              onClick={() => setProviderMenuOpen((open) => !open)}
+              disabled={!canUseTrend}
+              aria-expanded={providerMenuOpen}
+              className="flex min-h-[58px] w-full items-center justify-between gap-3 rounded-md border border-slate-300 bg-white px-3 py-2 text-left transition hover:border-blue-400 disabled:opacity-60"
+            >
+              <span className="flex min-w-0 items-center gap-3">
+                {selectedProvider ? <ProviderLogoBadge provider={selectedProvider} active sizeClassName="size-10" /> : null}
+                <span className="min-w-0">
+                  <span className="block text-sm font-black text-slate-950">{selectedProvider?.name ?? '-'}</span>
+                  <span className="block text-xs font-bold text-slate-500">{selectedProvider?.shortName ?? ''}</span>
+                </span>
+              </span>
+              <span className="text-lg font-black text-slate-500" aria-hidden="true">⌄</span>
+            </button>
+            {providerMenuOpen ? (
+              <div className="absolute z-20 mt-2 max-h-72 w-full overflow-auto rounded-md border border-slate-200 bg-white p-1 shadow-lg">
+                {providers.map((provider) => {
+                  const active = provider.code === selectedProviderCode;
+                  return (
+                    <button
+                      key={provider.code}
+                      type="button"
+                      onClick={() => {
+                        setSelectedProviderCode(provider.code);
+                        setProviderMenuOpen(false);
+                      }}
+                      aria-pressed={active}
+                      className={`flex w-full items-center gap-3 rounded px-3 py-2 text-left transition ${active ? 'bg-blue-50 text-blue-950' : 'hover:bg-slate-50'}`}
+                    >
+                      <ProviderLogoBadge provider={provider} active={active} sizeClassName="size-9" />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-black">{provider.name}</span>
+                        <span className="block text-xs font-bold text-slate-500">{provider.shortName}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
-
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {providers.map((provider) => {
-              const active = selected.has(provider.code);
-              return (
-                <button key={provider.code} type="button" onClick={() => toggle(provider.code)} aria-pressed={active} className={`min-h-[76px] rounded-lg border p-3 text-left transition ${active ? 'border-[#1e3a8a] bg-[#eff6ff] shadow-sm' : 'border-slate-200 bg-white hover:border-[#1e3a8a]'}`}>
-                  <ProviderLogoBadge provider={provider} active={active} />
-                  <span className="mt-2 block text-xs font-black leading-4 text-slate-900">{provider.name}</span>
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-3 text-xs font-semibold text-slate-500">{labels.selectedProviders}: <span className="text-slate-800">{selectedNames || '-'}</span></p>
         </section>
 
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => calculateTrend('hot')} disabled={status === 'loading' || !canUseTrend} className={`rounded-md border px-4 py-3 text-sm font-black transition disabled:opacity-60 ${trendKind === 'hot' ? 'border-blue-700 bg-blue-800 text-white shadow-sm' : 'border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100'}`}>
-            {status === 'loading' && trendKind === 'hot' ? labels.calculating : labels.hotSearchButton}
-          </button>
-          <button type="button" onClick={() => calculateTrend('cold')} disabled={status === 'loading' || !canUseTrend} className={`rounded-md border px-4 py-3 text-sm font-black transition disabled:opacity-60 ${trendKind === 'cold' ? 'border-blue-700 bg-blue-800 text-white shadow-sm' : 'border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100'}`}>
-            {status === 'loading' && trendKind === 'cold' ? labels.calculating : labels.coldSearchButton}
-          </button>
-        </div>
+        <section className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-black text-slate-900">{top3ToggleLabel}</h2>
+              <p className="mt-1 text-xs font-semibold text-slate-500">{prizeScopeText}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setTop3Only((value) => !value)}
+              disabled={!canUseTrend}
+              aria-pressed={top3Only}
+              className={`relative h-7 w-12 shrink-0 rounded-full border transition disabled:opacity-60 ${top3Only ? 'border-blue-800 bg-blue-800' : 'border-slate-300 bg-slate-200'}`}
+            >
+              <span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition ${top3Only ? 'left-6' : 'left-0.5'}`} />
+            </button>
+          </div>
+        </section>
+
         {status === 'error' ? <p className="mt-3 rounded border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-800">{labels.trendError}</p> : null}
       </form>
 
@@ -325,13 +372,21 @@ export function HotColdToolClient({locale, providers, labels}: Props) {
         {status === 'idle' ? <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-600 shadow-sm">{labels.noTrendYet}</div> : null}
         {trend ? (
           <>
+            <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <h2 className="text-sm font-black text-slate-950">{rangeSummaryLabel}</h2>
+              <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                {selectedProvider?.name ?? '-'} | {rangeLabel} | {prizeScopeText} | {labels.drawsScanned}: {trend.drawCount} | {labels.numbersScanned}: {trend.numberCount}
+              </p>
+            </section>
+
             <div className="grid gap-3 md:grid-cols-3">
               <SummaryCard title={labels.summaryTitle} value={`${trend.providerSummaries.length}`} detail={labels.providersLabel} />
-              <SummaryCard title={labels.drawsScanned} value={`${trend.drawCount}`} detail={trend.from ? `${trend.from} - ${trend.to || ''}` : labels.rangeAll} />
+              <SummaryCard title={labels.drawsScanned} value={`${trend.drawCount}`} detail={rangeLabel} />
               <SummaryCard title={labels.numbersScanned} value={`${trend.numberCount}`} detail="4D" />
             </div>
 
-            <TrendList title={trendKind === 'hot' ? labels.hotNumbersTitle : labels.coldNumbersTitle} items={trendKind === 'hot' ? trend.hotNumbers : trend.coldNumbers} labels={labels} emptyText={labels.noTrendResults} />
+            {status === 'loading' ? <p className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm font-bold text-blue-900">{labels.calculating}</p> : null}
+            <TrendList title={resultTitle} items={resultItems} labels={labels} emptyText={labels.noTrendResults} />
 
             <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="text-lg font-black text-slate-950">{labels.digitFrequencyTitle}</h2>

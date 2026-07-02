@@ -122,7 +122,8 @@ function getStandardHref(locale: Locale, tool: StandardTool) {
   if (tool === 'thousandHits') return `/${locale}/tools/thousand-hits`;
   if (tool === 'numberSearch') return `/${locale}/tools/4d-search`;
   if (tool === 'digitMap') return `/${locale}/tools/digit-map`;
-  if (tool === 'hotCold' || tool === 'cold4d') return `/${locale}/tools/hot-cold`;
+  if (tool === 'hotCold') return `/${locale}/tools/hot-cold?mode=hot`;
+  if (tool === 'cold4d') return `/${locale}/tools/hot-cold?mode=cold`;
   if (tool === 'favorites') return `/${locale}/tools/favorites`;
   if (tool === 'history') return `/${locale}/history`;
   return `/${locale}/account`;
