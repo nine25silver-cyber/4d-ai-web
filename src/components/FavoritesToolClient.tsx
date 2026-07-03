@@ -13,6 +13,7 @@ type FavoriteNumber = {
 };
 
 type Props = {
+  showSyncNote?: boolean;
   labels: {
     categoriesTitle: string;
     savedTitle: string;
@@ -99,7 +100,7 @@ function validatePackage(packageType: PackageType, rawDigits: string) {
   return `${packageType}${digits}`;
 }
 
-export function FavoritesToolClient({labels}: Props) {
+export function FavoritesToolClient({labels, showSyncNote = true}: Props) {
   const [selectedCategory, setSelectedCategory] = useState<FavoriteCategory>('fourD');
   const [favorites, setFavorites] = useState<FavoriteNumber[]>([]);
   const [digits, setDigits] = useState('');
@@ -239,10 +240,10 @@ export function FavoritesToolClient({labels}: Props) {
           {message ? <p className="mt-3 rounded border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-800">{message}</p> : null}
         </div>
 
-        <div className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4">
+        {showSyncNote ? <div className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4">
           <div className="text-xs font-black uppercase text-blue-800">{labels.syncNoteTitle}</div>
           <p className="mt-2 text-sm leading-6 text-slate-700">{labels.syncNoteText}</p>
-        </div>
+        </div> : null}
       </form>
 
       <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">

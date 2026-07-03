@@ -21,26 +21,28 @@ export default async function FavoritesToolPage({params}: {params: Promise<{loca
   const {locale} = await params;
   const t = await getTranslations({locale, namespace: 'Tools'});
   const rawLabel = (key: string) => t.raw(key) as string;
+  const showFavoritesHelp = locale !== 'zh';
 
   return (
     <main className="container-shell py-10">
       <Link href={`/${locale}/tools`} className="text-sm font-bold text-blue-800 hover:text-blue-900">{t('backToTools')}</Link>
 
       <section className="mt-4 border-b border-slate-200 pb-8">
-        <p className="text-sm font-bold uppercase text-blue-800">{t('favoritesEyebrow')}</p>
-        <div className="mt-2 grid gap-5 lg:grid-cols-[1fr_320px] lg:items-end">
+        {showFavoritesHelp ? <p className="text-sm font-bold uppercase text-blue-800">{t('favoritesEyebrow')}</p> : null}
+        <div className={`${showFavoritesHelp ? 'mt-2' : ''} grid gap-5 lg:grid-cols-[1fr_320px] lg:items-end`}>
           <div>
             <h1 className="text-3xl font-black text-slate-950 sm:text-4xl">{t('favoritesPageTitle')}</h1>
-            <p className="mt-4 max-w-3xl text-slate-600">{t('favoritesPageIntro')}</p>
+            {showFavoritesHelp ? <p className="mt-4 max-w-3xl text-slate-600">{t('favoritesPageIntro')}</p> : null}
           </div>
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          {showFavoritesHelp ? <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
             <div className="text-xs font-black uppercase text-blue-800">{t('favoritesLocalTitle')}</div>
             <p className="mt-2 text-sm leading-6 text-slate-700">{t('favoritesLocalText')}</p>
-          </div>
+          </div> : null}
         </div>
       </section>
 
       <FavoritesToolClient
+        showSyncNote={showFavoritesHelp}
         labels={{
           categoriesTitle: t('favoriteCategoriesTitle'),
           savedTitle: t('favoritesSavedTitle'),
