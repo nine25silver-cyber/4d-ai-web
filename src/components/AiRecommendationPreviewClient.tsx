@@ -290,7 +290,7 @@ function getExpertCardCopy(locale: string): ExpertCardCopy {
       specialMatch: '特别奖匹配',
       consoMatch: '安慰奖匹配',
       coreDigits: '4+1核心数字',
-      totalMatch: '最近100期四配',
+      totalMatch: '最近100期匹配',
       timesUnit: '次',
       viewRecords: '查看完整结果记录'
     };
@@ -305,7 +305,7 @@ function getExpertCardCopy(locale: string): ExpertCardCopy {
       specialMatch: 'Padanan Khas',
       consoMatch: 'Padanan Saguhati',
       coreDigits: 'Digit teras 4+1',
-      totalMatch: 'Jumlah 4 padanan 100 cabutan',
+      totalMatch: 'Jumlah padanan 100 cabutan',
       timesUnit: 'kali',
       viewRecords: 'Lihat rekod penuh'
     };

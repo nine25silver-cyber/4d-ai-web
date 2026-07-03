@@ -12,6 +12,7 @@ type Labels = {
   hitPrizePlaceholder: string;
   hitExpandLabel: string;
   hitCollapseLabel: string;
+  hitDisplayCountLabel: string;
   firstPrizeLabel: string;
   secondPrizeLabel: string;
   thirdPrizeLabel: string;
@@ -30,12 +31,15 @@ type Props = {
 
 export function AiHitHistorySectionClient({providerCode, expertTitle, labels, initialHitCount, rows, displayCount}: Props) {
   const [resolvedPeriods, setResolvedPeriods] = useState<number>(typeof displayCount === 'number' ? displayCount : 0);
+  const displayCountText = labels.hitDisplayCountLabel
+    .replace('{count}', String(resolvedPeriods))
+    .replace('{total}', '100');
 
   return (
     <section className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h3 className="text-lg font-black text-slate-950">{expertTitle}</h3>
-        <p className="text-xs font-bold text-slate-500">{'\u5f53\u524d\u5c55\u793a'} {resolvedPeriods}/100 {'\u671f'}</p>
+        <p className="text-xs font-bold text-slate-500">{displayCountText}</p>
       </div>
       <AiHitHistoryPreviewClient
         providerCode={providerCode}

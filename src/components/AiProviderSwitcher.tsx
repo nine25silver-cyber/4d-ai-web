@@ -1,5 +1,5 @@
 import type {Locale} from '@/i18n/routing';
-import type {RegionConfig} from '@/lib/providers';
+import {getProviderDisplayShortName, type RegionConfig} from '@/lib/providers';
 import {ProviderLogoBadge} from '@/components/ProviderLogoBadge';
 
 type Props = {
@@ -35,7 +35,7 @@ export function AiProviderSwitcher({locale, regions, currentProviderCode, title,
                 <ProviderLogoBadge provider={provider} sizeClassName={isSidebar ? 'size-8' : 'size-9'} active={active} />
               </span>
               <span className={`${isSidebar ? 'min-w-0 text-xs leading-4' : 'mt-0.5 block truncate text-[11px] leading-3'} font-black text-slate-900`}>
-                {provider.shortName}
+                {getProviderDisplayShortName(provider, locale)}
               </span>
             </a>
           );

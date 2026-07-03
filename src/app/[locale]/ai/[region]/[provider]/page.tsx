@@ -5,7 +5,7 @@ import {type AiHitHistoryMatch, type AiHitHistoryRow} from '@/components/AiHitHi
 import {AiHitHistorySectionClient} from '@/components/AiHitHistorySectionClient';
 import {AiRecommendationPreviewClient} from '@/components/AiRecommendationPreviewClient';
 import {AiProviderSwitcher} from '@/components/AiProviderSwitcher';
-import {getRegion, regions} from '@/lib/providers';
+import {getProviderDisplayName, getRegion, regions} from '@/lib/providers';
 import {buildMetadata} from '@/lib/seo';
 import {fetchAiHitHistoryReplay, fetchAiRecommendation, fetchProviderLatest} from '@/lib/cloudflare';
 import type {Locale} from '@/i18n/routing';
@@ -17,11 +17,12 @@ export async function generateMetadata({params}: {params: Promise<{locale: Local
   const region = getRegion(regionSlug);
   const provider = region?.providers.find((item) => item.code === providerCode);
   if (!region || !provider) return {};
+  const providerName = getProviderDisplayName(provider, locale);
   return buildMetadata({
     locale,
     path: `/ai/${region.slug}/${provider.code}`,
-    title: `${provider.name} 4D AI recommendations`,
-    description: `View ${provider.name} 4D AI recommendation numbers and recent hit history.`
+    title: `${providerName} 4D AI recommendations`,
+    description: `View ${providerName} 4D AI recommendation numbers and recent hit history.`
   });
 }
 
@@ -31,6 +32,7 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
   const provider = region?.providers.find((item) => item.code === providerCode);
   if (!region || !provider) notFound();
   const t = await getTranslations({locale, namespace: 'AI'});
+  const providerName = getProviderDisplayName(provider, locale);
   const prizeLabels = getAiHitPrizeLabels(locale);
   const [, hitHistoryReplay, recommendation, replayHistoryRows] = await Promise.all([
     fetchProviderLatest(provider.code),
@@ -53,6 +55,7 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
         hitPrizePlaceholder: t('hitPrizePlaceholder'),
         hitExpandLabel: t('hitExpandLabel'),
         hitCollapseLabel: t('hitCollapseLabel'),
+        hitDisplayCountLabel: t('hitDisplayCountLabel', {count: '{count}', total: '{total}'}),
         firstPrizeLabel: prizeLabels.first,
         secondPrizeLabel: prizeLabels.second,
         thirdPrizeLabel: prizeLabels.third,
@@ -76,6 +79,7 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
         hitPrizePlaceholder: t('hitPrizePlaceholder'),
         hitExpandLabel: t('hitExpandLabel'),
         hitCollapseLabel: t('hitCollapseLabel'),
+        hitDisplayCountLabel: t('hitDisplayCountLabel', {count: '{count}', total: '{total}'}),
         firstPrizeLabel: prizeLabels.first,
         secondPrizeLabel: prizeLabels.second,
         thirdPrizeLabel: prizeLabels.third,
@@ -93,20 +97,20 @@ export default async function AiProviderPage({params}: {params: Promise<{locale:
             locale={locale}
             regions={regions}
             currentProviderCode={provider.code}
-            title={locale === 'zh' ? '\u5207\u6362 Provider' : locale === 'ms' ? 'Tukar Provider' : 'Switch Provider'}
+            title={t('providerSwitcherTitle')}
             variant="sidebar"
           />
         </div>
         <div className="min-w-0">
           <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-            <h1 className="text-2xl font-black text-slate-950">{t('providerTitle', {provider: provider.name})}</h1>
+            <h1 className="text-2xl font-black text-slate-950">{t('providerTitle', {provider: providerName})}</h1>
           </section>
           <div className="block md:hidden">
             <AiProviderSwitcher
               locale={locale}
               regions={regions}
               currentProviderCode={provider.code}
-              title={locale === 'zh' ? '\u5207\u6362 Provider' : locale === 'ms' ? 'Tukar Provider' : 'Switch Provider'}
+              title={t('providerSwitcherTitle')}
             />
           </div>
 

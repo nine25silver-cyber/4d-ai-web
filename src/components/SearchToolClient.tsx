@@ -105,7 +105,7 @@ export function SearchToolClient({locale, providers, labels}: Props) {
           ? '请选择您要搜索的博彩公司'
           : locale === 'ms'
             ? 'Sila pilih syarikat nombor 4D yang ingin dicari.'
-            : 'Please choose at least one provider to search.'
+            : 'Please choose at least one company to search.'
       );
       return;
     }
@@ -140,10 +140,10 @@ export function SearchToolClient({locale, providers, labels}: Props) {
   function copyResults() {
     if (!isFormalPro || !data) return;
     const header = locale === 'zh'
-      ? '日期 | Provider | 期号 | 奖项 | 号码'
+      ? '日期 | 公司 | 期号 | 奖项 | 号码'
       : locale === 'ms'
-        ? 'Tarikh | Provider | Cabutan | Hadiah | Nombor'
-        : 'Date | Provider | Draw | Prize | Number';
+        ? 'Tarikh | Syarikat | Cabutan | Hadiah | Nombor'
+        : 'Date | Company | Draw | Prize | Number';
     const lines = filteredRows.map((row) => `${row.drawDate || '-'} | ${row.providerName} | ${row.drawNo || '-'} | ${prizeLabel(row.prizeType, locale)} | ${row.number}`);
     void navigator.clipboard.writeText([header, ...lines].join('\n'));
   }
@@ -230,7 +230,7 @@ export function SearchToolClient({locale, providers, labels}: Props) {
         </p>
 
         <div className="mt-5 flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-sm font-black text-slate-800">{locale === 'zh' ? '请选择博彩公司' : locale === 'ms' ? 'Pilih provider' : 'Choose providers'}</h2>
+          <h2 className="text-sm font-black text-slate-800">{locale === 'zh' ? '请选择博彩公司' : locale === 'ms' ? 'Pilih syarikat' : 'Choose companies'}</h2>
           <div className="flex gap-2">
             <button type="button" onClick={() => setSelected(new Set(providers.map((provider) => provider.code)))} className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-black text-slate-700 hover:border-blue-300">
               {locale === 'zh' ? '全选' : locale === 'ms' ? 'Pilih semua' : 'Select all'}
@@ -257,7 +257,7 @@ export function SearchToolClient({locale, providers, labels}: Props) {
           })}
         </div>
         <p className="mt-3 text-xs font-semibold text-slate-500">
-          {locale === 'zh' ? '已选择 provider' : locale === 'ms' ? 'Provider dipilih' : 'Selected providers'}: <span className="text-slate-800">{selectedNames || '-'}</span>
+          {locale === 'zh' ? '已选择公司' : locale === 'ms' ? 'Syarikat dipilih' : 'Selected companies'}: <span className="text-slate-800">{selectedNames || '-'}</span>
         </p>
       </section>
 
@@ -320,7 +320,7 @@ export function SearchToolClient({locale, providers, labels}: Props) {
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-xs font-black uppercase text-slate-500">
                     <th className="px-2 py-2">{locale === 'zh' ? '日期' : locale === 'ms' ? 'Tarikh' : 'Date'}</th>
-                    <th className="px-2 py-2">{locale === 'zh' ? '公司' : 'Provider'}</th>
+                    <th className="px-2 py-2">{locale === 'zh' ? '公司' : locale === 'ms' ? 'Syarikat' : 'Company'}</th>
                     <th className="px-2 py-2">{locale === 'zh' ? '期号' : locale === 'ms' ? 'Cabutan' : 'Draw'}</th>
                     <th className="px-2 py-2">{locale === 'zh' ? '奖项' : locale === 'ms' ? 'Hadiah' : 'Prize'}</th>
                     <th className="px-2 py-2">{locale === 'zh' ? '号码' : locale === 'ms' ? 'Nombor' : 'Number'}</th>

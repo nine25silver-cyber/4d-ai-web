@@ -230,8 +230,8 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
         <section className="mt-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-sm font-black text-slate-800">{locale === 'zh' ? '选择 Provider' : locale === 'ms' ? 'Pilih provider' : 'Choose providers'}</h2>
-              <p className="mt-1 text-xs font-semibold text-slate-500">{locale === 'zh' ? '可一次选择多个 provider' : locale === 'ms' ? 'Boleh pilih beberapa provider sekali gus' : 'Select multiple providers at once'}</p>
+              <h2 className="text-sm font-black text-slate-800">{locale === 'zh' ? '选择公司' : locale === 'ms' ? 'Pilih syarikat' : 'Choose companies'}</h2>
+              <p className="mt-1 text-xs font-semibold text-slate-500">{locale === 'zh' ? '可一次选择多个公司' : locale === 'ms' ? 'Boleh pilih beberapa syarikat sekali gus' : 'Select multiple companies at once'}</p>
             </div>
             <div className="flex gap-2">
               <button type="button" onClick={() => setSelected(new Set(providers.map((provider) => provider.code)))} className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-black text-slate-700 hover:border-blue-300">{locale === 'zh' ? '全选' : locale === 'ms' ? 'Pilih semua' : 'Select all'}</button>
@@ -249,7 +249,7 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
               );
             })}
           </div>
-          <p className="mt-3 text-xs font-semibold text-slate-500">{locale === 'zh' ? '已选择 provider' : locale === 'ms' ? 'Provider dipilih' : 'Selected providers'}: <span className="text-slate-800">{selectedNames || '-'}</span></p>
+          <p className="mt-3 text-xs font-semibold text-slate-500">{locale === 'zh' ? '已选择公司' : locale === 'ms' ? 'Syarikat dipilih' : 'Selected companies'}: <span className="text-slate-800">{selectedNames || '-'}</span></p>
         </section>
 
         <section className="mt-5">
@@ -377,7 +377,7 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
             </div>
           </div>
         ) : null}
-        {status === 'idle' ? <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-600 shadow-sm">{locale === 'zh' ? '选择日期与 provider 后开始统计。' : locale === 'ms' ? 'Pilih tarikh dan provider, kemudian mula kira.' : 'Choose dates and providers, then start calculation.'}</div> : null}
+        {status === 'idle' ? <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-600 shadow-sm">{locale === 'zh' ? '选择日期与公司后开始统计。' : locale === 'ms' ? 'Pilih tarikh dan syarikat, kemudian mula kira.' : 'Choose dates and companies, then start calculation.'}</div> : null}
         {status === 'error' ? <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm font-bold text-amber-800">{locale === 'zh' ? '包字排行榜暂时不可用。' : locale === 'ms' ? 'Ranking boxed belum tersedia.' : 'Boxed ranking is unavailable right now.'}</div> : null}
         {data ? (
           <>

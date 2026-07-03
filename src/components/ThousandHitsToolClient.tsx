@@ -77,7 +77,7 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
           ? '请选择您要搜索的博彩公司'
           : locale === 'ms'
             ? 'Sila pilih syarikat nombor 4D yang ingin dicari.'
-            : 'Please choose at least one provider to search.'
+            : 'Please choose at least one company to search.'
       );
       return;
     }
@@ -129,10 +129,10 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
   function exportAsText() {
     if (!data || !isFormalPro) return;
     const header = locale === 'zh'
-      ? '日期 | Provider | 期号 | 奖项 | 号码'
+      ? '日期 | 公司 | 期号 | 奖项 | 号码'
       : locale === 'ms'
-        ? 'Tarikh | Provider | Cabutan | Hadiah | Nombor'
-        : 'Date | Provider | Draw | Prize | Number';
+        ? 'Tarikh | Syarikat | Cabutan | Hadiah | Nombor'
+        : 'Date | Company | Draw | Prize | Number';
     const lines = filteredRows.map((row) => `${row.drawDate || '-'} | ${row.providerName} | ${row.drawNo || '-'} | ${prizeLabel(row.prizeType, locale)} | ${row.number}`);
     const text = [header, ...lines].join('\n');
     void navigator.clipboard.writeText(text);
@@ -224,7 +224,7 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
           {locale === 'zh' ? '仅支持输入3位数字' : locale === 'ms' ? 'Hanya 3 digit dibenarkan' : 'Only 3 digits are allowed'}
         </p>
 
-        <h2 className="mt-5 text-sm font-black text-slate-800">{locale === 'zh' ? '请选择博彩公司' : locale === 'ms' ? 'Pilih provider' : 'Choose providers'}</h2>
+        <h2 className="mt-5 text-sm font-black text-slate-800">{locale === 'zh' ? '请选择博彩公司' : locale === 'ms' ? 'Pilih syarikat' : 'Choose companies'}</h2>
         <div className="mt-2 grid grid-cols-2 gap-2">
           {providers.map((provider) => {
             const active = selected.has(provider.code);
@@ -242,7 +242,7 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
           })}
         </div>
         <p className="mt-3 text-xs font-semibold text-slate-500">
-          {locale === 'zh' ? '已选择 provider' : locale === 'ms' ? 'Provider dipilih' : 'Selected providers'}: <span className="text-slate-800">{selectedNames || '-'}</span>
+          {locale === 'zh' ? '已选择公司' : locale === 'ms' ? 'Syarikat dipilih' : 'Selected companies'}: <span className="text-slate-800">{selectedNames || '-'}</span>
         </p>
         <div className="mt-5" />
       </section>
@@ -303,7 +303,7 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-xs font-black uppercase text-slate-500">
                     <th className="px-2 py-2">{locale === 'zh' ? '日期' : locale === 'ms' ? 'Tarikh' : 'Date'}</th>
-                    <th className="px-2 py-2">{locale === 'zh' ? '公司' : 'Provider'}</th>
+                    <th className="px-2 py-2">{locale === 'zh' ? '公司' : locale === 'ms' ? 'Syarikat' : 'Company'}</th>
                     <th className="px-2 py-2">{locale === 'zh' ? '期号' : locale === 'ms' ? 'Cabutan' : 'Draw'}</th>
                     <th className="px-2 py-2">{locale === 'zh' ? '奖项' : locale === 'ms' ? 'Hadiah' : 'Prize'}</th>
                     <th className="px-2 py-2">{locale === 'zh' ? '号码' : locale === 'ms' ? 'Nombor' : 'Number'}</th>
