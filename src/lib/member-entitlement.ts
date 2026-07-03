@@ -23,6 +23,15 @@ type EntitlementRow = {
   updated_at: string | null;
 };
 
+type UserAccessStateRow = {
+  is_logged_in: boolean | null;
+  is_pro: boolean | null;
+  plan: string | null;
+  membership_status: string | null;
+  current_period_end: string | null;
+  checked_at: string | null;
+};
+
 const FREE_FALLBACK: CurrentUserEntitlement = {
   loggedIn: false,
   plan: 'free',
@@ -51,6 +60,92 @@ function periodAllowsPro(currentPeriodEnd: string | null): boolean {
   return timestamp > Date.now();
 }
 
+function normalizeRpcPlan(plan: string | null, isPro: boolean): 'free' | 'pro' {
+  const normalized = plan?.toLowerCase();
+  if (isPro && (normalized === 'premium' || normalized === 'pro')) return 'pro';
+  return 'free';
+}
+
+function getRpcAccessRow(data: unknown): UserAccessStateRow | null {
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row || typeof row !== 'object') return null;
+  const record = row as Partial<UserAccessStateRow>;
+  if (typeof record.is_pro !== 'boolean') return null;
+  if (record.current_period_end != null && typeof record.current_period_end !== 'string') return null;
+  if (record.membership_status != null && typeof record.membership_status !== 'string') return null;
+  if (record.plan != null && typeof record.plan !== 'string') return null;
+  if (record.checked_at != null && typeof record.checked_at !== 'string') return null;
+  return {
+    is_logged_in: typeof record.is_logged_in === 'boolean' ? record.is_logged_in : true,
+    is_pro: record.is_pro,
+    plan: record.plan ?? null,
+    membership_status: record.membership_status ?? null,
+    current_period_end: record.current_period_end ?? null,
+    checked_at: record.checked_at ?? null
+  };
+}
+
+function entitlementFromRpcRow(row: UserAccessStateRow, userId: string): CurrentUserEntitlement {
+  const isPro = row.is_pro === true && periodAllowsPro(row.current_period_end);
+  return {
+    loggedIn: true,
+    userId,
+    plan: normalizeRpcPlan(row.plan, isPro),
+    status: row.membership_status,
+    isPro,
+    source: 'user_membership_entitlements',
+    updatedAt: row.checked_at,
+    currentPeriodEnd: row.current_period_end
+  };
+}
+
+async function getCurrentUserEntitlementFromLegacyTable(
+  supabase: NonNullable<ReturnType<typeof getSupabaseBrowserClient>>,
+  userId: string
+): Promise<CurrentUserEntitlement> {
+  const {data, error} = await supabase
+    .from('user_membership_entitlements')
+    .select('user_id,plan,is_pro,status,current_period_end,updated_at')
+    .eq('user_id', userId)
+    .maybeSingle<EntitlementRow>();
+
+  if (error) {
+    return {
+      loggedIn: true,
+      userId,
+      plan: 'free',
+      isPro: false,
+      source: 'error',
+      error: sanitizeError(error)
+    };
+  }
+
+  if (!data) {
+    return {
+      loggedIn: true,
+      userId,
+      plan: 'free',
+      isPro: false,
+      source: 'missing_row'
+    };
+  }
+
+  const rowPlan = data.plan === 'pro' ? 'pro' : 'free';
+  const rowSaysPro = rowPlan === 'pro' || data.is_pro === true;
+  const isPro = rowSaysPro && statusAllowsPro(data.status) && periodAllowsPro(data.current_period_end);
+
+  return {
+    loggedIn: true,
+    userId,
+    plan: isPro ? 'pro' : 'free',
+    status: data.status,
+    isPro,
+    source: 'user_membership_entitlements',
+    updatedAt: data.updated_at,
+    currentPeriodEnd: data.current_period_end
+  };
+}
+
 export async function getCurrentUserEntitlement(): Promise<CurrentUserEntitlement> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
@@ -72,45 +167,11 @@ export async function getCurrentUserEntitlement(): Promise<CurrentUserEntitlemen
   const user = sessionResult.data.session?.user;
   if (!user) return FREE_FALLBACK;
 
-  const {data, error} = await supabase
-    .from('user_membership_entitlements')
-    .select('user_id,plan,is_pro,status,current_period_end,updated_at')
-    .eq('user_id', user.id)
-    .maybeSingle<EntitlementRow>();
-
-  if (error) {
-    return {
-      loggedIn: true,
-      userId: user.id,
-      plan: 'free',
-      isPro: false,
-      source: 'error',
-      error: sanitizeError(error)
-    };
+  const rpcResult = await supabase.rpc('get_user_access_state', {p_platform: 'web'});
+  if (!rpcResult.error) {
+    const rpcRow = getRpcAccessRow(rpcResult.data);
+    if (rpcRow) return entitlementFromRpcRow(rpcRow, user.id);
   }
 
-  if (!data) {
-    return {
-      loggedIn: true,
-      userId: user.id,
-      plan: 'free',
-      isPro: false,
-      source: 'missing_row'
-    };
-  }
-
-  const rowPlan = data.plan === 'pro' ? 'pro' : 'free';
-  const rowSaysPro = rowPlan === 'pro' || data.is_pro === true;
-  const isPro = rowSaysPro && statusAllowsPro(data.status) && periodAllowsPro(data.current_period_end);
-
-  return {
-    loggedIn: true,
-    userId: user.id,
-    plan: isPro ? 'pro' : 'free',
-    status: data.status,
-    isPro,
-    source: 'user_membership_entitlements',
-    updatedAt: data.updated_at,
-    currentPeriodEnd: data.current_period_end
-  };
+  return getCurrentUserEntitlementFromLegacyTable(supabase, user.id);
 }
