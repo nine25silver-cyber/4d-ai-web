@@ -122,9 +122,58 @@ export type AiRecommendationState =
   | {ok: true; providerCode: string; url: string; payload: AiRecommendationPayload}
   | {ok: false; providerCode: string; url: string; reason: string};
 
+export type CombinationRankingItem = {
+  rank: number;
+  key: string;
+  count: number;
+  lastSeen?: string;
+  currentGapDays: number;
+  currentGapDraws: number;
+  historicalMaxGapDays?: number;
+  historicalMaxGapDraws?: number;
+  providers: string[];
+};
+
+export type CombinationRankingBucket = {
+  mode: string;
+  rankingType: string;
+  prizeScopeKey: string;
+  coldSummary: CombinationRankingColdSummary;
+  items: CombinationRankingItem[];
+};
+
+export type CombinationRankingColdSummary = {
+  longestGapDays?: number;
+  longestGapDraws?: number;
+  combinationKey: string;
+  description: string;
+};
+
+export type CombinationRankingFeed = {
+  sourceType: string;
+  window: string;
+  scopeType: string;
+  scope: string;
+  scopeLabel: string;
+  generatedAt?: string;
+  updatedAt?: string;
+  freshnessState: string;
+  completeForCurrentCycle: boolean;
+  includedProviders: string[];
+  pendingProviders: string[];
+  missingProviders: string[];
+  coldSummary: CombinationRankingColdSummary;
+  rankings: CombinationRankingBucket[];
+};
+
+export type CombinationRankingState =
+  | {ok: true; url: string; payload: CombinationRankingFeed}
+  | {ok: false; url: string; reason: string};
+
 const latestBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_LATEST_BASE_URL ?? 'https://data.4dai88.com/latest/providers';
 const historyBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_HISTORY_BASE_URL ?? 'https://data.4dai88.com/history_test';
 const historyTestBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_HISTORY_TEST_BASE_URL ?? 'https://data.4dai88.com/history_test';
+const combinationRankingBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_COMBINATION_RANKING_BASE_URL ?? 'https://data.4dai88.com/latest/combination-ranking';
 const aiHitHistoryBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_AI_HIT_HISTORY_BASE_URL ?? 'https://data.4dai88.com/ai_hit_history';
 const aiHitHistoryReplayBaseUrl = (process.env.CLOUDFLARE_AI_HIT_HISTORY_REPLAY_BASE_URL && process.env.CLOUDFLARE_AI_HIT_HISTORY_REPLAY_BASE_URL.trim().length > 0
   ? process.env.CLOUDFLARE_AI_HIT_HISTORY_REPLAY_BASE_URL
@@ -407,6 +456,70 @@ function normalizeAiRecommendation(providerCode: string, raw: unknown): AiRecomm
   };
 }
 
+function normalizeCombinationRankingFeed(raw: unknown): CombinationRankingFeed | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const map = raw as Record<string, unknown>;
+  const rankingItems = Array.isArray(map.rankings) ? map.rankings : [];
+  const rankings = rankingItems
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item))
+    .map((item) => {
+      const rawItems = Array.isArray(item.items) ? item.items : [];
+      return {
+        mode: String(item.mode ?? '').trim(),
+        rankingType: String(item.ranking_type ?? item.rankingType ?? '').trim(),
+        prizeScopeKey: String(item.prize_scope_key ?? item.prizeScopeKey ?? '').trim(),
+        coldSummary: normalizeCombinationColdSummary(item.cold_summary ?? item.coldSummary),
+        items: rawItems
+          .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object' && !Array.isArray(row))
+          .map((row) => ({
+            rank: Number(row.rank ?? 0),
+            key: String(row.key ?? '').trim(),
+            count: Number(row.count ?? 0),
+            lastSeen: String(row.last_seen ?? row.lastSeen ?? '').trim() || undefined,
+            currentGapDays: Number(row.current_gap_days ?? row.currentGapDays ?? 0),
+            currentGapDraws: Number(row.current_gap_draws ?? row.currentGapDraws ?? 0),
+            historicalMaxGapDays: normalizeOptionalNumber(row.historical_max_gap_days ?? row.historicalMaxGapDays),
+            historicalMaxGapDraws: normalizeOptionalNumber(row.historical_max_gap_draws ?? row.historicalMaxGapDraws),
+            providers: normalizeNumbers(row.providers)
+          }))
+          .filter((row) => row.key.length > 0)
+      };
+    })
+    .filter((item) => item.mode && item.rankingType && item.prizeScopeKey);
+
+  return {
+    sourceType: String(map.source_type ?? map.sourceType ?? '').trim(),
+    window: String(map.window ?? '').trim(),
+    scopeType: String(map.scope_type ?? map.scopeType ?? '').trim(),
+    scope: String(map.scope ?? '').trim(),
+    scopeLabel: String(map.scope_label ?? map.scopeLabel ?? '').trim(),
+    generatedAt: String(map.generated_at ?? map.generatedAt ?? '').trim() || undefined,
+    updatedAt: String(map.updated_at ?? map.updatedAt ?? '').trim() || undefined,
+    freshnessState: String(map.freshness_state ?? map.freshnessState ?? '').trim(),
+    completeForCurrentCycle: map.complete_for_current_cycle !== false && map.completeForCurrentCycle !== false,
+    includedProviders: normalizeNumbers(map.included_providers ?? map.includedProviders),
+    pendingProviders: normalizeNumbers(map.pending_providers ?? map.pendingProviders),
+    missingProviders: normalizeNumbers(map.missing_providers ?? map.missingProviders),
+    coldSummary: normalizeCombinationColdSummary(map.cold_summary ?? map.coldSummary),
+    rankings
+  };
+}
+
+function normalizeCombinationColdSummary(raw: unknown): CombinationRankingColdSummary {
+  const map = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+  return {
+    longestGapDays: normalizeOptionalNumber(map.longest_gap_days ?? map.longestGapDays),
+    longestGapDraws: normalizeOptionalNumber(map.longest_gap_draws ?? map.longestGapDraws),
+    combinationKey: String(map.combination_key ?? map.combinationKey ?? '').trim(),
+    description: String(map.description ?? '').trim()
+  };
+}
+
+function normalizeOptionalNumber(value: unknown): number | undefined {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 function normalizeTop3ExpertDigits(map: Record<string, unknown>): string[] {
   const strategies = Array.isArray(map.experimentalStrategies ?? map.experimental_strategies)
     ? (map.experimentalStrategies ?? map.experimental_strategies) as unknown[]
@@ -594,5 +707,24 @@ export async function fetchAiRecommendation(providerCode: string): Promise<AiRec
     return {ok: true, providerCode, url, payload};
   } catch (error) {
     return {ok: false, providerCode, url, reason: error instanceof Error ? error.message : 'request_failed'};
+  }
+}
+
+export async function fetchCombinationRanking(window: string, scopeType: string, scope: string): Promise<CombinationRankingState> {
+  const safeWindow = window.replace(/[^a-zA-Z0-9_-]/g, '');
+  const safeScopeType = scopeType.replace(/[^a-zA-Z0-9_-]/g, '');
+  const safeScope = scope.replace(/[^a-zA-Z0-9_-]/g, '');
+  const url = `${combinationRankingBaseUrl.replace(/\/$/, '')}/${safeWindow}/${safeScopeType}/${safeScope}.json`;
+  try {
+    if (!safeWindow || !safeScopeType || !safeScope) return {ok: false, url, reason: 'invalid_params'};
+    const response = await fetch(url, {cache: 'no-store', headers: {accept: 'application/json'}});
+    if (!response.ok) return {ok: false, url, reason: `status_${response.status}`};
+    const decoded = parseJsonSafely(await response.text());
+    if (!decoded) return {ok: false, url, reason: 'invalid_json'};
+    const payload = normalizeCombinationRankingFeed(decoded);
+    if (!payload) return {ok: false, url, reason: 'invalid_json_shape'};
+    return {ok: true, url, payload};
+  } catch (error) {
+    return {ok: false, url, reason: compactErrorReason(error)};
   }
 }
