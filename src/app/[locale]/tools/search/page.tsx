@@ -22,21 +22,22 @@ export default async function SearchToolPage({params}: {params: Promise<{locale:
   const {locale} = await params;
   const t = await getTranslations({locale, namespace: 'Tools'});
   const providers = regions.flatMap((region) => region.providers);
+  const showSearchHelp = locale !== 'zh';
   return (
     <main className="container-shell py-10">
       <Link href={`/${locale}/tools`} className="text-sm font-bold text-blue-800 hover:text-blue-900">{t('backToTools')}</Link>
 
       <section className="mt-4 border-b border-slate-200 pb-8">
-        <p className="text-sm font-bold uppercase text-blue-800">{t('numberSearchEyebrow')}</p>
-        <div className="mt-2 grid gap-5 lg:grid-cols-[1fr_320px] lg:items-end">
+        {showSearchHelp ? <p className="text-sm font-bold uppercase text-blue-800">{t('numberSearchEyebrow')}</p> : null}
+        <div className={`${showSearchHelp ? 'mt-2' : ''} grid gap-5 lg:grid-cols-[1fr_320px] lg:items-end`}>
           <div>
             <h1 className="text-3xl font-black text-slate-950 sm:text-4xl">{t('searchTitle')}</h1>
-            <p className="mt-4 max-w-3xl text-slate-600">{t('searchIntro')}</p>
+            {showSearchHelp ? <p className="mt-4 max-w-3xl text-slate-600">{t('searchIntro')}</p> : null}
           </div>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          {showSearchHelp ? <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
             <div className="text-xs font-black uppercase text-amber-800">{t('searchStatus')}</div>
             <p className="mt-2 text-sm leading-6 text-slate-700">{t('comingResultText')}</p>
-          </div>
+          </div> : null}
         </div>
       </section>
         <SearchToolClient
@@ -73,14 +74,14 @@ export default async function SearchToolPage({params}: {params: Promise<{locale:
           }}
         />
 
-      <section className="mt-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      {showSearchHelp ? <section className="mt-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-black text-slate-950">{t('searchRuleTitle')}</h2>
         <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
           <li>{t('searchRule1')}</li>
           <li>{t('searchRule2')}</li>
           <li>{t('searchRule3')}</li>
         </ul>
-      </section>
+      </section> : null}
     </main>
   );
 }
