@@ -53,6 +53,10 @@ function displayItems(provider: ProviderConfig, result: ProviderResultState, sec
   if (!result.ok) return [];
   const payload = result.payload;
   const showLabels = !providersWithoutGridLabels.has(provider.code);
+  const slotItems = section === 'special' ? payload.slot_layout?.special_slots : payload.slot_layout?.consolation_slots;
+  if (provider.code === 'grand_dragon' && section === 'special' && slotItems && slotItems.length > 0) {
+    return slotItems.map((number, index) => ({label: showLabels ? String(index + 1) : undefined, number}));
+  }
   const display = payload.display_payload?.[section];
   if (display && display.length > 0) {
     return display.map((item, index) => ({
@@ -60,7 +64,6 @@ function displayItems(provider: ProviderConfig, result: ProviderResultState, sec
       number: item.number || '----'
     }));
   }
-  const slotItems = section === 'special' ? payload.slot_layout?.special_slots : payload.slot_layout?.consolation_slots;
   if (slotItems && slotItems.length > 0) {
     return slotItems.map((number, index) => ({label: showLabels ? String(index + 1) : undefined, number}));
   }
