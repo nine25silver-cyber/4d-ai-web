@@ -1,5 +1,7 @@
 import 'server-only';
 
+import Stripe from 'stripe';
+
 export type StripeConfigStatus = {
   hasSecretKey: boolean;
   hasWebhookSecret: boolean;
@@ -8,6 +10,8 @@ export type StripeConfigStatus = {
   checkoutConfigured: boolean;
   webhookConfigured: boolean;
 };
+
+let stripeClient: Stripe | null = null;
 
 function hasValue(value: string | undefined): boolean {
   return Boolean(value && value.trim().length > 0);
@@ -27,4 +31,12 @@ export function getStripeConfigStatus(): StripeConfigStatus {
     checkoutConfigured: hasSecretKey && hasProMonthlyPrice && hasSiteUrl,
     webhookConfigured: hasWebhookSecret
   };
+}
+
+export function getStripeServerClient(): Stripe | null {
+  const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!secretKey) return null;
+
+  stripeClient ??= new Stripe(secretKey);
+  return stripeClient;
 }
