@@ -4,7 +4,7 @@ import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 import {useLocale} from 'next-intl';
 import {ReactNode, useEffect, useState} from 'react';
-import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
+import {canAccessAiCore, getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
 
 type Props = {
@@ -51,8 +51,8 @@ export function ProAccessGateClient({children, labels}: Props) {
     };
   }, []);
 
-  const isEntitledPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
-  if (isEntitledPro) return <>{children}</>;
+  const hasAiAccess = canAccessAiCore(entitlement);
+  if (hasAiAccess) return <>{children}</>;
 
   const statusText = entitlementLoading
     ? (locale === 'zh' ? '正在确认会员权限' : locale === 'ms' ? 'Sedang menyemak akses ahli' : 'Checking membership access')

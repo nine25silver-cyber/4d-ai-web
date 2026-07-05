@@ -4,7 +4,7 @@ import {useEffect, useMemo, useState} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
-import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
+import {getCurrentUserEntitlement, isPaidProEntitlement, isTrialEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {initMemberState, loginUser, logoutUser, readMemberState, setPlan, subscribeMemberState, type MemberState} from '@/lib/member-state';
 import {hasSupabaseConfig} from '@/lib/supabase-browser';
 
@@ -94,11 +94,14 @@ export function MembershipFlowClient({labels, pricingHref, variant = 'default'}:
     return entitlementT(keyBySource[entitlement.source]);
   }, [entitlement, entitlementT]);
 
-  const entitlementPlanText = entitlement?.isPro ? labels.proPlan : labels.freePlan;
+  const trialPlanText = 'Trial';
+  const isPaidPro = isPaidProEntitlement(entitlement);
+  const isTrial = isTrialEntitlement(entitlement);
+  const entitlementPlanText = isPaidPro ? labels.proPlan : isTrial ? trialPlanText : labels.freePlan;
   const googleStatusText = state?.loggedIn ? (state.email || labels.loggedIn) : labels.loggedOut;
-  const proExpiryDate = entitlement?.isPro ? formatDateOnly(entitlement.currentPeriodEnd) : null;
-  const proExpiryText = proExpiryDate
-    ? `${locale === 'zh' ? 'Pro 到期' : locale === 'ms' ? 'Pro tamat' : 'Pro expires'}: ${proExpiryDate}`
+  const accessExpiryDate = isPaidPro || isTrial ? formatDateOnly(entitlement?.currentPeriodEnd) : null;
+  const accessExpiryText = accessExpiryDate
+    ? `${isPaidPro ? (locale === 'zh' ? 'Pro 到期' : locale === 'ms' ? 'Pro tamat' : 'Pro expires') : (locale === 'zh' ? 'Trial 到期' : locale === 'ms' ? 'Trial tamat' : 'Trial expires')}: ${accessExpiryDate}`
     : null;
 
   if (variant === 'account') {
@@ -124,7 +127,7 @@ export function MembershipFlowClient({labels, pricingHref, variant = 'default'}:
           <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
             <dt className="text-xs font-black uppercase text-slate-500">{labels.membershipLabel}</dt>
             <dd className="mt-1 text-sm font-bold text-slate-900">{entitlementLoading ? entitlementT('loading') : entitlementPlanText}</dd>
-            {proExpiryText ? <dd className="mt-1 text-xs font-semibold text-slate-600">{proExpiryText}</dd> : null}
+            {accessExpiryText ? <dd className="mt-1 text-xs font-semibold text-slate-600">{accessExpiryText}</dd> : null}
           </div>
         </dl>
         {syncWarningText ? (

@@ -5,7 +5,7 @@ import type {Locale} from '@/i18n/routing';
 import type {ProviderConfig} from '@/lib/providers';
 import Link from 'next/link';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
-import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
+import {canAccessAiCore, getCurrentUserEntitlement, isPaidProEntitlement, isTrialEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {
   addRewardCredit,
   consumeRewardCredit,
@@ -90,8 +90,9 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
     return regionGroups.map((group) => group.id).filter((groupId) => selectedGroups.has(groupId)).join('_');
   }, [providerCodes, scopeMode, selectedGroups, selectedProvider]);
 
-  const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
-  const canUseRanking = isFormalPro || adUnlocked;
+  const isFormalPro = isPaidProEntitlement(entitlement);
+  const isTrial = isTrialEntitlement(entitlement);
+  const canUseRanking = canAccessAiCore(entitlement) || adUnlocked;
 
   const selectedNames = useMemo(() => {
     if (scopeMode === 'provider') return providerByCode.get(selectedProvider)?.shortName ?? '-';
@@ -237,7 +238,11 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
   }
 
   const unlockedAccessText = locale === 'zh' ? '当前已解锁，可直接使用' : locale === 'ms' ? 'Akses sudah dibuka dan sedia digunakan' : 'Currently unlocked and ready to use';
-  const accessBadgeText = isFormalPro ? (locale === 'zh' ? 'Pro 已激活' : locale === 'ms' ? 'Pro aktif' : 'Pro active') : (locale === 'zh' ? '广告临时解锁' : locale === 'ms' ? 'Buka sementara melalui iklan' : 'Temporary ad unlock');
+  const accessBadgeText = isFormalPro
+    ? (locale === 'zh' ? 'Pro 已激活' : locale === 'ms' ? 'Pro aktif' : 'Pro active')
+    : isTrial
+      ? (locale === 'zh' ? 'Trial 已激活' : locale === 'ms' ? 'Trial aktif' : 'Trial active')
+      : (locale === 'zh' ? '广告临时解锁' : locale === 'ms' ? 'Buka sementara melalui iklan' : 'Temporary ad unlock');
   const lockedAccessText = locale === 'zh' ? '包字排行榜开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Ranking boxed untuk Pro, atau buka sementara melalui iklan.' : 'Package ranking is for Pro, or temporary ad unlock.';
   const rewardCreditsText = locale === 'zh' ? `可用广告解锁次数：${rewardCredits}` : locale === 'ms' ? `Kredit buka iklan tersedia: ${rewardCredits}` : `Available rewarded unlock credits: ${rewardCredits}`;
   const adUnlockRemainingText = locale === 'zh' ? `本次广告解锁剩余：约 ${unlockMinutesLeft} 分钟` : locale === 'ms' ? `Baki buka kunci iklan: kira-kira ${unlockMinutesLeft} minit` : `Ad unlock remaining: about ${unlockMinutesLeft} minutes`;

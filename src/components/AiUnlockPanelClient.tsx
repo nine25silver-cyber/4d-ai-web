@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import {useEffect, useState} from 'react';
-import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
+import {canAccessAiCore, getCurrentUserEntitlement, isPaidProEntitlement, isTrialEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 
 type Props = {
   locale: string;
@@ -33,12 +33,14 @@ export function AiUnlockPanelClient({locale, title, text, goPro, watchAd, unlock
     };
   }, []);
 
-  const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
+  const isFormalPro = isPaidProEntitlement(entitlement);
+  const isTrial = isTrialEntitlement(entitlement);
+  const hasAiAccess = canAccessAiCore(entitlement);
 
-  if (isFormalPro) {
+  if (hasAiAccess) {
     return (
       <section className="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-5">
-        <h2 className="text-lg font-black text-slate-950">{unlockedTitle}</h2>
+        <h2 className="text-lg font-black text-slate-950">{isFormalPro ? unlockedTitle : isTrial ? 'Trial active' : unlockedTitle}</h2>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">{unlockedText}</p>
       </section>
     );

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import {useEffect, useMemo, useState} from 'react';
 import type {Locale} from '@/i18n/routing';
 import type {ProviderConfig} from '@/lib/providers';
-import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
+import {canAccessAiCore, getCurrentUserEntitlement, isPaidProEntitlement, isTrialEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
 import {
   addRewardCredit,
@@ -101,8 +101,9 @@ export function HotColdToolClient({locale, providers, initialTrendKind, labels}:
     () => providers.find((provider) => provider.code === selectedProviderCode) ?? defaultProvider,
     [defaultProvider, providers, selectedProviderCode]
   );
-  const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
-  const canUseTrend = isFormalPro || adUnlocked;
+  const isFormalPro = isPaidProEntitlement(entitlement);
+  const isTrial = isTrialEntitlement(entitlement);
+  const canUseTrend = canAccessAiCore(entitlement) || adUnlocked;
   const unlockedAccessText = locale === 'zh'
     ? '当前已解锁，可直接使用'
     : locale === 'ms'
@@ -110,6 +111,8 @@ export function HotColdToolClient({locale, providers, initialTrendKind, labels}:
       : 'Currently unlocked and ready to use';
   const accessBadgeText = isFormalPro
     ? (locale === 'zh' ? 'Pro 已激活' : locale === 'ms' ? 'Pro aktif' : 'Pro active')
+    : isTrial
+      ? (locale === 'zh' ? 'Trial 已激活' : locale === 'ms' ? 'Trial aktif' : 'Trial active')
     : (locale === 'zh' ? '广告临时解锁' : locale === 'ms' ? 'Buka sementara melalui iklan' : 'Temporary ad unlock');
   const rewardCreditsText = locale === 'zh'
     ? `可用广告解锁次数：${rewardCredits}`

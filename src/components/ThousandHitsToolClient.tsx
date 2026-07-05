@@ -5,7 +5,7 @@ import {useEffect} from 'react';
 import type {Locale} from '@/i18n/routing';
 import type {ProviderConfig} from '@/lib/providers';
 import Link from 'next/link';
-import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
+import {canAccessHitHistory, getCurrentUserEntitlement, isPaidProEntitlement, isTrialEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {ProviderLogoBadge} from '@/components/ProviderLogoBadge';
 
 type HitRow = {
@@ -110,7 +110,9 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
     });
   }
   const canSearch = target.length === 3;
-  const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
+  const isFormalPro = isPaidProEntitlement(entitlement);
+  const isTrial = isTrialEntitlement(entitlement);
+  const canUseHitHistory = canAccessHitHistory(entitlement);
   const searchModeOptions: Array<{mode: Mode; label: string}> = [
     {mode: 'exact', label: locale === 'zh' ? '正千字' : locale === 'ms' ? 'Exact' : 'Exact'},
     {mode: 'boxed', label: locale === 'zh' ? '包字' : locale === 'ms' ? 'Boxed' : 'boxed'}
@@ -127,7 +129,7 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
   }, []);
 
   function exportAsText() {
-    if (!data || !isFormalPro) return;
+    if (!data || !canUseHitHistory) return;
     const header = locale === 'zh'
       ? '日期 | 公司 | 期号 | 奖项 | 号码'
       : locale === 'ms'
@@ -139,7 +141,7 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
   }
 
   function exportAsCsv() {
-    if (!data || !isFormalPro) return;
+    if (!data || !canUseHitHistory) return;
     const rows = [
       ['date', 'provider', 'draw_no', 'prize', 'number'],
       ...filteredRows.map((row) => [row.drawDate || '', row.providerName, row.drawNo || '', prizeLabel(row.prizeType, locale), row.number])
@@ -157,10 +159,10 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
   }
 
   const accessHint = locale === 'zh'
-    ? {free: '免费版可搜索千字中奖记录。', pro: 'Pro 可复制结果与下载 CSV。'}
+    ? {free: '免费版可搜索千字中奖记录。', pro: 'Trial / Pro 可复制结果与下载 CSV。'}
     : locale === 'ms'
-      ? {free: 'Versi percuma boleh cari rekod kemenangan 3D.', pro: 'Pro boleh salin hasil dan muat turun CSV.'}
-      : {free: 'Free users can search 3-digit hit records.', pro: 'Pro can copy results and download CSV.'};
+      ? {free: 'Versi percuma boleh cari rekod kemenangan 3D.', pro: 'Trial / Pro boleh salin hasil dan muat turun CSV.'}
+      : {free: 'Free users can search 3-digit hit records.', pro: 'Trial / Pro can copy results and download CSV.'};
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -256,8 +258,13 @@ export function ThousandHitsToolClient({locale, providers}: Props) {
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-black text-slate-950">{locale === 'zh' ? `总中奖次数：${filteredRows.length}` : locale === 'ms' ? `Total wins: ${filteredRows.length}` : `Total wins: ${filteredRows.length}`}</h2>
-            {isFormalPro ? (
+            {canUseHitHistory ? (
               <div className="flex gap-2">
+                {isFormalPro || isTrial ? (
+                  <span className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-800">
+                    {isFormalPro ? (locale === 'zh' ? 'Pro 已激活' : locale === 'ms' ? 'Pro aktif' : 'Pro active') : 'Trial'}
+                  </span>
+                ) : null}
                 <button type="button" onClick={exportAsText} disabled={!data} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-black text-slate-800 hover:bg-slate-100 disabled:opacity-50">
                   {locale === 'zh' ? '复制结果' : locale === 'ms' ? 'Salin hasil' : 'Copy results'}
                 </button>

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import type {ReactNode} from 'react';
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
+import {canAccessAiCore, getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
 import {
   addRewardCredit,
@@ -80,8 +80,8 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
   const recordsRef = useRef<HTMLDivElement | null>(null);
   const rewardCredits = 0;
-  const isFormalPro = entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
-  const isUnlocked = isFormalPro || adUnlocked;
+  const hasAiAccess = canAccessAiCore(entitlement);
+  const isUnlocked = hasAiAccess || adUnlocked;
   const allRoundDigits = useMemo(() => toFiveDigits(coreDigits), [coreDigits]);
   const top3Digits = useMemo(() => toFiveDigits(top3ExpertDigits), [top3ExpertDigits]);
   const guideDigits = useMemo(() => allRoundDigits.filter((digit) => /^\d$/.test(digit)), [allRoundDigits]);

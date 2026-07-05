@@ -8,6 +8,11 @@ export type CurrentUserEntitlement = {
   plan: 'free' | 'pro';
   status?: string | null;
   isPro: boolean;
+  canAccessAiCore: boolean;
+  canAccessHitHistory: boolean;
+  accessSource?: string | null;
+  deviceTrialActive: boolean;
+  devicePremiumActive: boolean;
   source: 'user_membership_entitlements' | 'missing_row' | 'not_logged_in' | 'supabase_unconfigured' | 'error';
   error?: string;
   updatedAt?: string | null;
@@ -29,6 +34,11 @@ type UserAccessStateRow = {
   plan: string | null;
   membership_status: string | null;
   current_period_end: string | null;
+  can_access_ai_core: boolean | null;
+  can_access_hit_history: boolean | null;
+  access_source: string | null;
+  device_trial_active: boolean | null;
+  device_premium_active: boolean | null;
   checked_at: string | null;
 };
 
@@ -36,6 +46,11 @@ const FREE_FALLBACK: CurrentUserEntitlement = {
   loggedIn: false,
   plan: 'free',
   isPro: false,
+  canAccessAiCore: false,
+  canAccessHitHistory: false,
+  accessSource: null,
+  deviceTrialActive: false,
+  devicePremiumActive: false,
   source: 'not_logged_in'
 };
 
@@ -74,6 +89,11 @@ function getRpcAccessRow(data: unknown): UserAccessStateRow | null {
   if (record.current_period_end != null && typeof record.current_period_end !== 'string') return null;
   if (record.membership_status != null && typeof record.membership_status !== 'string') return null;
   if (record.plan != null && typeof record.plan !== 'string') return null;
+  if (record.can_access_ai_core != null && typeof record.can_access_ai_core !== 'boolean') return null;
+  if (record.can_access_hit_history != null && typeof record.can_access_hit_history !== 'boolean') return null;
+  if (record.access_source != null && typeof record.access_source !== 'string') return null;
+  if (record.device_trial_active != null && typeof record.device_trial_active !== 'boolean') return null;
+  if (record.device_premium_active != null && typeof record.device_premium_active !== 'boolean') return null;
   if (record.checked_at != null && typeof record.checked_at !== 'string') return null;
   return {
     is_logged_in: typeof record.is_logged_in === 'boolean' ? record.is_logged_in : true,
@@ -81,6 +101,11 @@ function getRpcAccessRow(data: unknown): UserAccessStateRow | null {
     plan: record.plan ?? null,
     membership_status: record.membership_status ?? null,
     current_period_end: record.current_period_end ?? null,
+    can_access_ai_core: record.can_access_ai_core ?? false,
+    can_access_hit_history: record.can_access_hit_history ?? false,
+    access_source: record.access_source ?? null,
+    device_trial_active: record.device_trial_active ?? false,
+    device_premium_active: record.device_premium_active ?? false,
     checked_at: record.checked_at ?? null
   };
 }
@@ -93,6 +118,11 @@ function entitlementFromRpcRow(row: UserAccessStateRow, userId: string): Current
     plan: normalizeRpcPlan(row.plan, isPro),
     status: row.membership_status,
     isPro,
+    canAccessAiCore: row.can_access_ai_core === true,
+    canAccessHitHistory: row.can_access_hit_history === true,
+    accessSource: row.access_source,
+    deviceTrialActive: row.device_trial_active === true,
+    devicePremiumActive: row.device_premium_active === true,
     source: 'user_membership_entitlements',
     updatedAt: row.checked_at,
     currentPeriodEnd: row.current_period_end
@@ -115,6 +145,11 @@ async function getCurrentUserEntitlementFromLegacyTable(
       userId,
       plan: 'free',
       isPro: false,
+      canAccessAiCore: false,
+      canAccessHitHistory: false,
+      accessSource: null,
+      deviceTrialActive: false,
+      devicePremiumActive: false,
       source: 'error',
       error: sanitizeError(error)
     };
@@ -126,6 +161,11 @@ async function getCurrentUserEntitlementFromLegacyTable(
       userId,
       plan: 'free',
       isPro: false,
+      canAccessAiCore: false,
+      canAccessHitHistory: false,
+      accessSource: null,
+      deviceTrialActive: false,
+      devicePremiumActive: false,
       source: 'missing_row'
     };
   }
@@ -140,10 +180,34 @@ async function getCurrentUserEntitlementFromLegacyTable(
     plan: isPro ? 'pro' : 'free',
     status: data.status,
     isPro,
+    canAccessAiCore: isPro,
+    canAccessHitHistory: isPro,
+    accessSource: isPro ? 'legacy_membership' : null,
+    deviceTrialActive: false,
+    devicePremiumActive: false,
     source: 'user_membership_entitlements',
     updatedAt: data.updated_at,
     currentPeriodEnd: data.current_period_end
   };
+}
+
+export function isPaidProEntitlement(entitlement: CurrentUserEntitlement | null | undefined): boolean {
+  return entitlement?.source === 'user_membership_entitlements' && entitlement.isPro;
+}
+
+export function isTrialEntitlement(entitlement: CurrentUserEntitlement | null | undefined): boolean {
+  if (!entitlement || entitlement.isPro) return false;
+  if (entitlement.deviceTrialActive) return true;
+  if (entitlement.status?.toLowerCase().includes('trial')) return true;
+  return entitlement.accessSource?.toLowerCase().includes('trial') === true;
+}
+
+export function canAccessAiCore(entitlement: CurrentUserEntitlement | null | undefined): boolean {
+  return entitlement?.source === 'user_membership_entitlements' && entitlement.canAccessAiCore;
+}
+
+export function canAccessHitHistory(entitlement: CurrentUserEntitlement | null | undefined): boolean {
+  return entitlement?.source === 'user_membership_entitlements' && entitlement.canAccessHitHistory;
 }
 
 export async function getCurrentUserEntitlement(): Promise<CurrentUserEntitlement> {
