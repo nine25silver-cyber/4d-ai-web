@@ -76,12 +76,12 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
   const [entitlementLoading, setEntitlementLoading] = useState(true);
   const [adUnlocked, setAdUnlocked] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
-  const [selectedExpertMode, setSelectedExpertMode] = useState<ExpertMode>('top3_expert');
+  const [selectedExpertMode, setSelectedExpertMode] = useState<ExpertMode>('all_round');
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
   const recordsRef = useRef<HTMLDivElement | null>(null);
-  const rewardCredits = 0;
   const hasAiAccess = canAccessAiCore(entitlement);
-  const isUnlocked = hasAiAccess || adUnlocked;
+  const canUseAllRoundExpert = hasAiAccess || adUnlocked;
+  const canUseTop3Expert = hasAiAccess;
   const allRoundDigits = useMemo(() => toFiveDigits(coreDigits), [coreDigits]);
   const top3Digits = useMemo(() => toFiveDigits(top3ExpertDigits), [top3ExpertDigits]);
   const guideDigits = useMemo(() => allRoundDigits.filter((digit) => /^\d$/.test(digit)), [allRoundDigits]);
@@ -143,6 +143,8 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
     }
   }
   function showRecords(mode: ExpertMode) {
+    if (mode === 'top3_expert' && !canUseTop3Expert) return;
+    if (mode === 'all_round' && !canUseAllRoundExpert) return;
     setSelectedExpertMode(mode);
     window.setTimeout(() => {
       recordsRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
@@ -170,6 +172,8 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
               digits={top3Digits}
               stats={expertStats?.top3Expert ?? null}
               copy={expertCopy}
+              canAccess={canUseTop3Expert}
+              lockedText={locale === 'zh' ? 'Top3 专家仅限 Trial / Pro 使用。' : locale === 'ms' ? 'Pakar Top3 hanya untuk Trial / Pro.' : 'Top3 Expert is available for Trial / Pro only.'}
               onViewRecords={() => showRecords('top3_expert')}
             />
             <ExpertRecommendationCard
@@ -177,72 +181,62 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
               digits={allRoundDigits}
               stats={expertStats?.allRound ?? null}
               copy={expertCopy}
+              canAccess={canUseAllRoundExpert}
+              lockedText={locale === 'zh' ? '观看广告后可临时使用全方位专家。' : locale === 'ms' ? 'Tonton iklan untuk membuka Pakar Menyeluruh sementara.' : 'Watch an ad to unlock All-round Expert temporarily.'}
               onViewRecords={() => showRecords('all_round')}
             />
           </div>
         </section>
         <div id="ai-hit-history-details" ref={recordsRef}>
-          {selectedExpertMode === 'top3_expert' ? top3HistorySlot : allRoundHistorySlot}
+          {selectedExpertMode === 'top3_expert'
+            ? (canUseTop3Expert ? top3HistorySlot : (
+              <LockedExpertPanel
+                locale={locale}
+                memberLoggedIn={memberState?.loggedIn === true}
+                labels={labels}
+                onLogin={() => void loginUser(locale)}
+                onUnlockByAd={unlockByRewardedAd}
+                unlockMinutesLeft={unlockMinutesLeft}
+                top3Only
+              />
+            ))
+            : (canUseAllRoundExpert ? allRoundHistorySlot : (
+              <LockedExpertPanel
+                locale={locale}
+                memberLoggedIn={memberState?.loggedIn === true}
+                labels={labels}
+                onLogin={() => void loginUser(locale)}
+                onUnlockByAd={unlockByRewardedAd}
+                unlockMinutesLeft={unlockMinutesLeft}
+              />
+            ))}
         </div>
-        {!isUnlocked ? (
-          <section className="rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-sm">
-            <h3 className="text-lg font-black text-slate-950">{labels.proRequiredTitle}</h3>
-            <p className="mt-2 text-sm font-bold leading-6 text-slate-700">{labels.proRequiredDescription}</p>
-            <p className="hidden">
-              {locale === 'zh'
-                ? `可用广告解锁次数：${rewardCredits}`
-                : locale === 'ms'
-                  ? `Kredit buka iklan tersedia: ${rewardCredits}`
-                  : `Available rewarded unlock credits: ${rewardCredits}`}
-            </p>
-            {adUnlocked ? (
-              <p className="mt-1 text-xs font-bold text-blue-800">
-                {locale === 'zh'
-                  ? `本次广告解锁剩余：约 ${unlockMinutesLeft} 分钟`
-                  : locale === 'ms'
-                    ? `Baki buka kunci iklan: kira-kira ${unlockMinutesLeft} minit`
-                    : `Ad unlock remaining: about ${unlockMinutesLeft} minutes`}
-              </p>
-            ) : null}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {!memberState?.loggedIn ? (
-                <button type="button" onClick={() => void loginUser(locale)} className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100">
-                  {labels.login}
-                </button>
-              ) : null}
-              <button type="button" onClick={unlockByRewardedAd} className="rounded-md border border-amber-300 bg-white px-4 py-2 text-sm font-black text-amber-900 hover:bg-amber-100">
-                {locale === 'zh' ? '观看广告并解锁30分钟' : locale === 'ms' ? 'Tonton iklan & buka 30 minit' : 'Watch ad and unlock for 30 minutes'}
-              </button>
-              <Link href={`/${locale}/pricing`} className="rounded-md bg-blue-800 px-4 py-2 text-sm font-black text-white hover:bg-blue-900">
-                {labels.goPro}
-              </Link>
-            </div>
-          </section>
-        ) : null}
 
       </div>
     </section>
   );
 }
 
-function ExpertRecommendationCard({title, digits, stats, copy, onViewRecords}: {title: string; digits: string[]; stats: ExpertHitStats | null; copy: ExpertCardCopy; onViewRecords: () => void}) {
+function ExpertRecommendationCard({title, digits, stats, copy, canAccess, lockedText, onViewRecords}: {title: string; digits: string[]; stats: ExpertHitStats | null; copy: ExpertCardCopy; canAccess: boolean; lockedText: string; onViewRecords: () => void}) {
   const metricRows = [
-    {label: copy.top3Match, value: stats?.top3Hits ?? null},
-    {label: copy.specialMatch, value: stats?.specialHits ?? null},
-    {label: copy.consoMatch, value: stats?.consoHits ?? null}
+    {label: copy.top3Match, value: canAccess ? stats?.top3Hits ?? null : null},
+    {label: copy.specialMatch, value: canAccess ? stats?.specialHits ?? null : null},
+    {label: copy.consoMatch, value: canAccess ? stats?.consoHits ?? null : null}
   ];
-  const totalText = formatExpertCount(stats?.totalHits ?? null);
+  const totalText = formatExpertCount(canAccess ? stats?.totalHits ?? null : null);
+  const displayDigits = canAccess ? digits : ['-', '-', '-', '-', '-'];
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm">
+    <article className={`rounded-lg border bg-white p-2.5 shadow-sm ${canAccess ? 'border-slate-200' : 'border-amber-200'}`}>
       <div className="flex flex-wrap items-start justify-between gap-1.5">
         <div>
           <h3 className="text-base font-black text-slate-950">{title}</h3>
           <p className="text-[11px] font-black leading-4 text-blue-800">{copy.recordWindow}</p>
         </div>
-        <button type="button" onClick={onViewRecords} className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[11px] font-black leading-4 text-blue-800 hover:bg-blue-100">
+        <button type="button" onClick={onViewRecords} disabled={!canAccess} className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[11px] font-black leading-4 text-blue-800 hover:bg-blue-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400">
           {copy.viewRecords}
         </button>
       </div>
+      {!canAccess ? <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-bold leading-4 text-amber-900">{lockedText}</p> : null}
       <div className="mt-2 grid gap-1.5">
         {metricRows.map((row) => (
           <div key={row.label} className="flex items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50 px-2 py-1">
@@ -254,7 +248,7 @@ function ExpertRecommendationCard({title, digits, stats, copy, onViewRecords}: {
       <div className="mt-2 rounded-md border border-blue-100 bg-blue-50 p-2">
         <p className="text-xs font-black text-slate-700">{copy.coreDigits}</p>
         <div className="mt-1 flex flex-wrap gap-1">
-          {digits.map((digit, index) => (
+          {displayDigits.map((digit, index) => (
             <span key={`${digit}-${index}`} className="grid size-7 place-items-center rounded-full border border-blue-300 bg-white text-sm font-black text-blue-950">
               {digit}
             </span>
@@ -265,6 +259,45 @@ function ExpertRecommendationCard({title, digits, stats, copy, onViewRecords}: {
         {copy.totalMatch} {totalText}{totalText === '--' ? '' : ` ${copy.timesUnit}`}
       </p>
     </article>
+  );
+}
+
+function LockedExpertPanel({locale, memberLoggedIn, labels, onLogin, onUnlockByAd, unlockMinutesLeft, top3Only = false}: {locale: string; memberLoggedIn: boolean; labels: Props['labels']; onLogin: () => void; onUnlockByAd: () => void; unlockMinutesLeft: number; top3Only?: boolean}) {
+  const title = top3Only
+    ? (locale === 'zh' ? 'Top3 专家需要 Trial / Pro 权限' : locale === 'ms' ? 'Pakar Top3 memerlukan akses Trial / Pro' : 'Top3 Expert requires Trial / Pro access')
+    : labels.proRequiredTitle;
+  const description = top3Only
+    ? (locale === 'zh' ? '观看广告只会解锁全方位专家，不能解锁 Top3 专家。' : locale === 'ms' ? 'Iklan hanya membuka Pakar Menyeluruh, bukan Pakar Top3.' : 'Ad unlock only opens All-round Expert, not Top3 Expert.')
+    : labels.proRequiredDescription;
+  return (
+    <section className="rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-sm">
+      <h3 className="text-lg font-black text-slate-950">{title}</h3>
+      <p className="mt-2 text-sm font-bold leading-6 text-slate-700">{description}</p>
+      {unlockMinutesLeft > 0 ? (
+        <p className="mt-1 text-xs font-bold text-blue-800">
+          {locale === 'zh'
+            ? `本次广告解锁剩余：约 ${unlockMinutesLeft} 分钟`
+            : locale === 'ms'
+              ? `Baki buka kunci iklan: kira-kira ${unlockMinutesLeft} minit`
+              : `Ad unlock remaining: about ${unlockMinutesLeft} minutes`}
+        </p>
+      ) : null}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {!memberLoggedIn ? (
+          <button type="button" onClick={onLogin} className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100">
+            {labels.login}
+          </button>
+        ) : null}
+        {!top3Only ? (
+          <button type="button" onClick={onUnlockByAd} className="rounded-md border border-amber-300 bg-white px-4 py-2 text-sm font-black text-amber-900 hover:bg-amber-100">
+            {locale === 'zh' ? '观看广告并解锁30分钟' : locale === 'ms' ? 'Tonton iklan & buka 30 minit' : 'Watch ad and unlock for 30 minutes'}
+          </button>
+        ) : null}
+        <Link href={`/${locale}/pricing`} className="rounded-md bg-blue-800 px-4 py-2 text-sm font-black text-white hover:bg-blue-900">
+          {labels.goPro}
+        </Link>
+      </div>
+    </section>
   );
 }
 
