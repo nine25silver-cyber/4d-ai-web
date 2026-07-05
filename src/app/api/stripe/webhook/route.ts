@@ -1,6 +1,16 @@
 import {NextResponse} from 'next/server';
 import Stripe from 'stripe';
 import {getStripeConfigStatus, getStripeServerClient} from '@/lib/stripe';
+import {getSupabaseAdminClient} from '@/lib/supabase/admin';
+
+type PurchaseRecordRow = {
+  id: string;
+};
+
+type UserEntitlementRow = {
+  id: string;
+  premium_expires_at: string | null;
+};
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return NextResponse.json(body, {status, headers: {'Cache-Control': 'no-store'}});
@@ -14,6 +24,209 @@ function stripeId(value: string | {id?: string} | null): string | null {
 
 function metadataUserId(session: Stripe.Checkout.Session): string | null {
   return session.metadata?.supabase_user_id ?? session.client_reference_id ?? null;
+}
+
+function safeLogContext(event: Stripe.Event, session?: Stripe.Checkout.Session, userId?: string | null, subscriptionId?: string | null) {
+  return {
+    eventId: event.id,
+    type: event.type,
+    checkoutSessionId: session?.id,
+    userId: userId ?? null,
+    subscriptionId: subscriptionId ?? null
+  };
+}
+
+function unixSecondsToIso(seconds: number | null | undefined): string | null {
+  if (!seconds || !Number.isFinite(seconds)) return null;
+  return new Date(seconds * 1000).toISOString();
+}
+
+function getSubscriptionPeriodEnd(subscription: Stripe.Subscription): string | null {
+  const currentPeriodEnd = (subscription as Stripe.Subscription & {current_period_end?: number}).current_period_end;
+  return unixSecondsToIso(currentPeriodEnd);
+}
+
+function getSubscriptionPriceId(subscription: Stripe.Subscription): string | null {
+  return subscription.items.data[0]?.price?.id ?? null;
+}
+
+function laterTimestamp(current: string | null | undefined, next: string): string {
+  if (!current) return next;
+  const currentMs = Date.parse(current);
+  const nextMs = Date.parse(next);
+  if (Number.isNaN(currentMs) || Number.isNaN(nextMs)) return next;
+  return currentMs > nextMs ? current : next;
+}
+
+async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stripe.Checkout.Session, stripe: Stripe) {
+  const supabaseUserId = metadataUserId(session);
+  const customerId = stripeId(session.customer);
+  const subscriptionId = stripeId(session.subscription);
+
+  if (!supabaseUserId) {
+    console.warn('Stripe checkout completed without Supabase user id.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    return jsonResponse(
+      {
+        received: true,
+        eventId: event.id,
+        type: event.type,
+        checkoutSessionId: session.id,
+        writesEnabled: false,
+        warning: 'missing_supabase_user_id'
+      },
+      200
+    );
+  }
+
+  if (!subscriptionId) {
+    console.warn('Stripe checkout completed without subscription id.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    return jsonResponse(
+      {
+        received: true,
+        eventId: event.id,
+        type: event.type,
+        checkoutSessionId: session.id,
+        writesEnabled: false,
+        warning: 'missing_subscription_id'
+      },
+      200
+    );
+  }
+
+  const expectedPriceId = process.env.STRIPE_PRICE_PRO_MONTHLY?.trim();
+  if (!expectedPriceId) {
+    console.error('Stripe checkout webhook missing monthly price configuration.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    return jsonResponse({error: 'stripe_price_not_configured', eventId: event.id, checkoutSessionId: session.id}, 500);
+  }
+
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const subscriptionPriceId = getSubscriptionPriceId(subscription);
+  const premiumExpiresAt = getSubscriptionPeriodEnd(subscription);
+
+  if (subscriptionPriceId !== expectedPriceId) {
+    console.warn('Stripe checkout completed with unexpected price id.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    return jsonResponse(
+      {
+        received: true,
+        eventId: event.id,
+        type: event.type,
+        checkoutSessionId: session.id,
+        writesEnabled: false,
+        warning: 'price_mismatch'
+      },
+      200
+    );
+  }
+
+  if (!premiumExpiresAt) {
+    console.error('Stripe subscription is missing current period end.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    return jsonResponse({error: 'subscription_period_end_missing', eventId: event.id, checkoutSessionId: session.id}, 500);
+  }
+
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    console.error('Supabase admin client is not configured for Stripe webhook writes.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    return jsonResponse({error: 'supabase_admin_not_configured', eventId: event.id, checkoutSessionId: session.id}, 500);
+  }
+
+  const {data: existingPurchaseRows, error: existingPurchaseError} = await supabase
+    .from('purchase_records')
+    .select('id')
+    .eq('provider', 'stripe')
+    .eq('transaction_id', session.id)
+    .limit(1)
+    .returns<PurchaseRecordRow[]>();
+
+  if (existingPurchaseError) {
+    console.error('Unable to check existing Stripe purchase record.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    return jsonResponse({error: 'purchase_record_lookup_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
+  }
+
+  const purchaseAlreadyRecorded = Boolean(existingPurchaseRows?.[0]);
+  if (!purchaseAlreadyRecorded) {
+    const {error: insertPurchaseError} = await supabase.from('purchase_records').insert({
+      provider: 'stripe',
+      user_id: supabaseUserId,
+      product_id: subscriptionPriceId,
+      subscription_id: subscriptionId,
+      transaction_id: session.id,
+      status: subscription.status,
+      verified_at: new Date().toISOString(),
+      raw_payload: {
+        event: {
+          id: event.id,
+          type: event.type,
+          created: event.created
+        },
+        checkout_session: {
+          id: session.id,
+          customer: customerId,
+          subscription: subscriptionId,
+          client_reference_id: session.client_reference_id,
+          metadata: session.metadata
+        },
+        subscription: {
+          id: subscription.id,
+          status: subscription.status,
+          current_period_end: (subscription as Stripe.Subscription & {current_period_end?: number}).current_period_end,
+          price_id: subscriptionPriceId
+        },
+        plan_key: 'pro_monthly'
+      }
+    });
+
+    if (insertPurchaseError) {
+      console.error('Unable to insert Stripe purchase record.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+      return jsonResponse({error: 'purchase_record_insert_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
+    }
+  }
+
+  const {data: entitlementRows, error: entitlementLookupError} = await supabase
+    .from('user_entitlements')
+    .select('id,premium_expires_at')
+    .eq('user_id', supabaseUserId)
+    .limit(1)
+    .returns<UserEntitlementRow[]>();
+
+  if (entitlementLookupError) {
+    console.error('Unable to look up user entitlement.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    return jsonResponse({error: 'entitlement_lookup_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
+  }
+
+  const existingEntitlement = entitlementRows?.[0] ?? null;
+  const entitlementExpiresAt = laterTimestamp(existingEntitlement?.premium_expires_at, premiumExpiresAt);
+  const entitlementPayload = {
+    user_id: supabaseUserId,
+    platform: 'web',
+    is_premium: true,
+    premium_expires_at: entitlementExpiresAt,
+    updated_at: new Date().toISOString()
+  };
+
+  const entitlementResult = existingEntitlement
+    ? await supabase.from('user_entitlements').update(entitlementPayload).eq('id', existingEntitlement.id)
+    : await supabase.from('user_entitlements').insert(entitlementPayload);
+
+  if (entitlementResult.error) {
+    console.error('Unable to write user entitlement.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    return jsonResponse({error: 'entitlement_write_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
+  }
+
+  return jsonResponse(
+    {
+      received: true,
+      eventId: event.id,
+      type: event.type,
+      checkoutSessionId: session.id,
+      hasSupabaseUserId: true,
+      hasCustomer: Boolean(customerId),
+      hasSubscription: true,
+      purchaseAlreadyRecorded,
+      entitlementUpdated: true,
+      writesEnabled: true
+    },
+    200
+  );
 }
 
 export async function POST(request: Request) {
@@ -51,30 +264,12 @@ export async function POST(request: Request) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
-    const supabaseUserId = metadataUserId(session);
-    const customerId = stripeId(session.customer);
-    const subscriptionId = stripeId(session.subscription);
-
-    // TODO Phase 3B: use event.id for idempotency before any database write.
-    // TODO Phase 3B: insert or upsert public.purchase_records with session/customer/subscription audit data.
-    // TODO Phase 3B: update public.user_entitlements only after the subscription state and period are verified.
-    return jsonResponse(
-      {
-        received: true,
-        eventId: event.id,
-        type: event.type,
-        checkoutSessionId: session.id,
-        hasSupabaseUserId: Boolean(supabaseUserId),
-        hasCustomer: Boolean(customerId),
-        hasSubscription: Boolean(subscriptionId),
-        writesEnabled: false
-      },
-      200
-    );
+    return handleCheckoutSessionCompleted(event, session, stripe);
   }
 
-  // TODO Phase 3B: handle customer.subscription.updated with an idempotent server-side entitlement update.
-  // TODO Phase 3B: handle customer.subscription.deleted with an idempotent server-side entitlement update.
+  // TODO Phase 3: handle customer.subscription.updated with an idempotent server-side entitlement update.
+  // TODO Phase 3: handle customer.subscription.deleted with an idempotent server-side entitlement update.
+  // TODO Phase 3: handle invoice.payment_failed with an idempotent server-side entitlement update.
   return jsonResponse(
     {
       received: true,
