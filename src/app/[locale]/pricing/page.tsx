@@ -4,10 +4,16 @@ import {getTranslations} from 'next-intl/server';
 import {buildMetadata} from '@/lib/seo';
 import type {Locale} from '@/i18n/routing';
 import {MembershipFlowClient} from '@/components/MembershipFlowClient';
+import {PricingSubscribeButton} from '@/components/PricingSubscribeButton';
 
 const pageKey = 'Pricing';
 const pagePath = 'pricing';
-const plans = ['free', 'pro', 'tng', 'ad'] as const;
+const plans = [
+  {key: 'free'},
+  {key: 'pro'},
+  {key: 'tng'},
+  {key: 'ad'}
+] as const;
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale}>}): Promise<Metadata> {
   const {locale} = await params;
@@ -35,28 +41,40 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
       </section>
 
       <section className="mt-8 grid gap-4 lg:grid-cols-4">
-        {plans.map((plan) => (
-          <article key={plan} className={`rounded-lg border bg-white p-5 shadow-sm ${plan === 'pro' ? 'border-blue-300 ring-2 ring-blue-100' : 'border-slate-200'}`}>
+        {plans.map((plan) => {
+          const isProPlan = plan.key === 'pro';
+          return (
+          <article key={plan.key} className={`rounded-lg border bg-white p-5 shadow-sm ${isProPlan ? 'border-blue-300 ring-2 ring-blue-100' : 'border-slate-200'}`}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-xl font-black text-slate-950">{t(`${plan}Plan`)}</h2>
-                <p className="mt-1 text-2xl font-black text-blue-800">{t(`${plan}Price`)}</p>
+                <h2 className="text-xl font-black text-slate-950">{t(`${plan.key}Plan`)}</h2>
+                <p className="mt-1 text-2xl font-black text-blue-800">{t(`${plan.key}Price`)}</p>
               </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-black ${plan === 'pro' ? 'bg-blue-800 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                {plan === 'pro' ? t('recommended') : t(`${plan}Badge`)}
+              <span className={`rounded-full px-3 py-1 text-xs font-black ${isProPlan ? 'bg-blue-800 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                {isProPlan ? t('recommended') : t(`${plan.key}Badge`)}
               </span>
             </div>
-            {plan === 'pro' ? <p className="mt-2 text-xs font-bold text-blue-800">{t('proBadge')}</p> : null}
+            {isProPlan ? <p className="mt-2 text-xs font-bold text-blue-800">{t('proBadge')}</p> : null}
             <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-700">
               {[1, 2, 3, 4].map((item) => (
                 <li key={item} className="flex gap-2">
                   <span className="mt-2 size-1.5 rounded-full bg-blue-700" />
-                  <span>{t(`${plan}Point${item}`)}</span>
+                  <span>{t(`${plan.key}Point${item}`)}</span>
                 </li>
               ))}
             </ul>
+            {isProPlan ? (
+              <PricingSubscribeButton
+                labels={{
+                  idle: t('subscribeMonthlyCta'),
+                  loading: t('subscribeMonthlyLoading'),
+                  error: t('subscribeMonthlyError')
+                }}
+              />
+            ) : null}
           </article>
-        ))}
+          );
+        })}
       </section>
 
       <section className="mt-8 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
