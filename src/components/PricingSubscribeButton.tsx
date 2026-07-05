@@ -1,6 +1,7 @@
 'use client';
 
 import {useState} from 'react';
+import {usePathname} from 'next/navigation';
 import {getSupabaseBrowserClient} from '@/lib/supabase-browser';
 
 type Props = {
@@ -17,7 +18,20 @@ type CheckoutResponse = {
   error?: string;
 };
 
+const SUPPORTED_LOCALES = new Set(['en', 'zh', 'ms']);
+
+function getCheckoutReturnPaths(pathname: string | null) {
+  const firstSegment = pathname?.split('/').filter(Boolean)[0];
+  const localePrefix = firstSegment && SUPPORTED_LOCALES.has(firstSegment) ? `/${firstSegment}` : '';
+
+  return {
+    successPath: `${localePrefix}/account?checkout=success`,
+    cancelPath: `${localePrefix}/pricing`
+  };
+}
+
 export function PricingSubscribeButton({labels}: Props) {
+  const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const idleLabel = labels.idle || 'Monthly Subscribe';
@@ -33,13 +47,14 @@ export function PricingSubscribeButton({labels}: Props) {
       const supabase = getSupabaseBrowserClient();
       const {data} = supabase ? await supabase.auth.getSession() : {data: {session: null}};
       const token = data.session?.access_token;
+      const returnPaths = getCheckoutReturnPaths(pathname);
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? {Authorization: `Bearer ${token}`} : {})
         },
-        body: JSON.stringify({plan: 'pro_monthly'})
+        body: JSON.stringify({plan: 'pro_monthly', ...returnPaths})
       });
       const payload = (await response.json().catch(() => ({}))) as CheckoutResponse;
 
