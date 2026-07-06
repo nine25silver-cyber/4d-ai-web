@@ -191,7 +191,15 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
     .returns<PurchaseRecordRow[]>();
 
   if (existingPurchaseError) {
-    console.error('Unable to check existing Stripe purchase record.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    console.error('Unable to check existing Stripe purchase record.', {
+      ...safeLogContext(event, session, supabaseUserId, subscriptionId),
+      supabaseError: {
+        code: existingPurchaseError.code,
+        message: existingPurchaseError.message,
+        details: existingPurchaseError.details,
+        hint: existingPurchaseError.hint
+      }
+    });
     return jsonResponse({error: 'purchase_record_lookup_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
   }
 
