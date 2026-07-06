@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import {createClient} from '@supabase/supabase-js';
-import {getStripeConfigStatus, getStripeServerClient} from '@/lib/stripe';
+import {getStripeConfigStatus} from '@/lib/stripe';
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return NextResponse.json(body, {status, headers: {'Cache-Control': 'no-store'}});
@@ -66,6 +66,42 @@ function getCheckoutUrl(request: Request, path: string): string {
   return new URL(path, `${getCheckoutOrigin(request)}/`).toString();
 }
 
+async function createStripeCheckoutSession(params: {
+  priceId: string;
+  secretKey: string;
+  successUrl: string;
+  cancelUrl: string;
+  userId: string;
+  userEmail?: string | null;
+}) {
+  const body = new URLSearchParams();
+  body.set('mode', 'subscription');
+  body.set('line_items[0][price]', params.priceId);
+  body.set('line_items[0][quantity]', '1');
+  body.set('success_url', params.successUrl);
+  body.set('cancel_url', params.cancelUrl);
+  body.set('client_reference_id', params.userId);
+  body.set('metadata[supabase_user_id]', params.userId);
+  body.set('metadata[user_id]', params.userId);
+  body.set('metadata[plan]', 'pro_monthly');
+  body.set('subscription_data[metadata][supabase_user_id]', params.userId);
+  body.set('subscription_data[metadata][user_id]', params.userId);
+  body.set('subscription_data[metadata][plan]', 'pro_monthly');
+
+  if (params.userEmail) {
+    body.set('customer_email', params.userEmail);
+  }
+
+  return fetch('https://api.stripe.com/v1/checkout/sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${params.secretKey}`,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body
+  });
+}
+
 export async function POST(request: Request) {
   const config = getStripeConfigStatus();
   const body = await readCheckoutRequestBody(request);
@@ -109,33 +145,41 @@ export async function POST(request: Request) {
     return jsonResponse({error: 'not_authenticated', message: 'Unable to verify the current Supabase user.'}, 401);
   }
 
-  const stripe = getStripeServerClient();
-  if (!stripe) {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
+  const stripePriceId = process.env.STRIPE_PRICE_PRO_MONTHLY?.trim();
+  if (!stripeSecretKey || !stripePriceId) {
     return jsonResponse({error: 'checkout_not_configured', message: 'Stripe Checkout is not configured for this environment.'}, 503);
   }
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    line_items: [
-      {
-        price: process.env.STRIPE_PRICE_PRO_MONTHLY,
-        quantity: 1
-      }
-    ],
-    success_url: getCheckoutUrl(request, successPath),
-    cancel_url: getCheckoutUrl(request, cancelPath),
-    client_reference_id: user.id,
-    metadata: {
-      supabase_user_id: user.id
-    },
-    subscription_data: {
-      metadata: {
-        supabase_user_id: user.id
-      }
-    }
-  });
+  let stripeResponse: Response;
+  try {
+    stripeResponse = await createStripeCheckoutSession({
+      priceId: stripePriceId,
+      secretKey: stripeSecretKey,
+      successUrl: getCheckoutUrl(request, successPath),
+      cancelUrl: getCheckoutUrl(request, cancelPath),
+      userId: user.id,
+      userEmail: user.email
+    });
+  } catch (error) {
+    console.error('Stripe checkout session request failed', {
+      errorName: error instanceof Error ? error.name : 'unknown'
+    });
+    return jsonResponse({error: 'stripe_checkout_failed', message: 'Unable to create Stripe Checkout session.'}, 502);
+  }
 
-  if (!session.url) {
+  const session = await stripeResponse.json().catch(() => null) as {url?: string; error?: {type?: string; code?: string}} | null;
+
+  if (!stripeResponse.ok) {
+    console.error('Stripe checkout session creation failed', {
+      status: stripeResponse.status,
+      errorType: session?.error?.type,
+      errorCode: session?.error?.code
+    });
+    return jsonResponse({error: 'stripe_checkout_failed', message: 'Unable to create Stripe Checkout session.'}, 502);
+  }
+
+  if (!session?.url) {
     return jsonResponse({error: 'checkout_session_missing_url', message: 'Stripe Checkout did not return a hosted checkout URL.'}, 502);
   }
 
