@@ -18,6 +18,7 @@ type StripeSubscriptionRest = {
   current_period_end?: number | null;
   items: {
     data: Array<{
+      current_period_end?: number | null;
       price?: {
         id?: string | null;
       } | null;
@@ -54,8 +55,12 @@ function unixSecondsToIso(seconds: number | null | undefined): string | null {
   return new Date(seconds * 1000).toISOString();
 }
 
+function getSubscriptionPeriodEndUnix(subscription: StripeSubscriptionRest): number | null | undefined {
+  return subscription.current_period_end ?? subscription.items.data[0]?.current_period_end;
+}
+
 function getSubscriptionPeriodEnd(subscription: StripeSubscriptionRest): string | null {
-  return unixSecondsToIso(subscription.current_period_end);
+  return unixSecondsToIso(getSubscriptionPeriodEndUnix(subscription));
 }
 
 function getSubscriptionPriceId(subscription: StripeSubscriptionRest): string | null {
@@ -216,7 +221,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
         subscription: {
           id: subscription.id,
           status: subscription.status,
-          current_period_end: subscription.current_period_end,
+          current_period_end: getSubscriptionPeriodEndUnix(subscription),
           price_id: subscriptionPriceId
         },
         plan_key: 'pro_monthly'
