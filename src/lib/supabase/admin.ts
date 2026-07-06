@@ -34,12 +34,15 @@ export function getSupabaseAdminClient(): SupabaseClient | null {
   if (!hasValue(supabaseUrl) || !hasValue(serviceRoleKey)) {
     const cloudflareSupabaseUrl = getCloudflareEnvValue('NEXT_PUBLIC_SUPABASE_URL');
     const cloudflareServiceRoleKey = getCloudflareEnvValue('SUPABASE_SERVICE_ROLE_KEY');
+    const cloudflareWorkerSecretPresenceTest = getCloudflareEnvValue('WORKER_SECRET_PRESENCE_TEST');
     console.error('Supabase admin env is not configured.', {
       processSupabaseUrlPresent: hasValue(process.env.NEXT_PUBLIC_SUPABASE_URL),
       processServiceRoleKeyPresent: hasValue(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      processWorkerSecretPresenceTest: hasValue(process.env.WORKER_SECRET_PRESENCE_TEST),
       cloudflareContextAvailable: cloudflareSupabaseUrl.contextAvailable || cloudflareServiceRoleKey.contextAvailable,
       cloudflareSupabaseUrlPresent: hasValue(cloudflareSupabaseUrl.value),
-      cloudflareServiceRoleKeyPresent: hasValue(cloudflareServiceRoleKey.value)
+      cloudflareServiceRoleKeyPresent: hasValue(cloudflareServiceRoleKey.value),
+      cloudflareWorkerSecretPresenceTest: hasValue(cloudflareWorkerSecretPresenceTest.value)
     });
     return null;
   }
