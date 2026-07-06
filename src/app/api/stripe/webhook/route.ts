@@ -102,6 +102,33 @@ function postgrestEq(value: string): string {
   return `eq.${value}`;
 }
 
+function supabaseUrlDebugShape(config: SupabaseRestConfig, path: string) {
+  let originOnlyShape = false;
+  let finalUrlContainsDoubleSlashAfterHost = false;
+  const finalUrl = `${config.url}/rest/v1/${path}`;
+
+  try {
+    const url = new URL(config.url);
+    originOnlyShape = url.pathname === '/' && !url.search && !url.hash;
+    const finalUrlObject = new URL(finalUrl);
+    finalUrlContainsDoubleSlashAfterHost = finalUrlObject.pathname.includes('//');
+  } catch {
+    originOnlyShape = false;
+    finalUrlContainsDoubleSlashAfterHost = false;
+  }
+
+  return {
+    supabaseUrlPresent: Boolean(config.url),
+    supabaseUrlStartsWithHttps: config.url.startsWith('https://'),
+    supabaseUrlContainsRestV1: config.url.includes('/rest/v1'),
+    supabaseUrlEndsWithSlash: config.url.endsWith('/'),
+    supabaseUrlOriginOnlyShape: originOnlyShape,
+    sanitizedPath: path,
+    finalUrlContainsDoubleRestV1: finalUrl.includes('/rest/v1/rest/v1/'),
+    finalUrlContainsDoubleSlashAfterHost
+  };
+}
+
 async function parseSupabaseRestResponse<T>(response: Response): Promise<SupabaseRestResult<T>> {
   const bodyText = await response.text();
   let bodyJson: unknown = null;
@@ -324,7 +351,11 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
   );
 
   if (!existingPurchaseResult.ok) {
-    logSupabaseRestError('purchase_records_lookup', existingPurchaseResult, logContext);
+    const urlDebugShape = supabaseUrlDebugShape(supabase, purchaseLookupPath);
+    logSupabaseRestError('purchase_records_lookup', existingPurchaseResult, {
+      ...logContext,
+      ...urlDebugShape
+    });
     return jsonResponse(
       {
         error: 'purchase_record_lookup_failed',
@@ -332,6 +363,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
         checkoutSessionId: session.id,
         operation: 'purchase_records_lookup',
         path: purchaseLookupPath,
+        ...urlDebugShape,
         status: existingPurchaseResult.status,
         responseText: existingPurchaseResult.bodyText,
         responseJson: existingPurchaseResult.bodyJson
