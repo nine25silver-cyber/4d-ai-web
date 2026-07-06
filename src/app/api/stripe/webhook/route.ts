@@ -460,7 +460,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
 
   const purchaseLookupPath = supabaseRestPath('purchase_records', {
     select: 'id',
-    provider: postgrestEq('stripe'),
+    provider: postgrestEq('website'),
     transaction_id: postgrestEq(session.id),
     limit: '1'
   });
@@ -513,7 +513,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
         method: 'POST',
         headers: supabaseHeaders(supabase, 'return=minimal'),
         body: JSON.stringify({
-          provider: 'stripe',
+          provider: 'website',
           user_id: supabaseUserId,
           product_id: subscriptionPriceId,
           plan_key: 'pro_monthly',
