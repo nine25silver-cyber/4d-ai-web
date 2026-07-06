@@ -12,6 +12,19 @@ type UserEntitlementRow = {
   premium_expires_at: string | null;
 };
 
+type StripeSubscriptionRest = {
+  id: string;
+  status: string;
+  current_period_end?: number | null;
+  items: {
+    data: Array<{
+      price?: {
+        id?: string | null;
+      } | null;
+    }>;
+  };
+};
+
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return NextResponse.json(body, {status, headers: {'Cache-Control': 'no-store'}});
 }
@@ -41,13 +54,22 @@ function unixSecondsToIso(seconds: number | null | undefined): string | null {
   return new Date(seconds * 1000).toISOString();
 }
 
-function getSubscriptionPeriodEnd(subscription: Stripe.Subscription): string | null {
-  const currentPeriodEnd = (subscription as Stripe.Subscription & {current_period_end?: number}).current_period_end;
-  return unixSecondsToIso(currentPeriodEnd);
+function getSubscriptionPeriodEnd(subscription: StripeSubscriptionRest): string | null {
+  return unixSecondsToIso(subscription.current_period_end);
 }
 
-function getSubscriptionPriceId(subscription: Stripe.Subscription): string | null {
+function getSubscriptionPriceId(subscription: StripeSubscriptionRest): string | null {
   return subscription.items.data[0]?.price?.id ?? null;
+}
+
+async function retrieveStripeSubscription(subscriptionId: string, secretKey: string) {
+  const response = await fetch(`https://api.stripe.com/v1/subscriptions/${subscriptionId}`, {
+    headers: {
+      Authorization: `Bearer ${secretKey}`
+    }
+  });
+  const payload = await response.json().catch(() => null) as StripeSubscriptionRest & {error?: {type?: string; code?: string}} | null;
+  return {response, payload};
 }
 
 function laterTimestamp(current: string | null | undefined, next: string): string {
@@ -99,7 +121,33 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
     return jsonResponse({error: 'stripe_price_not_configured', eventId: event.id, checkoutSessionId: session.id}, 500);
   }
 
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!stripeSecretKey) {
+    console.error('Stripe checkout webhook missing secret key configuration.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    return jsonResponse({error: 'stripe_secret_not_configured', eventId: event.id, checkoutSessionId: session.id}, 500);
+  }
+
+  let subscription: StripeSubscriptionRest;
+  try {
+    const {response, payload} = await retrieveStripeSubscription(subscriptionId, stripeSecretKey);
+    if (!response.ok || !payload || payload.error) {
+      console.error('Stripe subscription retrieve failed.', {
+        ...safeLogContext(event, session, supabaseUserId, subscriptionId),
+        status: response.status,
+        errorType: payload?.error?.type,
+        errorCode: payload?.error?.code
+      });
+      return jsonResponse({error: 'stripe_subscription_retrieve_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
+    }
+    subscription = payload;
+  } catch (error) {
+    console.error('Stripe subscription retrieve request failed.', {
+      ...safeLogContext(event, session, supabaseUserId, subscriptionId),
+      errorName: error instanceof Error ? error.name : 'unknown'
+    });
+    return jsonResponse({error: 'stripe_subscription_retrieve_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
+  }
+
   const subscriptionPriceId = getSubscriptionPriceId(subscription);
   const premiumExpiresAt = getSubscriptionPeriodEnd(subscription);
 
@@ -168,7 +216,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
         subscription: {
           id: subscription.id,
           status: subscription.status,
-          current_period_end: (subscription as Stripe.Subscription & {current_period_end?: number}).current_period_end,
+          current_period_end: subscription.current_period_end,
           price_id: subscriptionPriceId
         },
         plan_key: 'pro_monthly'
