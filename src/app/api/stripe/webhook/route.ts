@@ -580,6 +580,11 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
     premium_expires_at: entitlementExpiresAt,
     updated_at: new Date().toISOString()
   };
+  const insertEntitlementPayload = {
+    ...entitlementPayload,
+    device_id: `user:${supabaseUserId}`,
+    trial_days: 0
+  };
 
   const entitlementResult = existingEntitlement
     ? await supabaseRestRequest<null>(
@@ -601,7 +606,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
         {
           method: 'POST',
           headers: supabaseHeaders(supabase, 'return=minimal'),
-          body: JSON.stringify(entitlementPayload)
+          body: JSON.stringify(insertEntitlementPayload)
         },
         'user_entitlements_insert',
         logContext
