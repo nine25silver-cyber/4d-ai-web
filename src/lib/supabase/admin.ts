@@ -28,20 +28,41 @@ function getRuntimeEnvValue(name: string): string | undefined {
   return process.env[name] ?? getCloudflareEnvValue(name).value;
 }
 
+function getRuntimeEnvValueFrom(names: string[]): string | undefined {
+  for (const name of names) {
+    const processValue = process.env[name];
+    if (hasValue(processValue)) {
+      return processValue;
+    }
+
+    const cloudflareValue = getCloudflareEnvValue(name).value;
+    if (hasValue(cloudflareValue)) {
+      return cloudflareValue;
+    }
+  }
+  return undefined;
+}
+
 export function getSupabaseAdminClient(): SupabaseClient | null {
   const supabaseUrl = getRuntimeEnvValue('NEXT_PUBLIC_SUPABASE_URL')?.trim();
-  const serviceRoleKey = getRuntimeEnvValue('SUPABASE_SERVICE_ROLE_KEY')?.trim();
+  const serviceRoleKey = getRuntimeEnvValueFrom([
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'SUPABASE_ADMIN_SERVICE_ROLE_KEY'
+  ])?.trim();
   if (!hasValue(supabaseUrl) || !hasValue(serviceRoleKey)) {
     const cloudflareSupabaseUrl = getCloudflareEnvValue('NEXT_PUBLIC_SUPABASE_URL');
     const cloudflareServiceRoleKey = getCloudflareEnvValue('SUPABASE_SERVICE_ROLE_KEY');
+    const cloudflareAdminServiceRoleKey = getCloudflareEnvValue('SUPABASE_ADMIN_SERVICE_ROLE_KEY');
     const cloudflareWorkerSecretPresenceTest = getCloudflareEnvValue('WORKER_SECRET_PRESENCE_TEST');
     console.error('Supabase admin env is not configured.', {
       processSupabaseUrlPresent: hasValue(process.env.NEXT_PUBLIC_SUPABASE_URL),
       processServiceRoleKeyPresent: hasValue(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      processAdminServiceRoleKeyPresent: hasValue(process.env.SUPABASE_ADMIN_SERVICE_ROLE_KEY),
       processWorkerSecretPresenceTest: hasValue(process.env.WORKER_SECRET_PRESENCE_TEST),
       cloudflareContextAvailable: cloudflareSupabaseUrl.contextAvailable || cloudflareServiceRoleKey.contextAvailable,
       cloudflareSupabaseUrlPresent: hasValue(cloudflareSupabaseUrl.value),
       cloudflareServiceRoleKeyPresent: hasValue(cloudflareServiceRoleKey.value),
+      cloudflareAdminServiceRoleKeyPresent: hasValue(cloudflareAdminServiceRoleKey.value),
       cloudflareWorkerSecretPresenceTest: hasValue(cloudflareWorkerSecretPresenceTest.value)
     });
     return null;
