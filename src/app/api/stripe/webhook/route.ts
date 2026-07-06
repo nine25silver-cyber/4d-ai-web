@@ -304,9 +304,10 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
     return jsonResponse({error: 'supabase_admin_not_configured', eventId: event.id, checkoutSessionId: session.id}, 500);
   }
 
+  const purchaseLookupPath = `purchase_records?select=id&provider=${postgrestFilter('stripe')}&transaction_id=${postgrestFilter(session.id)}&limit=1`;
   const existingPurchaseResult = await supabaseRestRequest<PurchaseRecordRow[]>(
     supabase,
-    `purchase_records?select=id&provider=${postgrestFilter('stripe')}&transaction_id=${postgrestFilter(session.id)}&limit=1`,
+    purchaseLookupPath,
     {method: 'GET'},
     'purchase_records_lookup',
     logContext
@@ -314,7 +315,19 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
 
   if (!existingPurchaseResult.ok) {
     logSupabaseRestError('purchase_records_lookup', existingPurchaseResult, logContext);
-    return jsonResponse({error: 'purchase_record_lookup_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
+    return jsonResponse(
+      {
+        error: 'purchase_record_lookup_failed',
+        eventId: event.id,
+        checkoutSessionId: session.id,
+        operation: 'purchase_records_lookup',
+        path: purchaseLookupPath,
+        status: existingPurchaseResult.status,
+        responseText: existingPurchaseResult.bodyText,
+        responseJson: existingPurchaseResult.bodyJson
+      },
+      500
+    );
   }
 
   const purchaseAlreadyRecorded = Boolean(existingPurchaseResult.data?.[0]);
