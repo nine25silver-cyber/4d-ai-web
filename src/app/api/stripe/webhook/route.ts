@@ -84,6 +84,13 @@ function getSupabaseRestConfig(): SupabaseRestConfig | null {
   return {url: url!.replace(/\/+$/, ''), serviceRoleKey: serviceRoleKey!};
 }
 
+function serviceRoleKeyLengthCategory(value: string | undefined): 'missing' | 'short' | 'jwt_like' | 'long' {
+  if (!hasValue(value)) return 'missing';
+  if (value!.length < 40) return 'short';
+  if (value!.startsWith('ey') && value!.split('.').length >= 3) return 'jwt_like';
+  return 'long';
+}
+
 function supabaseHeaders(config: SupabaseRestConfig, prefer?: string): HeadersInit {
   return {
     Authorization: `Bearer ${config.serviceRoleKey}`,
@@ -149,6 +156,45 @@ async function parseSupabaseRestResponse<T>(response: Response): Promise<Supabas
     return {ok: false, status: response.status, bodyText, bodyJson};
   }
   return {ok: true, status: response.status, data: bodyJson as T};
+}
+
+async function supabaseAnonLookupDebug(config: SupabaseRestConfig, path: string): Promise<Record<string, unknown>> {
+  const anonKey = getRuntimeEnvValue('NEXT_PUBLIC_SUPABASE_ANON_KEY')?.trim();
+  const serviceRoleKey = config.serviceRoleKey;
+  const debug: Record<string, unknown> = {
+    serviceRoleKeyPresent: hasValue(serviceRoleKey),
+    serviceRoleKeyStartsWithEy: serviceRoleKey.startsWith('ey'),
+    serviceRoleKeyContainsWhitespace: /\s/.test(serviceRoleKey),
+    serviceRoleKeyLengthCategory: serviceRoleKeyLengthCategory(serviceRoleKey),
+    anonKeyPresent: hasValue(anonKey),
+    anonLookupStatus: null,
+    anonLookupResponseText: '',
+    serviceLookupStatus: null,
+    serviceLookupResponseText: '',
+    sanitizedPath: path
+  };
+
+  if (!hasValue(anonKey)) {
+    return debug;
+  }
+
+  try {
+    const response = await fetch(supabaseRestUrl(config, path), {
+      method: 'GET',
+      headers: {
+        apikey: anonKey!,
+        Authorization: `Bearer ${anonKey!}`,
+        Accept: 'application/json'
+      }
+    });
+    debug.anonLookupStatus = response.status;
+    debug.anonLookupResponseText = await response.text();
+  } catch (error) {
+    debug.anonLookupStatus = 0;
+    debug.anonLookupResponseText = error instanceof Error ? error.message : 'unknown';
+  }
+
+  return debug;
 }
 
 async function supabaseRestRequest<T>(
@@ -358,9 +404,19 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
 
   if (!existingPurchaseResult.ok) {
     const urlDebugShape = supabaseUrlDebugShape(supabase, purchaseLookupPath);
+    const anonLookupDebug =
+      existingPurchaseResult.status === 400
+        ? await supabaseAnonLookupDebug(supabase, purchaseLookupPath)
+        : {};
+    const purchaseLookupDebug = {
+      ...urlDebugShape,
+      ...anonLookupDebug,
+      serviceLookupStatus: existingPurchaseResult.status,
+      serviceLookupResponseText: existingPurchaseResult.bodyText
+    };
     logSupabaseRestError('purchase_records_lookup', existingPurchaseResult, {
       ...logContext,
-      ...urlDebugShape
+      ...purchaseLookupDebug
     });
     return jsonResponse(
       {
@@ -369,7 +425,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
         checkoutSessionId: session.id,
         operation: 'purchase_records_lookup',
         path: purchaseLookupPath,
-        ...urlDebugShape,
+        ...purchaseLookupDebug,
         status: existingPurchaseResult.status,
         responseText: existingPurchaseResult.bodyText,
         responseJson: existingPurchaseResult.bodyJson
