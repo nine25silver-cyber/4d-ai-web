@@ -1,7 +1,7 @@
 import {NextResponse} from 'next/server';
+import {getCloudflareContext} from '@opennextjs/cloudflare';
 import Stripe from 'stripe';
 import {getStripeConfigStatus, getStripeServerClient} from '@/lib/stripe';
-import {getSupabaseAdminClient} from '@/lib/supabase/admin';
 
 type PurchaseRecordRow = {
   id: string;
@@ -26,8 +26,129 @@ type StripeSubscriptionRest = {
   };
 };
 
+type SupabaseRestConfig = {
+  url: string;
+  serviceRoleKey: string;
+};
+
+type SupabaseRestResult<T> =
+  | {ok: true; data: T; status: number}
+  | {ok: false; status: number; bodyText: string; bodyJson: unknown};
+
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return NextResponse.json(body, {status, headers: {'Cache-Control': 'no-store'}});
+}
+
+function hasValue(value: string | undefined): boolean {
+  return Boolean(value && value.trim().length > 0);
+}
+
+function getCloudflareEnvValue(name: string): string | undefined {
+  try {
+    const {env} = getCloudflareContext();
+    const value = (env as Record<string, unknown>)[name];
+    return typeof value === 'string' ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function getRuntimeEnvValue(name: string): string | undefined {
+  return process.env[name] ?? getCloudflareEnvValue(name);
+}
+
+function getRuntimeEnvValueFrom(names: string[]): string | undefined {
+  for (const name of names) {
+    const processValue = process.env[name];
+    if (hasValue(processValue)) {
+      return processValue;
+    }
+
+    const cloudflareValue = getCloudflareEnvValue(name);
+    if (hasValue(cloudflareValue)) {
+      return cloudflareValue;
+    }
+  }
+  return undefined;
+}
+
+function getSupabaseRestConfig(): SupabaseRestConfig | null {
+  const url = getRuntimeEnvValue('NEXT_PUBLIC_SUPABASE_URL')?.trim();
+  const serviceRoleKey = getRuntimeEnvValueFrom([
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'SUPABASE_ADMIN_SERVICE_ROLE_KEY'
+  ])?.trim();
+  if (!hasValue(url) || !hasValue(serviceRoleKey)) {
+    return null;
+  }
+  return {url: url!.replace(/\/+$/, ''), serviceRoleKey: serviceRoleKey!};
+}
+
+function supabaseHeaders(config: SupabaseRestConfig, prefer?: string): HeadersInit {
+  return {
+    Authorization: `Bearer ${config.serviceRoleKey}`,
+    apikey: config.serviceRoleKey,
+    'Content-Type': 'application/json',
+    ...(prefer ? {Prefer: prefer} : {})
+  };
+}
+
+function postgrestFilter(value: string): string {
+  return encodeURIComponent(`eq.${value}`);
+}
+
+async function parseSupabaseRestResponse<T>(response: Response): Promise<SupabaseRestResult<T>> {
+  const bodyText = await response.text();
+  let bodyJson: unknown = null;
+  if (bodyText) {
+    try {
+      bodyJson = JSON.parse(bodyText) as unknown;
+    } catch {
+      bodyJson = null;
+    }
+  }
+  if (!response.ok) {
+    return {ok: false, status: response.status, bodyText, bodyJson};
+  }
+  return {ok: true, status: response.status, data: bodyJson as T};
+}
+
+async function supabaseRestRequest<T>(
+  config: SupabaseRestConfig,
+  path: string,
+  init: RequestInit,
+  operation: string,
+  context: ReturnType<typeof safeLogContext>
+): Promise<SupabaseRestResult<T>> {
+  try {
+    const response = await fetch(`${config.url}/rest/v1/${path}`, {
+      ...init,
+      headers: {
+        ...supabaseHeaders(config),
+        ...(init.headers ?? {})
+      }
+    });
+    return await parseSupabaseRestResponse<T>(response);
+  } catch (error) {
+    console.error('Supabase REST request failed.', {
+      ...context,
+      operation,
+      errorName: error instanceof Error ? error.name : 'unknown',
+      errorMessage: error instanceof Error ? error.message : ''
+    });
+    return {ok: false, status: 0, bodyText: '', bodyJson: null};
+  }
+}
+
+function logSupabaseRestError(operation: string, result: SupabaseRestResult<unknown>, context: ReturnType<typeof safeLogContext>) {
+  if (result.ok) return;
+  console.error('Supabase REST operation failed.', {
+    ...context,
+    operation,
+    status: result.status,
+    responseText: result.bodyText,
+    responseJson: result.bodyJson
+  });
 }
 
 function stripeId(value: string | {id?: string} | null): string | null {
@@ -176,85 +297,90 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
     return jsonResponse({error: 'subscription_period_end_missing', eventId: event.id, checkoutSessionId: session.id}, 500);
   }
 
-  const supabase = getSupabaseAdminClient();
+  const logContext = safeLogContext(event, session, supabaseUserId, subscriptionId);
+  const supabase = getSupabaseRestConfig();
   if (!supabase) {
-    console.error('Supabase admin client is not configured for Stripe webhook writes.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    console.error('Supabase REST admin config is not configured for Stripe webhook writes.', logContext);
     return jsonResponse({error: 'supabase_admin_not_configured', eventId: event.id, checkoutSessionId: session.id}, 500);
   }
 
-  const {data: existingPurchaseRows, error: existingPurchaseError} = await supabase
-    .from('purchase_records')
-    .select('id')
-    .eq('provider', 'stripe')
-    .eq('transaction_id', session.id)
-    .limit(1)
-    .returns<PurchaseRecordRow[]>();
+  const existingPurchaseResult = await supabaseRestRequest<PurchaseRecordRow[]>(
+    supabase,
+    `purchase_records?select=id&provider=${postgrestFilter('stripe')}&transaction_id=${postgrestFilter(session.id)}&limit=1`,
+    {method: 'GET'},
+    'purchase_records_lookup',
+    logContext
+  );
 
-  if (existingPurchaseError) {
-    console.error('Unable to check existing Stripe purchase record.', {
-      ...safeLogContext(event, session, supabaseUserId, subscriptionId),
-      supabaseError: {
-        code: existingPurchaseError.code,
-        message: existingPurchaseError.message,
-        details: existingPurchaseError.details,
-        hint: existingPurchaseError.hint
-      }
-    });
+  if (!existingPurchaseResult.ok) {
+    logSupabaseRestError('purchase_records_lookup', existingPurchaseResult, logContext);
     return jsonResponse({error: 'purchase_record_lookup_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
   }
 
-  const purchaseAlreadyRecorded = Boolean(existingPurchaseRows?.[0]);
+  const purchaseAlreadyRecorded = Boolean(existingPurchaseResult.data?.[0]);
   if (!purchaseAlreadyRecorded) {
-    const {error: insertPurchaseError} = await supabase.from('purchase_records').insert({
-      provider: 'stripe',
-      user_id: supabaseUserId,
-      product_id: subscriptionPriceId,
-      subscription_id: subscriptionId,
-      transaction_id: session.id,
-      status: subscription.status,
-      verified_at: new Date().toISOString(),
-      raw_payload: {
-        event: {
-          id: event.id,
-          type: event.type,
-          created: event.created
-        },
-        checkout_session: {
-          id: session.id,
-          customer: customerId,
-          subscription: subscriptionId,
-          client_reference_id: session.client_reference_id,
-          metadata: session.metadata
-        },
-        subscription: {
-          id: subscription.id,
+    const insertPurchaseResult = await supabaseRestRequest<null>(
+      supabase,
+      'purchase_records',
+      {
+        method: 'POST',
+        headers: supabaseHeaders(supabase, 'return=minimal'),
+        body: JSON.stringify({
+          provider: 'stripe',
+          user_id: supabaseUserId,
+          product_id: subscriptionPriceId,
+          plan_key: 'pro_monthly',
+          subscription_id: subscriptionId,
+          transaction_id: session.id,
           status: subscription.status,
-          current_period_end: getSubscriptionPeriodEndUnix(subscription),
-          price_id: subscriptionPriceId
-        },
-        plan_key: 'pro_monthly'
-      }
-    });
+          verified_at: new Date().toISOString(),
+          raw_payload: {
+            event: {
+              id: event.id,
+              type: event.type,
+              created: event.created
+            },
+            checkout_session: {
+              id: session.id,
+              customer: customerId,
+              subscription: subscriptionId,
+              client_reference_id: session.client_reference_id,
+              metadata: session.metadata
+            },
+            subscription: {
+              id: subscription.id,
+              status: subscription.status,
+              current_period_end: getSubscriptionPeriodEndUnix(subscription),
+              price_id: subscriptionPriceId
+            },
+            plan_key: 'pro_monthly'
+          }
+        })
+      },
+      'purchase_records_insert',
+      logContext
+    );
 
-    if (insertPurchaseError) {
-      console.error('Unable to insert Stripe purchase record.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+    if (!insertPurchaseResult.ok) {
+      logSupabaseRestError('purchase_records_insert', insertPurchaseResult, logContext);
       return jsonResponse({error: 'purchase_record_insert_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
     }
   }
 
-  const {data: entitlementRows, error: entitlementLookupError} = await supabase
-    .from('user_entitlements')
-    .select('id,premium_expires_at')
-    .eq('user_id', supabaseUserId)
-    .limit(1)
-    .returns<UserEntitlementRow[]>();
+  const entitlementLookupResult = await supabaseRestRequest<UserEntitlementRow[]>(
+    supabase,
+    `user_entitlements?select=id,premium_expires_at&user_id=${postgrestFilter(supabaseUserId)}&limit=1`,
+    {method: 'GET'},
+    'user_entitlements_lookup',
+    logContext
+  );
 
-  if (entitlementLookupError) {
-    console.error('Unable to look up user entitlement.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+  if (!entitlementLookupResult.ok) {
+    logSupabaseRestError('user_entitlements_lookup', entitlementLookupResult, logContext);
     return jsonResponse({error: 'entitlement_lookup_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
   }
 
-  const existingEntitlement = entitlementRows?.[0] ?? null;
+  const existingEntitlement = entitlementLookupResult.data?.[0] ?? null;
   const entitlementExpiresAt = laterTimestamp(existingEntitlement?.premium_expires_at, premiumExpiresAt);
   const entitlementPayload = {
     user_id: supabaseUserId,
@@ -265,11 +391,31 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
   };
 
   const entitlementResult = existingEntitlement
-    ? await supabase.from('user_entitlements').update(entitlementPayload).eq('id', existingEntitlement.id)
-    : await supabase.from('user_entitlements').insert(entitlementPayload);
+    ? await supabaseRestRequest<null>(
+        supabase,
+        `user_entitlements?id=${postgrestFilter(existingEntitlement.id)}`,
+        {
+          method: 'PATCH',
+          headers: supabaseHeaders(supabase, 'return=minimal'),
+          body: JSON.stringify(entitlementPayload)
+        },
+        'user_entitlements_update',
+        logContext
+      )
+    : await supabaseRestRequest<null>(
+        supabase,
+        'user_entitlements',
+        {
+          method: 'POST',
+          headers: supabaseHeaders(supabase, 'return=minimal'),
+          body: JSON.stringify(entitlementPayload)
+        },
+        'user_entitlements_insert',
+        logContext
+      );
 
-  if (entitlementResult.error) {
-    console.error('Unable to write user entitlement.', safeLogContext(event, session, supabaseUserId, subscriptionId));
+  if (!entitlementResult.ok) {
+    logSupabaseRestError(existingEntitlement ? 'user_entitlements_update' : 'user_entitlements_insert', entitlementResult, logContext);
     return jsonResponse({error: 'entitlement_write_failed', eventId: event.id, checkoutSessionId: session.id}, 500);
   }
 
