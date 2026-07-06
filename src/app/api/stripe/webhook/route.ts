@@ -93,8 +93,13 @@ function supabaseHeaders(config: SupabaseRestConfig, prefer?: string): HeadersIn
   };
 }
 
-function postgrestFilter(value: string): string {
-  return encodeURIComponent(`eq.${value}`);
+function supabaseRestPath(table: string, params: Record<string, string>): string {
+  const searchParams = new URLSearchParams(params);
+  return `${table}?${searchParams.toString()}`;
+}
+
+function postgrestEq(value: string): string {
+  return `eq.${value}`;
 }
 
 async function parseSupabaseRestResponse<T>(response: Response): Promise<SupabaseRestResult<T>> {
@@ -304,7 +309,12 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
     return jsonResponse({error: 'supabase_admin_not_configured', eventId: event.id, checkoutSessionId: session.id}, 500);
   }
 
-  const purchaseLookupPath = `purchase_records?select=id&provider=${postgrestFilter('stripe')}&transaction_id=${postgrestFilter(session.id)}&limit=1`;
+  const purchaseLookupPath = supabaseRestPath('purchase_records', {
+    select: 'id',
+    provider: postgrestEq('stripe'),
+    transaction_id: postgrestEq(session.id),
+    limit: '1'
+  });
   const existingPurchaseResult = await supabaseRestRequest<PurchaseRecordRow[]>(
     supabase,
     purchaseLookupPath,
@@ -382,7 +392,11 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
 
   const entitlementLookupResult = await supabaseRestRequest<UserEntitlementRow[]>(
     supabase,
-    `user_entitlements?select=id,premium_expires_at&user_id=${postgrestFilter(supabaseUserId)}&limit=1`,
+    supabaseRestPath('user_entitlements', {
+      select: 'id,premium_expires_at',
+      user_id: postgrestEq(supabaseUserId),
+      limit: '1'
+    }),
     {method: 'GET'},
     'user_entitlements_lookup',
     logContext
@@ -406,7 +420,9 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
   const entitlementResult = existingEntitlement
     ? await supabaseRestRequest<null>(
         supabase,
-        `user_entitlements?id=${postgrestFilter(existingEntitlement.id)}`,
+        supabaseRestPath('user_entitlements', {
+          id: postgrestEq(existingEntitlement.id)
+        }),
         {
           method: 'PATCH',
           headers: supabaseHeaders(supabase, 'return=minimal'),
