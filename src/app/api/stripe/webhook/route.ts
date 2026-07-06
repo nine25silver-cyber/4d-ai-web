@@ -93,9 +93,15 @@ function supabaseHeaders(config: SupabaseRestConfig, prefer?: string): HeadersIn
   };
 }
 
-function supabaseRestPath(table: string, params: Record<string, string>): string {
-  const searchParams = new URLSearchParams(params);
-  return `${table}?${searchParams.toString()}`;
+function supabaseRestPath(table: string, params?: Record<string, string>): string {
+  const searchParams = params ? new URLSearchParams(params) : null;
+  const query = searchParams?.toString();
+  return `/rest/v1/${table}${query ? `?${query}` : ''}`;
+}
+
+function supabaseRestUrl(config: SupabaseRestConfig, path: string): string {
+  const normalizedPath = path.startsWith('/rest/v1/') ? path : `/rest/v1/${path.replace(/^\/+/, '')}`;
+  return `${config.url}${normalizedPath}`;
 }
 
 function postgrestEq(value: string): string {
@@ -105,7 +111,7 @@ function postgrestEq(value: string): string {
 function supabaseUrlDebugShape(config: SupabaseRestConfig, path: string) {
   let originOnlyShape = false;
   let finalUrlContainsDoubleSlashAfterHost = false;
-  const finalUrl = `${config.url}/rest/v1/${path}`;
+  const finalUrl = supabaseRestUrl(config, path);
 
   try {
     const url = new URL(config.url);
@@ -153,7 +159,7 @@ async function supabaseRestRequest<T>(
   context: ReturnType<typeof safeLogContext>
 ): Promise<SupabaseRestResult<T>> {
   try {
-    const response = await fetch(`${config.url}/rest/v1/${path}`, {
+    const response = await fetch(supabaseRestUrl(config, path), {
       ...init,
       headers: {
         ...supabaseHeaders(config),
@@ -376,7 +382,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
   if (!purchaseAlreadyRecorded) {
     const insertPurchaseResult = await supabaseRestRequest<null>(
       supabase,
-      'purchase_records',
+      supabaseRestPath('purchase_records'),
       {
         method: 'POST',
         headers: supabaseHeaders(supabase, 'return=minimal'),
@@ -465,7 +471,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
       )
     : await supabaseRestRequest<null>(
         supabase,
-        'user_entitlements',
+        supabaseRestPath('user_entitlements'),
         {
           method: 'POST',
           headers: supabaseHeaders(supabase, 'return=minimal'),
