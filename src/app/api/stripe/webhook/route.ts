@@ -54,21 +54,28 @@ function getCloudflareEnvValue(name: string): string | undefined {
 }
 
 function getRuntimeEnvValue(name: string): string | undefined {
-  return process.env[name] ?? getCloudflareEnvValue(name);
+  const cloudflareValue = getCloudflareEnvValue(name);
+  if (hasValue(cloudflareValue)) {
+    return cloudflareValue;
+  }
+  return process.env[name];
 }
 
 function getRuntimeEnvValueFrom(names: string[]): string | undefined {
   for (const name of names) {
-    const processValue = process.env[name];
-    if (hasValue(processValue)) {
-      return processValue;
-    }
-
     const cloudflareValue = getCloudflareEnvValue(name);
     if (hasValue(cloudflareValue)) {
       return cloudflareValue;
     }
   }
+
+  for (const name of names) {
+    const processValue = process.env[name];
+    if (hasValue(processValue)) {
+      return processValue;
+    }
+  }
+
   return undefined;
 }
 
