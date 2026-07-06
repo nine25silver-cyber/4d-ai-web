@@ -29,11 +29,24 @@ type StripeSubscriptionRest = {
 type SupabaseRestConfig = {
   url: string;
   serviceRoleKey: string;
+  serviceRoleSelection: RuntimeEnvSelection;
 };
 
 type SupabaseRestResult<T> =
   | {ok: true; data: T; status: number}
   | {ok: false; status: number; bodyText: string; bodyJson: unknown};
+
+type RuntimeEnvSelection = {
+  selectedName: string | null;
+  selectedSource: 'cloudflare' | 'process' | null;
+  candidates: Array<{
+    name: string;
+    cloudflarePresent: boolean;
+    processPresent: boolean;
+    selected: boolean;
+  }>;
+  value?: string;
+};
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return NextResponse.json(body, {status, headers: {'Cache-Control': 'no-store'}});
@@ -62,33 +75,65 @@ function getRuntimeEnvValue(name: string): string | undefined {
 }
 
 function getRuntimeEnvValueFrom(names: string[]): string | undefined {
+  return getRuntimeEnvSelection(names).value;
+}
+
+function getRuntimeEnvSelection(names: string[]): RuntimeEnvSelection {
+  const candidates = names.map((name) => ({
+    name,
+    cloudflarePresent: hasValue(getCloudflareEnvValue(name)),
+    processPresent: hasValue(process.env[name]),
+    selected: false
+  }));
+
+  let selectedName: string | null = null;
+  let selectedSource: 'cloudflare' | 'process' | null = null;
+  let value: string | undefined;
+
   for (const name of names) {
     const cloudflareValue = getCloudflareEnvValue(name);
     if (hasValue(cloudflareValue)) {
-      return cloudflareValue;
+      selectedName = name;
+      selectedSource = 'cloudflare';
+      value = cloudflareValue;
+      break;
     }
   }
 
-  for (const name of names) {
-    const processValue = process.env[name];
-    if (hasValue(processValue)) {
-      return processValue;
+  if (!hasValue(value)) {
+    for (const name of names) {
+      const processValue = process.env[name];
+      if (hasValue(processValue)) {
+        selectedName = name;
+        selectedSource = 'process';
+        value = processValue;
+        break;
+      }
     }
   }
 
-  return undefined;
+  return {
+    selectedName,
+    selectedSource,
+    candidates: candidates.map((candidate) => ({
+      ...candidate,
+      selected: candidate.name === selectedName
+    })),
+    value
+  };
 }
 
 function getSupabaseRestConfig(): SupabaseRestConfig | null {
   const url = getRuntimeEnvValue('NEXT_PUBLIC_SUPABASE_URL')?.trim();
-  const serviceRoleKey = getRuntimeEnvValueFrom([
+  const serviceRoleSelection = getRuntimeEnvSelection([
     'SUPABASE_SERVICE_ROLE_KEY',
     'SUPABASE_ADMIN_SERVICE_ROLE_KEY'
-  ])?.trim();
+  ]);
+  const serviceRoleKey = serviceRoleSelection.value?.trim();
   if (!hasValue(url) || !hasValue(serviceRoleKey)) {
     return null;
   }
-  return {url: url!.replace(/\/+$/, ''), serviceRoleKey: serviceRoleKey!};
+  return {url: url!.replace(/\/+$/, ''), serviceRoleKey: serviceRoleKey!, serviceRoleSelection};
 }
 
 function serviceRoleKeyLengthCategory(value: string | undefined): 'missing' | 'short' | 'jwt_like' | 'long' {
@@ -173,6 +218,9 @@ async function supabaseAnonLookupDebug(config: SupabaseRestConfig, path: string)
     serviceRoleKeyStartsWithEy: serviceRoleKey.startsWith('ey'),
     serviceRoleKeyContainsWhitespace: /\s/.test(serviceRoleKey),
     serviceRoleKeyLengthCategory: serviceRoleKeyLengthCategory(serviceRoleKey),
+    selectedServiceRoleEnvName: config.serviceRoleSelection.selectedName,
+    selectedServiceRoleSource: config.serviceRoleSelection.selectedSource,
+    checkedServiceRoleCandidates: config.serviceRoleSelection.candidates,
     anonKeyPresent: hasValue(anonKey),
     anonLookupStatus: null,
     anonLookupResponseText: '',
