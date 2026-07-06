@@ -143,6 +143,13 @@ function serviceRoleKeyLengthCategory(value: string | undefined): 'missing' | 's
   return 'long';
 }
 
+function authorizationHeaderShape(value: string | undefined): 'Bearer JWT' | 'Bearer sb_secret' | 'Bearer other' | 'missing' {
+  if (!hasValue(value)) return 'missing';
+  if (value!.startsWith('ey') && value!.split('.').length >= 3) return 'Bearer JWT';
+  if (value!.startsWith('sb_secret')) return 'Bearer sb_secret';
+  return 'Bearer other';
+}
+
 function supabaseHeaders(config: SupabaseRestConfig, prefer?: string): HeadersInit {
   return {
     Authorization: `Bearer ${config.serviceRoleKey}`,
@@ -213,11 +220,19 @@ async function parseSupabaseRestResponse<T>(response: Response): Promise<Supabas
 async function supabaseAnonLookupDebug(config: SupabaseRestConfig, path: string): Promise<Record<string, unknown>> {
   const anonKey = getRuntimeEnvValue('NEXT_PUBLIC_SUPABASE_ANON_KEY')?.trim();
   const serviceRoleKey = config.serviceRoleKey;
+  const actualFetchServiceKey = config.serviceRoleKey;
   const debug: Record<string, unknown> = {
     serviceRoleKeyPresent: hasValue(serviceRoleKey),
     serviceRoleKeyStartsWithEy: serviceRoleKey.startsWith('ey'),
     serviceRoleKeyContainsWhitespace: /\s/.test(serviceRoleKey),
     serviceRoleKeyLengthCategory: serviceRoleKeyLengthCategory(serviceRoleKey),
+    actualFetchServiceKeyLength: actualFetchServiceKey.length,
+    actualFetchServiceKeyPrefix4: actualFetchServiceKey.slice(0, 4),
+    actualFetchServiceKeySuffix4: actualFetchServiceKey.slice(-4),
+    actualFetchServiceKeyStartsWithEy: actualFetchServiceKey.startsWith('ey'),
+    actualFetchServiceKeyStartsWithSbSecret: actualFetchServiceKey.startsWith('sb_secret'),
+    actualFetchAuthorizationHeaderShape: authorizationHeaderShape(actualFetchServiceKey),
+    debugKeySameAsFetchKey: serviceRoleKey === actualFetchServiceKey,
     selectedServiceRoleEnvName: config.serviceRoleSelection.selectedName,
     selectedServiceRoleSource: config.serviceRoleSelection.selectedSource,
     checkedServiceRoleCandidates: config.serviceRoleSelection.candidates,
