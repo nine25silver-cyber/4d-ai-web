@@ -29,24 +29,11 @@ type StripeSubscriptionRest = {
 type SupabaseRestConfig = {
   url: string;
   serviceRoleKey: string;
-  serviceRoleSelection: RuntimeEnvSelection;
 };
 
 type SupabaseRestResult<T> =
   | {ok: true; data: T; status: number}
   | {ok: false; status: number; bodyText: string; bodyJson: unknown};
-
-type RuntimeEnvSelection = {
-  selectedName: string | null;
-  selectedSource: 'cloudflare' | 'process' | null;
-  candidates: Array<{
-    name: string;
-    cloudflarePresent: boolean;
-    processPresent: boolean;
-    selected: boolean;
-  }>;
-  value?: string;
-};
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return NextResponse.json(body, {status, headers: {'Cache-Control': 'no-store'}});
@@ -75,79 +62,33 @@ function getRuntimeEnvValue(name: string): string | undefined {
 }
 
 function getRuntimeEnvValueFrom(names: string[]): string | undefined {
-  return getRuntimeEnvSelection(names).value;
-}
-
-function getRuntimeEnvSelection(names: string[]): RuntimeEnvSelection {
-  const candidates = names.map((name) => ({
-    name,
-    cloudflarePresent: hasValue(getCloudflareEnvValue(name)),
-    processPresent: hasValue(process.env[name]),
-    selected: false
-  }));
-
-  let selectedName: string | null = null;
-  let selectedSource: 'cloudflare' | 'process' | null = null;
-  let value: string | undefined;
-
   for (const name of names) {
     const cloudflareValue = getCloudflareEnvValue(name);
     if (hasValue(cloudflareValue)) {
-      selectedName = name;
-      selectedSource = 'cloudflare';
-      value = cloudflareValue;
-      break;
+      return cloudflareValue;
     }
   }
 
-  if (!hasValue(value)) {
-    for (const name of names) {
-      const processValue = process.env[name];
-      if (hasValue(processValue)) {
-        selectedName = name;
-        selectedSource = 'process';
-        value = processValue;
-        break;
-      }
+  for (const name of names) {
+    const processValue = process.env[name];
+    if (hasValue(processValue)) {
+      return processValue;
     }
   }
 
-  return {
-    selectedName,
-    selectedSource,
-    candidates: candidates.map((candidate) => ({
-      ...candidate,
-      selected: candidate.name === selectedName
-    })),
-    value
-  };
+  return undefined;
 }
 
 function getSupabaseRestConfig(): SupabaseRestConfig | null {
   const url = getRuntimeEnvValue('NEXT_PUBLIC_SUPABASE_URL')?.trim();
-  const serviceRoleSelection = getRuntimeEnvSelection([
+  const serviceRoleKey = getRuntimeEnvValueFrom([
     'SUPABASE_SERVICE_ROLE_KEY',
     'SUPABASE_ADMIN_SERVICE_ROLE_KEY'
-  ]);
-  const serviceRoleKey = serviceRoleSelection.value?.trim();
+  ])?.trim();
   if (!hasValue(url) || !hasValue(serviceRoleKey)) {
     return null;
   }
-  return {url: url!.replace(/\/+$/, ''), serviceRoleKey: serviceRoleKey!, serviceRoleSelection};
-}
-
-function serviceRoleKeyLengthCategory(value: string | undefined): 'missing' | 'short' | 'jwt_like' | 'long' {
-  if (!hasValue(value)) return 'missing';
-  if (value!.length < 40) return 'short';
-  if (value!.startsWith('ey') && value!.split('.').length >= 3) return 'jwt_like';
-  return 'long';
-}
-
-function authorizationHeaderShape(value: string | undefined): 'Bearer JWT' | 'Bearer sb_secret' | 'Bearer other' | 'missing' {
-  if (!hasValue(value)) return 'missing';
-  if (value!.startsWith('ey') && value!.split('.').length >= 3) return 'Bearer JWT';
-  if (value!.startsWith('sb_secret')) return 'Bearer sb_secret';
-  return 'Bearer other';
+  return {url: url!.replace(/\/+$/, ''), serviceRoleKey: serviceRoleKey!};
 }
 
 function supabaseHeaders(config: SupabaseRestConfig, prefer?: string): HeadersInit {
@@ -174,33 +115,6 @@ function postgrestEq(value: string): string {
   return `eq.${value}`;
 }
 
-function supabaseUrlDebugShape(config: SupabaseRestConfig, path: string) {
-  let originOnlyShape = false;
-  let finalUrlContainsDoubleSlashAfterHost = false;
-  const finalUrl = supabaseRestUrl(config, path);
-
-  try {
-    const url = new URL(config.url);
-    originOnlyShape = url.pathname === '/' && !url.search && !url.hash;
-    const finalUrlObject = new URL(finalUrl);
-    finalUrlContainsDoubleSlashAfterHost = finalUrlObject.pathname.includes('//');
-  } catch {
-    originOnlyShape = false;
-    finalUrlContainsDoubleSlashAfterHost = false;
-  }
-
-  return {
-    supabaseUrlPresent: Boolean(config.url),
-    supabaseUrlStartsWithHttps: config.url.startsWith('https://'),
-    supabaseUrlContainsRestV1: config.url.includes('/rest/v1'),
-    supabaseUrlEndsWithSlash: config.url.endsWith('/'),
-    supabaseUrlOriginOnlyShape: originOnlyShape,
-    sanitizedPath: path,
-    finalUrlContainsDoubleRestV1: finalUrl.includes('/rest/v1/rest/v1/'),
-    finalUrlContainsDoubleSlashAfterHost
-  };
-}
-
 async function parseSupabaseRestResponse<T>(response: Response): Promise<SupabaseRestResult<T>> {
   const bodyText = await response.text();
   let bodyJson: unknown = null;
@@ -215,56 +129,6 @@ async function parseSupabaseRestResponse<T>(response: Response): Promise<Supabas
     return {ok: false, status: response.status, bodyText, bodyJson};
   }
   return {ok: true, status: response.status, data: bodyJson as T};
-}
-
-async function supabaseAnonLookupDebug(config: SupabaseRestConfig, path: string): Promise<Record<string, unknown>> {
-  const anonKey = getRuntimeEnvValue('NEXT_PUBLIC_SUPABASE_ANON_KEY')?.trim();
-  const serviceRoleKey = config.serviceRoleKey;
-  const actualFetchServiceKey = config.serviceRoleKey;
-  const debug: Record<string, unknown> = {
-    serviceRoleKeyPresent: hasValue(serviceRoleKey),
-    serviceRoleKeyStartsWithEy: serviceRoleKey.startsWith('ey'),
-    serviceRoleKeyContainsWhitespace: /\s/.test(serviceRoleKey),
-    serviceRoleKeyLengthCategory: serviceRoleKeyLengthCategory(serviceRoleKey),
-    actualFetchServiceKeyLength: actualFetchServiceKey.length,
-    actualFetchServiceKeyPrefix4: actualFetchServiceKey.slice(0, 4),
-    actualFetchServiceKeySuffix4: actualFetchServiceKey.slice(-4),
-    actualFetchServiceKeyStartsWithEy: actualFetchServiceKey.startsWith('ey'),
-    actualFetchServiceKeyStartsWithSbSecret: actualFetchServiceKey.startsWith('sb_secret'),
-    actualFetchAuthorizationHeaderShape: authorizationHeaderShape(actualFetchServiceKey),
-    debugKeySameAsFetchKey: serviceRoleKey === actualFetchServiceKey,
-    selectedServiceRoleEnvName: config.serviceRoleSelection.selectedName,
-    selectedServiceRoleSource: config.serviceRoleSelection.selectedSource,
-    checkedServiceRoleCandidates: config.serviceRoleSelection.candidates,
-    anonKeyPresent: hasValue(anonKey),
-    anonLookupStatus: null,
-    anonLookupResponseText: '',
-    serviceLookupStatus: null,
-    serviceLookupResponseText: '',
-    sanitizedPath: path
-  };
-
-  if (!hasValue(anonKey)) {
-    return debug;
-  }
-
-  try {
-    const response = await fetch(supabaseRestUrl(config, path), {
-      method: 'GET',
-      headers: {
-        apikey: anonKey!,
-        Authorization: `Bearer ${anonKey!}`,
-        Accept: 'application/json'
-      }
-    });
-    debug.anonLookupStatus = response.status;
-    debug.anonLookupResponseText = await response.text();
-  } catch (error) {
-    debug.anonLookupStatus = 0;
-    debug.anonLookupResponseText = error instanceof Error ? error.message : 'unknown';
-  }
-
-  return debug;
 }
 
 async function supabaseRestRequest<T>(
@@ -473,21 +337,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
   );
 
   if (!existingPurchaseResult.ok) {
-    const urlDebugShape = supabaseUrlDebugShape(supabase, purchaseLookupPath);
-    const anonLookupDebug =
-      existingPurchaseResult.status === 400
-        ? await supabaseAnonLookupDebug(supabase, purchaseLookupPath)
-        : {};
-    const purchaseLookupDebug = {
-      ...urlDebugShape,
-      ...anonLookupDebug,
-      serviceLookupStatus: existingPurchaseResult.status,
-      serviceLookupResponseText: existingPurchaseResult.bodyText
-    };
-    logSupabaseRestError('purchase_records_lookup', existingPurchaseResult, {
-      ...logContext,
-      ...purchaseLookupDebug
-    });
+    logSupabaseRestError('purchase_records_lookup', existingPurchaseResult, logContext);
     return jsonResponse(
       {
         error: 'purchase_record_lookup_failed',
@@ -495,7 +345,6 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
         checkoutSessionId: session.id,
         operation: 'purchase_records_lookup',
         path: purchaseLookupPath,
-        ...purchaseLookupDebug,
         status: existingPurchaseResult.status,
         responseText: existingPurchaseResult.bodyText,
         responseJson: existingPurchaseResult.bodyJson
