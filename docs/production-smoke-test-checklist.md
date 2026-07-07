@@ -77,6 +77,27 @@ These URLs intentionally pair each provider with its correct region.
   - Basic search remains free.
   - Copy/download require Pro.
 
+## Stripe Membership Smoke Test
+
+Run this only with Stripe test mode / sandbox test cards.
+
+1. Log in on `https://4dai88.com/zh/account`.
+2. Open `https://4dai88.com/zh/pricing`.
+3. Click the Monthly Subscribe button.
+4. Complete Stripe test Checkout.
+5. Confirm the success return keeps the same origin and locale, for example `/zh/account?checkout=success`.
+6. Confirm Stripe webhook delivery returns 2xx.
+7. Confirm `public.purchase_records` has the Checkout Session transaction:
+   - `provider = website`
+   - `transaction_id = <checkout_session_id>`
+   - `plan_key = pro_monthly`
+8. Confirm `public.user_entitlements` is updated for the same user:
+   - `is_premium = true`
+   - `premium_expires_at` is not null
+   - `device_id = user:<user_id>`
+9. Refresh `/zh/account`.
+10. Confirm Account and Header show Pro.
+
 ## Stop Conditions
 
 - Stop if a smoke test suggests a provider data contract mismatch.

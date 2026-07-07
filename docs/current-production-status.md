@@ -30,12 +30,19 @@
 
 ## Membership / Pro Entitlement
 
-- Official source of Pro: `public.user_membership_entitlements`
-- Frontend only reads entitlement
-- Frontend must not insert/update/delete `plan`, `is_pro`, or `status`
+- Stripe Web Membership sandbox/production flow has been verified end to end.
+- Canonical Pro source: `public.user_entitlements`
+- Official read API: `public.get_user_access_state()`
+- Web flow: Pricing -> Stripe Checkout -> Stripe webhook -> `purchase_records` -> `user_entitlements` -> Account/Header Pro.
+- `purchase_records.provider` for Web Stripe records is `website`.
+- Web-created account entitlement rows use `user_entitlements.device_id = user:<user_id>`.
+- Web-created paid entitlement rows use `trial_days = 0`.
+- Frontend only reads entitlement through the approved access-state path.
+- Frontend must not insert/update/delete entitlement rows or payment state.
 - Missing row = Free
 - Error/unconfigured = Free
 - Reward/ad unlock remains separate temporary feature unlock, not Pro membership
+- `public.user_membership_entitlements`, if present, is legacy compatibility state and is not the canonical Pro source.
 
 ## Current Pro Gate Migration Status
 
