@@ -20,6 +20,11 @@ type CheckoutRequestBody = {
 };
 
 const SUPPORTED_LOCALES = new Set(['en', 'zh', 'ms']);
+const STRIPE_CHECKOUT_LOCALES: Record<string, string> = {
+  en: 'en',
+  zh: 'zh',
+  ms: 'ms'
+};
 
 function getLocaleFromPath(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -73,9 +78,13 @@ async function createStripeCheckoutSession(params: {
   cancelUrl: string;
   userId: string;
   userEmail?: string | null;
+  locale?: string | null;
 }) {
   const body = new URLSearchParams();
   body.set('mode', 'subscription');
+  if (params.locale) {
+    body.set('locale', params.locale);
+  }
   body.set('line_items[0][price]', params.priceId);
   body.set('line_items[0][quantity]', '1');
   body.set('success_url', params.successUrl);
@@ -106,6 +115,7 @@ export async function POST(request: Request) {
   const config = getStripeConfigStatus();
   const body = await readCheckoutRequestBody(request);
   const locale = getLocaleFromPath(body.successPath) ?? getLocaleFromPath(body.cancelPath) ?? getLocaleFromReferer(request);
+  const stripeLocale = locale ? STRIPE_CHECKOUT_LOCALES[locale] ?? null : null;
   const defaultSuccessPath = locale ? `/${locale}/account?checkout=success` : '/account?checkout=success';
   const defaultCancelPath = locale ? `/${locale}/pricing` : '/pricing';
   const successPath = getRequestBodyPath(body.successPath, defaultSuccessPath);
@@ -159,7 +169,8 @@ export async function POST(request: Request) {
       successUrl: getCheckoutUrl(request, successPath),
       cancelUrl: getCheckoutUrl(request, cancelPath),
       userId: user.id,
-      userEmail: user.email
+      userEmail: user.email,
+      locale: stripeLocale
     });
   } catch (error) {
     console.error('Stripe checkout session request failed', {
