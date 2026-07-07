@@ -49,13 +49,44 @@ const providerBannerThemeByCode: Record<string, {bg: string; text: string; muted
   singapore: {bg: 'bg-[#0F6CBD]', text: 'text-white', muted: 'text-blue-100'}
 };
 
+function isFilledResultNumber(value?: string): value is string {
+  const normalized = String(value ?? '').trim();
+  return normalized.length > 0 && normalized !== '----';
+}
+
+function isLiveResultPayload(result: ProviderResultState): boolean {
+  if (!result.ok) return false;
+  const phase = result.payload.phase?.toLowerCase() ?? '';
+  const status = result.payload.status?.toLowerCase() ?? '';
+  const state = `${phase} ${status}`;
+  if (state.includes('final') || state.includes('complete') || state.includes('closed')) return false;
+  return state.includes('live') || state.includes('progress');
+}
+
+function maskPromotedGrandDragonSpecials(result: ProviderResultState, slotItems: string[]): string[] {
+  if (!result.ok || !isLiveResultPayload(result)) return slotItems;
+  const payload = result.payload;
+  const topPrizeNumbers = new Set(
+    [
+      payload.first_prize,
+      payload.second_prize,
+      payload.third_prize,
+      ...(payload.display_payload?.top3?.map((item) => item.number) ?? [])
+    ]
+      .map((number) => String(number ?? '').trim())
+      .filter(isFilledResultNumber)
+  );
+  if (topPrizeNumbers.size === 0) return slotItems;
+  return slotItems.map((number) => topPrizeNumbers.has(String(number ?? '').trim()) ? '----' : number);
+}
+
 function displayItems(provider: ProviderConfig, result: ProviderResultState, section: 'special' | 'consolation'): NumberCell[] {
   if (!result.ok) return [];
   const payload = result.payload;
   const showLabels = !providersWithoutGridLabels.has(provider.code);
   const slotItems = section === 'special' ? payload.slot_layout?.special_slots : payload.slot_layout?.consolation_slots;
   if (provider.code === 'grand_dragon' && section === 'special' && slotItems && slotItems.length > 0) {
-    return slotItems.map((number, index) => ({label: showLabels ? String(index + 1) : undefined, number}));
+    return maskPromotedGrandDragonSpecials(result, slotItems).map((number, index) => ({label: showLabels ? String(index + 1) : undefined, number}));
   }
   const display = payload.display_payload?.[section];
   if (display && display.length > 0) {
