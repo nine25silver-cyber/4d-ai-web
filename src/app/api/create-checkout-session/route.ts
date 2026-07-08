@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import {createClient} from '@supabase/supabase-js';
-import {getStripeConfigStatus} from '@/lib/stripe';
+import {getStripeConfigStatus, getStripePriceIdForPlan, isStripeCheckoutPlan, type StripeCheckoutPlan} from '@/lib/stripe';
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return NextResponse.json(body, {status, headers: {'Cache-Control': 'no-store'}});
@@ -15,6 +15,7 @@ function getBearerToken(request: Request): string | null {
 }
 
 type CheckoutRequestBody = {
+  plan?: unknown;
   successPath?: unknown;
   cancelPath?: unknown;
 };
@@ -79,6 +80,7 @@ async function createStripeCheckoutSession(params: {
   userId: string;
   userEmail?: string | null;
   locale?: string | null;
+  plan: StripeCheckoutPlan;
 }) {
   const body = new URLSearchParams();
   body.set('mode', 'subscription');
@@ -92,10 +94,10 @@ async function createStripeCheckoutSession(params: {
   body.set('client_reference_id', params.userId);
   body.set('metadata[supabase_user_id]', params.userId);
   body.set('metadata[user_id]', params.userId);
-  body.set('metadata[plan]', 'pro_monthly');
+  body.set('metadata[plan]', params.plan);
   body.set('subscription_data[metadata][supabase_user_id]', params.userId);
   body.set('subscription_data[metadata][user_id]', params.userId);
-  body.set('subscription_data[metadata][plan]', 'pro_monthly');
+  body.set('subscription_data[metadata][plan]', params.plan);
 
   if (params.userEmail) {
     body.set('customer_email', params.userEmail);
@@ -120,6 +122,11 @@ export async function POST(request: Request) {
   const defaultCancelPath = locale ? `/${locale}/pricing` : '/pricing';
   const successPath = getRequestBodyPath(body.successPath, defaultSuccessPath);
   const cancelPath = getRequestBodyPath(body.cancelPath, defaultCancelPath);
+  const plan = body.plan;
+
+  if (!isStripeCheckoutPlan(plan)) {
+    return jsonResponse({error: 'invalid_plan', message: 'Unsupported checkout plan.'}, 400);
+  }
 
   if (!config.checkoutConfigured) {
     return jsonResponse(
@@ -129,6 +136,8 @@ export async function POST(request: Request) {
         config: {
           hasSecretKey: config.hasSecretKey,
           hasProMonthlyPrice: config.hasProMonthlyPrice,
+          hasProQuarterlyPrice: config.hasProQuarterlyPrice,
+          hasProYearlyPrice: config.hasProYearlyPrice,
           hasSiteUrl: config.hasSiteUrl
         }
       },
@@ -156,7 +165,7 @@ export async function POST(request: Request) {
   }
 
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
-  const stripePriceId = process.env.STRIPE_PRICE_PRO_MONTHLY?.trim();
+  const stripePriceId = getStripePriceIdForPlan(plan);
   if (!stripeSecretKey || !stripePriceId) {
     return jsonResponse({error: 'checkout_not_configured', message: 'Stripe Checkout is not configured for this environment.'}, 503);
   }
@@ -170,7 +179,8 @@ export async function POST(request: Request) {
       cancelUrl: getCheckoutUrl(request, cancelPath),
       userId: user.id,
       userEmail: user.email,
-      locale: stripeLocale
+      locale: stripeLocale,
+      plan
     });
   } catch (error) {
     console.error('Stripe checkout session request failed', {

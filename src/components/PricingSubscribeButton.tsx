@@ -4,7 +4,10 @@ import {useState} from 'react';
 import {usePathname} from 'next/navigation';
 import {getSupabaseBrowserClient} from '@/lib/supabase-browser';
 
+type CheckoutPlan = 'pro_monthly' | 'pro_quarterly' | 'pro_yearly';
+
 type Props = {
+  plan: CheckoutPlan;
   labels: {
     idle: string;
     loading: string;
@@ -30,7 +33,7 @@ function getCheckoutReturnPaths(pathname: string | null) {
   };
 }
 
-export function PricingSubscribeButton({labels}: Props) {
+export function PricingSubscribeButton({labels, plan}: Props) {
   const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +57,7 @@ export function PricingSubscribeButton({labels}: Props) {
           'Content-Type': 'application/json',
           ...(token ? {Authorization: `Bearer ${token}`} : {})
         },
-        body: JSON.stringify({plan: 'pro_monthly', ...returnPaths})
+        body: JSON.stringify({plan, ...returnPaths})
       });
       const payload = (await response.json().catch(() => ({}))) as CheckoutResponse;
 

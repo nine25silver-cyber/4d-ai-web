@@ -5,14 +5,19 @@ import {buildMetadata} from '@/lib/seo';
 import type {Locale} from '@/i18n/routing';
 import {MembershipFlowClient} from '@/components/MembershipFlowClient';
 import {PricingSubscribeButton} from '@/components/PricingSubscribeButton';
+import {PricingTrialLoginButton} from './PricingTrialLoginButton';
 
 const pageKey = 'Pricing';
 const pagePath = 'pricing';
 const plans = [
   {key: 'free'},
   {key: 'pro'},
-  {key: 'tng'},
-  {key: 'ad'}
+  {key: 'temporary'}
+] as const;
+const pricingOptions = [
+  {key: 'monthly', featured: false, plan: 'pro_monthly'},
+  {key: 'quarterly', featured: true, plan: 'pro_quarterly'},
+  {key: 'yearly', featured: true, plan: 'pro_yearly'}
 ] as const;
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale}>}): Promise<Metadata> {
@@ -40,21 +45,35 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
         </div>
       </section>
 
-      <section className="mt-8 grid gap-4 lg:grid-cols-4">
+      <section className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.35fr)_minmax(0,0.9fr)] lg:items-start">
         {plans.map((plan) => {
           const isProPlan = plan.key === 'pro';
           return (
-          <article key={plan.key} className={`rounded-lg border bg-white p-5 shadow-sm ${isProPlan ? 'border-blue-300 ring-2 ring-blue-100' : 'border-slate-200'}`}>
+          <article key={plan.key} className={`rounded-lg border bg-white p-5 shadow-sm ${isProPlan ? 'border-blue-500 shadow-lg ring-2 ring-blue-100 lg:-mt-2 lg:p-6' : 'border-slate-200'}`}>
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-black text-slate-950">{t(`${plan.key}Plan`)}</h2>
-                <p className="mt-1 text-2xl font-black text-blue-800">{t(`${plan.key}Price`)}</p>
+                {isProPlan ? null : plan.key === 'temporary' ? (
+                  <p className="mt-2 text-lg font-black leading-7 text-blue-800">
+                    <span className="block">{t('temporarySubtitleLine1')}</span>
+                    <span className="block">{t('temporarySubtitleLine2')}</span>
+                    <span className="block">{t('temporarySubtitleLine3')}</span>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-2xl font-black text-blue-800">{t(`${plan.key}Price`)}</p>
+                )}
               </div>
               <span className={`rounded-full px-3 py-1 text-xs font-black ${isProPlan ? 'bg-blue-800 text-white' : 'bg-slate-100 text-slate-600'}`}>
                 {isProPlan ? t('recommended') : t(`${plan.key}Badge`)}
               </span>
             </div>
-            {isProPlan ? <p className="mt-2 text-xs font-bold text-blue-800">{t('proBadge')}</p> : null}
+            {isProPlan ? (
+              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-black text-amber-900">{t('earlyBirdTitle')}</p>
+                <p className="mt-2 text-sm font-bold text-amber-800 line-through">{t('regularMonthlyPrice')}</p>
+                <p className="mt-1 text-sm font-black text-slate-800">{t('earlyBirdChoosePlan')}</p>
+              </div>
+            ) : null}
             <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-700">
               {[1, 2, 3, 4].map((item) => (
                 <li key={item} className="flex gap-2">
@@ -64,13 +83,63 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
               ))}
             </ul>
             {isProPlan ? (
-              <PricingSubscribeButton
-                labels={{
-                  idle: t('subscribeMonthlyCta'),
-                  loading: t('subscribeMonthlyLoading'),
-                  error: t('subscribeMonthlyError')
-                }}
-              />
+              <>
+                <div className="mt-6 grid items-stretch gap-3 md:grid-cols-3">
+                  {pricingOptions.map((option) => (
+                    <div key={option.key} className={`flex min-h-[268px] min-w-0 flex-col rounded-lg border p-4 ${option.featured ? 'border-blue-300 bg-blue-50' : 'border-slate-200 bg-white'}`}>
+                      <div className="flex min-h-7 flex-wrap items-start gap-1">
+                        {option.key === 'quarterly' ? <span className="whitespace-nowrap rounded-full bg-blue-800 px-2.5 py-1 text-xs font-black text-white">{t('quarterlyBadge')}</span> : null}
+                        {option.key === 'yearly' ? <span className="whitespace-nowrap rounded-full bg-amber-500 px-2.5 py-1 text-xs font-black text-white">{t('yearlyBadge')}</span> : null}
+                      </div>
+                      <div className="flex flex-1 flex-col">
+                        <h3 className="mt-2 text-base font-black text-slate-950">{t(`${option.key}Title`)}</h3>
+                        <div className="mt-4 min-h-[96px]">
+                          {option.key === 'monthly' ? <div className="h-6" /> : (
+                            <p className="text-sm font-bold text-slate-500 line-through">{t(`${option.key}OriginalPrice`)}</p>
+                          )}
+                          <p className="mt-1 text-3xl font-black text-slate-950">{t(`${option.key}Price`)}</p>
+                          {option.key === 'monthly' ? <p className="mt-1 text-sm font-bold text-slate-600">{t('monthlyUnit')}</p> : null}
+                          <p className="mt-2 min-h-5 text-xs font-black text-blue-800">{t(`${option.key}Save`)}</p>
+                        </div>
+                        <p className="mt-2 text-xs font-bold text-slate-500">{t(`${option.key}Billing`)}</p>
+                      </div>
+                      <div className="mt-auto [&_button]:min-h-[48px] [&_button]:whitespace-normal [&_button]:px-4 [&_button]:text-center [&_button]:font-semibold [&_button]:leading-tight">
+                        {option.key === 'monthly' ? (
+                          <PricingSubscribeButton
+                            plan={option.plan}
+                            labels={{
+                              idle: t('monthlyCta'),
+                              loading: t('subscribeMonthlyLoading'),
+                              error: t('subscribeMonthlyError')
+                            }}
+                          />
+                        ) : (
+                          <PricingSubscribeButton
+                            plan={option.plan}
+                            labels={{
+                              idle: t(`${option.key}Cta`),
+                              loading: t('subscribeMonthlyLoading'),
+                              error: t('subscribeMonthlyError')
+                            }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-4 text-xs font-semibold leading-5 text-slate-500">{t('earlyBirdNote')}</p>
+              </>
+            ) : plan.key === 'temporary' ? (
+              <div className="mt-5">
+                <PricingTrialLoginButton
+                  locale={locale}
+                  labels={{
+                    login: t('trialLoginCta'),
+                    loggedIn: t('trialLoggedIn'),
+                    ready: t('trialReadyText')
+                  }}
+                />
+              </div>
             ) : null}
           </article>
           );
@@ -123,7 +192,7 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
           panelText: t('demoPanelText'),
           statusLabel: t('demoStatusLabel'),
           loggedOut: t('demoLoggedOut'),
-          loggedIn: t('demoLoggedIn'),
+          loggedIn: t('demoLoggedInStatus'),
           freePlan: t('freePlan'),
           proPlan: t('proPlan'),
           login: t('demoLogin'),

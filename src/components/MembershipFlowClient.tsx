@@ -107,27 +107,23 @@ export function MembershipFlowClient({labels, pricingHref, variant = 'default'}:
   if (variant === 'account') {
     return (
       <section className="mt-5 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-black text-slate-950">{labels.panelTitle}</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-600">{labels.panelText}</p>
           </div>
           <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-800">
             {entitlementLoading ? entitlementT('loading') : entitlementPlanText}
           </span>
         </div>
-        <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-            <dt className="text-xs font-black uppercase text-slate-500">{labels.statusLabel}</dt>
-            <dd className="mt-1 break-words text-sm font-bold text-slate-900">{statusText}</dd>
-          </div>
-          <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-            <dt className="text-xs font-black uppercase text-slate-500">{labels.googleLabel}</dt>
-            <dd className="mt-1 break-words text-sm font-bold text-slate-900">{googleStatusText}</dd>
-          </div>
+        <dl className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
           <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
             <dt className="text-xs font-black uppercase text-slate-500">{labels.membershipLabel}</dt>
             <dd className="mt-1 text-sm font-bold text-slate-900">{entitlementLoading ? entitlementT('loading') : entitlementPlanText}</dd>
             {accessExpiryText ? <dd className="mt-1 text-xs font-semibold text-slate-600">{accessExpiryText}</dd> : null}
+          </div>
+          <div className="text-sm font-semibold text-slate-600">
+            {state?.loggedIn ? googleStatusText : labels.loggedOut}
           </div>
         </dl>
         {syncWarningText ? (

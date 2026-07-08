@@ -1,7 +1,7 @@
 import {NextResponse} from 'next/server';
 import {getCloudflareContext} from '@opennextjs/cloudflare';
 import Stripe from 'stripe';
-import {getStripeConfigStatus, getStripeServerClient} from '@/lib/stripe';
+import {getStripeConfigStatus, getStripePlanForPriceId, getStripeServerClient} from '@/lib/stripe';
 
 type PurchaseRecordRow = {
   id: string;
@@ -259,12 +259,6 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
     );
   }
 
-  const expectedPriceId = process.env.STRIPE_PRICE_PRO_MONTHLY?.trim();
-  if (!expectedPriceId) {
-    console.error('Stripe checkout webhook missing monthly price configuration.', safeLogContext(event, session, supabaseUserId, subscriptionId));
-    return jsonResponse({error: 'stripe_price_not_configured', eventId: event.id, checkoutSessionId: session.id}, 500);
-  }
-
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
   if (!stripeSecretKey) {
     console.error('Stripe checkout webhook missing secret key configuration.', safeLogContext(event, session, supabaseUserId, subscriptionId));
@@ -294,8 +288,9 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
 
   const subscriptionPriceId = getSubscriptionPriceId(subscription);
   const premiumExpiresAt = getSubscriptionPeriodEnd(subscription);
+  const planKey = getStripePlanForPriceId(subscriptionPriceId);
 
-  if (subscriptionPriceId !== expectedPriceId) {
+  if (!planKey) {
     console.warn('Stripe checkout completed with unexpected price id.', safeLogContext(event, session, supabaseUserId, subscriptionId));
     return jsonResponse(
       {
@@ -365,7 +360,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
           provider: 'website',
           user_id: supabaseUserId,
           product_id: subscriptionPriceId,
-          plan_key: 'pro_monthly',
+          plan_key: planKey,
           subscription_id: subscriptionId,
           transaction_id: session.id,
           status: subscription.status,
@@ -389,7 +384,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event, session: Stri
               current_period_end: getSubscriptionPeriodEndUnix(subscription),
               price_id: subscriptionPriceId
             },
-            plan_key: 'pro_monthly'
+            plan_key: planKey
           }
         })
       },
