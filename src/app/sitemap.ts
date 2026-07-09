@@ -24,10 +24,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const aiProviderPages = regions.flatMap((region) => region.providers.map((provider) => `/ai/${region.slug}/${provider.code}`));
   const now = new Date();
   const pages = [...staticPages, ...resultPages, ...historyRegionPages, ...historyProviderPages, ...aiRegionPages, ...aiProviderPages];
-  return routing.locales.flatMap((locale) => pages.map((path) => ({
+  const localizedPages: MetadataRoute.Sitemap = routing.locales.flatMap((locale) => pages.map((path) => ({
     url: siteUrl(`/${locale}${path}`),
     lastModified: now,
     changeFrequency: path.startsWith('/results') || path.startsWith('/history') || path.startsWith('/ai') || path === '' ? 'hourly' : 'weekly',
     priority: path.startsWith('/results') || path.startsWith('/history') || path.startsWith('/ai') || path === '' ? 0.9 : 0.6
   })));
+  const legalPages: MetadataRoute.Sitemap = ['/privacy', '/terms'].map((path) => ({
+    url: siteUrl(path),
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.4
+  }));
+
+  return [...localizedPages, ...legalPages];
 }

@@ -29,6 +29,16 @@ const sections = [
     ]
   },
   {
+    title: 'Advertising, Cookies, and Google AdSense',
+    body: [
+      '4D AI may use Google AdSense and other third-party advertising services to display advertisements on the website.',
+      'Google and its partners may use cookies or similar technologies to serve ads, limit how often ads are shown, measure ad performance, and support personalized advertising.',
+      'Third-party advertising services may use information about visits to this website and other websites to help show advertisements that may be more relevant to users.',
+      'Users can disable or limit cookies through their browser settings. Some website features or advertising functions may not work as intended if cookies are disabled.',
+      'Users can manage personalized advertising preferences through Google Ads Settings and other Google privacy controls.'
+    ]
+  },
+  {
     title: 'Data and Results',
     body: [
       'Lottery results, related data, and app information shown in 4D AI are for informational purposes only.',
