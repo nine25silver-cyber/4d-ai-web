@@ -194,6 +194,7 @@
     "hitDateLabel": "日期",
     "hitRecommendedLabel": "AI推荐号码",
     "hitResultLabel": "中奖号码",
+    "hitNoWinText": "很遗憾，这期没有中奖",
     "hitStatusLabel": "命中次数",
     "hitPrizePlaceholder": "奖项",
     "hitExpandLabel": "展开命中详情",

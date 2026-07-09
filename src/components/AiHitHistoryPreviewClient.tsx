@@ -8,6 +8,7 @@ type Labels = {
   hitRowCountLabel: string;
   hitRecommendedLabel: string;
   hitResultLabel: string;
+  hitNoWinText: string;
   hitPrizePlaceholder: string;
   hitExpandLabel: string;
   hitCollapseLabel: string;
@@ -389,7 +390,7 @@ function WinningNumbers({activeHitIndex, labels, matches}: {activeHitIndex: numb
   if (matches.length === 1 && matches[0]?.number === '----' && !matches[0]?.prizeLabel) {
     return (
       <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-600">
-        很遗憾，这期没有中奖
+        {labels.hitNoWinText}
       </div>
     );
   }

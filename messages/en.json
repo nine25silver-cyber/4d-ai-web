@@ -178,6 +178,7 @@
     "hitDateLabel": "Date",
     "hitRecommendedLabel": "AI recommended numbers",
     "hitResultLabel": "Winning numbers",
+    "hitNoWinText": "Unfortunately, there were no winning records for this draw.",
     "hitStatusLabel": "Hit count",
     "hitPrizePlaceholder": "Prize",
     "hitExpandLabel": "Expand hit details",

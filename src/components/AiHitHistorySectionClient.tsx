@@ -9,6 +9,7 @@ type Labels = {
   hitRowCountLabel: string;
   hitRecommendedLabel: string;
   hitResultLabel: string;
+  hitNoWinText: string;
   hitPrizePlaceholder: string;
   hitExpandLabel: string;
   hitCollapseLabel: string;
@@ -52,6 +53,7 @@ export function AiHitHistorySectionClient({providerCode, expertTitle, labels, in
           hitRowCountLabel: labels.hitRowCountLabel,
           hitRecommendedLabel: labels.hitRecommendedLabel,
           hitResultLabel: labels.hitResultLabel,
+          hitNoWinText: labels.hitNoWinText,
           hitPrizePlaceholder: labels.hitPrizePlaceholder,
           hitExpandLabel: labels.hitExpandLabel,
           hitCollapseLabel: labels.hitCollapseLabel,
