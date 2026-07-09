@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type {Metadata} from 'next';
 import {getTranslations} from 'next-intl/server';
 import {buildMetadata} from '@/lib/seo';
@@ -9,16 +8,91 @@ import {PricingTrialLoginButton} from './PricingTrialLoginButton';
 
 const pageKey = 'Pricing';
 const pagePath = 'pricing';
-const plans = [
-  {key: 'free'},
-  {key: 'pro'},
-  {key: 'temporary'}
-] as const;
 const pricingOptions = [
   {key: 'monthly', featured: false, plan: 'pro_monthly'},
   {key: 'quarterly', featured: true, plan: 'pro_quarterly'},
   {key: 'yearly', featured: true, plan: 'pro_yearly'}
 ] as const;
+
+const pageCopy = {
+  zh: {
+    heroTitle: '免费版与 Pro',
+    heroIntro: '免费版提供最新成绩、历史记录与基础搜索功能；升级 Pro 后可享有无广告体验、完整 AI 推荐及包字排行榜。',
+    featureEyebrow: '功能权限',
+    featureTitle: '功能权限',
+    freeLabel: '免费',
+    freeItems: ['最新成绩、历史记录与基础搜索可用', '收藏号码和基础工具可用', 'AI 页面可预览，完整号码与 100 期命中详情需 Pro'],
+    proLabel: 'Pro',
+    proItems: ['AI 推荐号码完整可见', 'AI 最近 100 期命中详情完整可见', '热门 / 冷门长期走势与更多高级工具可用'],
+    partialLabel: '免费试用',
+    accessRows: [
+      {feature: '搜索工具', free: '√', partial: '√', pro: '√'},
+      {feature: '收藏号码', free: '√', partial: '√', pro: '√'},
+      {feature: 'AI 推荐', free: '×', partial: '√', pro: '√'},
+      {feature: '近 100 期命中详情', free: '×', partial: '√', pro: '√'},
+      {feature: '包字排行榜', free: '看广告', partial: '√', pro: '√'}
+    ],
+    membershipTitle: '会员权限',
+    membershipText: '查看当前账号、方案与权限状态。Pro 功能由账号权限规则控制。',
+    membershipLabel: '当前方案'
+  },
+  en: {
+    heroTitle: 'Free and Pro',
+    heroIntro: 'The Free plan includes the latest results, history and basic search. Upgrade to Pro for an ad-free experience, full AI recommendations and Boxed Number Rankings.',
+    featureEyebrow: 'Access',
+    featureTitle: 'Feature access',
+    freeLabel: 'Free',
+    freeItems: ['Latest results, history and basic search are available', 'Favorites and core tools are available', 'AI pages can be previewed; full numbers and 100-draw hit details require Pro'],
+    proLabel: 'Pro',
+    proItems: ['Full AI recommendation numbers', 'Full AI 100-draw hit details', 'Hot / Cold long-term trends and more advanced tools'],
+    partialLabel: 'Free trial',
+    accessRows: [
+      {feature: 'Search tools', free: '√', partial: '√', pro: '√'},
+      {feature: 'Favorites', free: '√', partial: '√', pro: '√'},
+      {feature: 'AI picks', free: '×', partial: '√', pro: '√'},
+      {feature: '100-draw hits', free: '×', partial: '√', pro: '√'},
+      {feature: 'Package ranking', free: 'Ads', partial: '√', pro: '√'}
+    ],
+    membershipTitle: 'Account access',
+    membershipText: 'Review the current account, plan and access state. Pro features are controlled by account access rules.',
+    membershipLabel: 'Current plan'
+  },
+  ms: {
+    heroTitle: 'Percuma dan Pro',
+    heroIntro: 'Pelan Percuma merangkumi keputusan terkini, sejarah dan carian asas. Naik taraf ke Pro untuk pengalaman tanpa iklan, cadangan AI penuh serta Ranking Boxed.',
+    featureEyebrow: 'Akses',
+    featureTitle: 'Perbandingan fungsi',
+    freeLabel: 'Percuma',
+    freeItems: ['Keputusan terkini, sejarah dan carian asas tersedia', 'Kegemaran dan alat asas tersedia', 'Halaman AI boleh dipratonton; nombor penuh dan butiran 100 cabutan memerlukan Pro'],
+    proLabel: 'Pro',
+    proItems: ['Nombor cadangan AI penuh', 'Butiran hit 100 cabutan AI penuh', 'Trend panas / sejuk jangka panjang dan lebih banyak alat lanjutan'],
+    partialLabel: 'Percubaan',
+    accessRows: [
+      {feature: 'Alat carian', free: '√', partial: '√', pro: '√'},
+      {feature: 'Kegemaran', free: '√', partial: '√', pro: '√'},
+      {feature: 'Cadangan AI', free: '×', partial: '√', pro: '√'},
+      {feature: 'Hit 100 cabutan', free: '×', partial: '√', pro: '√'},
+      {feature: 'Ranking pakej', free: 'Iklan', partial: '√', pro: '√'}
+    ],
+    membershipTitle: 'Akses ahli',
+    membershipText: 'Semak akaun, pelan dan status akses semasa. Fungsi Pro dikawal oleh peraturan akses akaun.',
+    membershipLabel: 'Pelan semasa'
+  }
+} satisfies Record<Locale, {
+  heroTitle: string;
+  heroIntro: string;
+  featureEyebrow: string;
+  featureTitle: string;
+  freeLabel: string;
+  freeItems: string[];
+  proLabel: string;
+  proItems: string[];
+  partialLabel: string;
+  accessRows: Array<{feature: string; free: string; partial: string; pro: string}>;
+  membershipTitle: string;
+  membershipText: string;
+  membershipLabel: string;
+}>;
 
 export async function generateMetadata({params}: {params: Promise<{locale: Locale}>}): Promise<Metadata> {
   const {locale} = await params;
@@ -29,180 +103,167 @@ export async function generateMetadata({params}: {params: Promise<{locale: Local
 export default async function InfoPage({params}: {params: Promise<{locale: Locale}>}) {
   const {locale} = await params;
   const t = await getTranslations({locale, namespace: pageKey});
+  const copy = pageCopy[locale];
   return (
-    <main className="container-shell py-10">
-      <section className="border-b border-slate-200 pb-8">
-        <p className="text-sm font-bold uppercase text-blue-800">4D AI</p>
-        <div className="mt-2 grid gap-5 lg:grid-cols-[1fr_320px] lg:items-end">
-          <div>
-            <h1 className="text-3xl font-black text-slate-950 sm:text-4xl">{t('title')}</h1>
-            <p className="mt-4 max-w-3xl text-slate-600">{t('intro')}</p>
-          </div>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <div className="text-xs font-black uppercase text-amber-800">{t('comingSoon')}</div>
-            <p className="mt-2 text-sm leading-6 text-slate-700">{t('paymentNoteText')}</p>
-          </div>
-        </div>
+    <main className="container-shell py-4">
+      <section className="pb-2">
+        <h1 className="text-2xl font-black text-slate-950 sm:text-3xl">{copy.heroTitle}</h1>
+        <p className="mt-0.5 max-w-3xl text-sm leading-5 text-slate-600">{copy.heroIntro}</p>
       </section>
 
-      <section className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.35fr)_minmax(0,0.9fr)] lg:items-start">
-        {plans.map((plan) => {
-          const isProPlan = plan.key === 'pro';
-          return (
-          <article key={plan.key} className={`rounded-lg border bg-white p-5 shadow-sm ${isProPlan ? 'border-blue-500 shadow-lg ring-2 ring-blue-100 lg:-mt-2 lg:p-6' : 'border-slate-200'}`}>
-            <div className="flex items-start justify-between gap-3">
+      <section className="mt-1.5 grid gap-1.5 md:grid-cols-2 md:items-stretch lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.36fr)_minmax(0,0.86fr)]">
+        <div className="grid h-full gap-1.5 lg:grid-rows-[auto_minmax(0,1fr)]">
+          <article className="flex min-w-0 flex-col rounded-lg border border-slate-200 bg-white p-2 shadow-sm sm:p-2.5 lg:h-full">
+            <div className="flex items-start justify-between gap-2">
               <div>
-                <h2 className="text-xl font-black text-slate-950">{t(`${plan.key}Plan`)}</h2>
-                {isProPlan ? null : plan.key === 'temporary' ? (
-                  <p className="mt-2 text-lg font-black leading-7 text-blue-800">
-                    <span className="block">{t('temporarySubtitleLine1')}</span>
-                    <span className="block">{t('temporarySubtitleLine2')}</span>
-                    <span className="block">{t('temporarySubtitleLine3')}</span>
-                  </p>
-                ) : (
-                  <p className="mt-1 text-2xl font-black text-blue-800">{t(`${plan.key}Price`)}</p>
-                )}
+                <h2 className="text-lg font-black text-slate-950">{t('freePlan')}</h2>
               </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-black ${isProPlan ? 'bg-blue-800 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                {isProPlan ? t('recommended') : t(`${plan.key}Badge`)}
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-600">
+                {t('freeBadge')}
               </span>
             </div>
-            {isProPlan ? (
-              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
-                <p className="text-sm font-black text-amber-900">{t('earlyBirdTitle')}</p>
-                <p className="mt-2 text-sm font-bold text-amber-800 line-through">{t('regularMonthlyPrice')}</p>
-                <p className="mt-1 text-sm font-black text-slate-800">{t('earlyBirdChoosePlan')}</p>
-              </div>
-            ) : null}
-            <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-700">
+            <ul className="mt-1.5 space-y-0.5 text-sm leading-5 text-slate-700">
               {[1, 2, 3, 4].map((item) => (
                 <li key={item} className="flex gap-2">
-                  <span className="mt-2 size-1.5 rounded-full bg-blue-700" />
-                  <span>{t(`${plan.key}Point${item}`)}</span>
+                  <span className="mt-1.5 size-1.5 rounded-full bg-blue-700" />
+                  <span>{t(`freePoint${item}`)}</span>
                 </li>
               ))}
             </ul>
-            {isProPlan ? (
-              <>
-                <div className="mt-6 grid items-stretch gap-3 md:grid-cols-3">
-                  {pricingOptions.map((option) => (
-                    <div key={option.key} className={`flex min-h-[268px] min-w-0 flex-col rounded-lg border p-4 ${option.featured ? 'border-blue-300 bg-blue-50' : 'border-slate-200 bg-white'}`}>
-                      <div className="flex min-h-7 flex-wrap items-start gap-1">
-                        {option.key === 'quarterly' ? <span className="whitespace-nowrap rounded-full bg-blue-800 px-2.5 py-1 text-xs font-black text-white">{t('quarterlyBadge')}</span> : null}
-                        {option.key === 'yearly' ? <span className="whitespace-nowrap rounded-full bg-amber-500 px-2.5 py-1 text-xs font-black text-white">{t('yearlyBadge')}</span> : null}
-                      </div>
-                      <div className="flex flex-1 flex-col">
-                        <h3 className="mt-2 text-base font-black text-slate-950">{t(`${option.key}Title`)}</h3>
-                        <div className="mt-4 min-h-[96px]">
-                          {option.key === 'monthly' ? <div className="h-6" /> : (
-                            <p className="text-sm font-bold text-slate-500 line-through">{t(`${option.key}OriginalPrice`)}</p>
-                          )}
-                          <p className="mt-1 text-3xl font-black text-slate-950">{t(`${option.key}Price`)}</p>
-                          {option.key === 'monthly' ? <p className="mt-1 text-sm font-bold text-slate-600">{t('monthlyUnit')}</p> : null}
-                          <p className="mt-2 min-h-5 text-xs font-black text-blue-800">{t(`${option.key}Save`)}</p>
-                        </div>
-                        <p className="mt-2 text-xs font-bold text-slate-500">{t(`${option.key}Billing`)}</p>
-                      </div>
-                      <div className="mt-auto [&_button]:min-h-[48px] [&_button]:whitespace-normal [&_button]:px-4 [&_button]:text-center [&_button]:font-semibold [&_button]:leading-tight">
-                        {option.key === 'monthly' ? (
-                          <PricingSubscribeButton
-                            plan={option.plan}
-                            labels={{
-                              idle: t('monthlyCta'),
-                              loading: t('subscribeMonthlyLoading'),
-                              error: t('subscribeMonthlyError')
-                            }}
-                          />
-                        ) : (
-                          <PricingSubscribeButton
-                            plan={option.plan}
-                            labels={{
-                              idle: t(`${option.key}Cta`),
-                              loading: t('subscribeMonthlyLoading'),
-                              error: t('subscribeMonthlyError')
-                            }}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-4 text-xs font-semibold leading-5 text-slate-500">{t('earlyBirdNote')}</p>
-              </>
-            ) : plan.key === 'temporary' ? (
-              <div className="mt-5">
-                <PricingTrialLoginButton
-                  locale={locale}
-                  labels={{
-                    login: t('trialLoginCta'),
-                    loggedIn: t('trialLoggedIn'),
-                    ready: t('trialReadyText')
-                  }}
-                />
-              </div>
-            ) : null}
           </article>
-          );
-        })}
-      </section>
 
-      <section className="mt-8 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
-            <p className="text-sm font-bold uppercase text-blue-800">{t('paymentNoteTitle')}</p>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">{t('paymentNoteText')}</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link href={`/${locale}/account`} className="rounded-md border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-black text-blue-900 hover:bg-blue-100">{t('accountCta')}</Link>
-            <Link href={`/${locale}/tools`} className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:border-blue-300 hover:bg-slate-50">{t('toolsCta')}</Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-8 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <p className="text-sm font-bold uppercase text-blue-800">
-          {locale === 'zh' ? '功能权限对照' : locale === 'ms' ? 'Perbandingan akses fungsi' : 'Feature Access Matrix'}
-        </p>
-        <h2 className="mt-2 text-2xl font-black text-slate-950">
-          {locale === 'zh' ? '免费、部分 Pro 与 Pro 的区别' : locale === 'ms' ? 'Perbezaan Percuma, Sebahagian Pro dan Pro' : 'Free vs Partial Pro vs Pro'}
-        </h2>
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="text-xs font-black uppercase text-blue-800">{locale === 'zh' ? '免费' : locale === 'ms' ? 'Percuma' : 'Free'}</div>
-            <ul className="mt-2 space-y-1 text-sm font-semibold text-slate-700">
-              <li>{locale === 'zh' ? '搜索工具：可用' : locale === 'ms' ? 'Carian nombor: tersedia' : 'Number search: available'}</li>
-              <li>{locale === 'zh' ? '收藏号码：可用' : locale === 'ms' ? 'Kegemaran: tersedia' : 'Favorites: available'}</li>
-              <li>{locale === 'zh' ? 'AI：仅预览（号码与100期详情锁定）' : locale === 'ms' ? 'AI: pratonton sahaja (nombor & 100 rekod dikunci)' : 'AI: preview only (numbers & 100-draw details locked)'}</li>
+          <article className="flex min-w-0 flex-col rounded-lg border border-slate-200 bg-white p-2 shadow-sm sm:p-2.5">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="text-base font-black leading-5 text-blue-800">
+                  <span className="block">{t('temporarySubtitleLine1')}</span>
+                  <span className="block">{t('temporarySubtitleLine2')}</span>
+                  <span className="block">{t('temporarySubtitleLine3')}</span>
+                </p>
+              </div>
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-600">
+                {t('temporaryBadge')}
+              </span>
+            </div>
+            <ul className="mt-1.5 space-y-0.5 text-sm leading-5 text-slate-700">
+              {[1, 2, 3, 4].map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="mt-1.5 size-1.5 rounded-full bg-blue-700" />
+                  <span>{t(`temporaryPoint${item}`)}</span>
+                </li>
+              ))}
             </ul>
-          </div>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <div className="text-xs font-black uppercase text-amber-800">Pro</div>
-            <ul className="mt-2 space-y-1 text-sm font-semibold text-slate-700">
-              <li>{locale === 'zh' ? '热门/冷门：可用' : locale === 'ms' ? 'Panas/Sejuk: tersedia' : 'Hot/Cold trends: available'}</li>
-              <li>{locale === 'zh' ? 'AI 推荐号码：完整可见' : locale === 'ms' ? 'Nombor AI: penuh' : 'AI recommendation numbers: full access'}</li>
-              <li>{locale === 'zh' ? 'AI 最近100期命中详情：完整可见' : locale === 'ms' ? 'Butiran hit 100 cabutan AI: penuh' : 'AI 100-draw hit details: full access'}</li>
-            </ul>
-          </div>
+            <div className="mt-auto pt-1.5">
+              <PricingTrialLoginButton
+                locale={locale}
+                labels={{
+                  login: t('trialLoginCta'),
+                  loggedIn: t('trialLoggedIn'),
+                  ready: t('trialReadyText')
+                }}
+              />
+            </div>
+          </article>
         </div>
-      </section>
 
-      <MembershipFlowClient
-        labels={{
-          panelTitle: t('demoPanelTitle'),
-          panelText: t('demoPanelText'),
-          statusLabel: t('demoStatusLabel'),
-          loggedOut: t('demoLoggedOut'),
-          loggedIn: t('demoLoggedInStatus'),
-          freePlan: t('freePlan'),
-          proPlan: t('proPlan'),
-          login: t('demoLogin'),
-          logout: t('demoLogout'),
-          activatePro: t('demoActivatePro'),
-          switchFree: t('demoSwitchFree'),
-          syncWarningPrefix: t('syncWarningPrefix'),
-          syncWarningFallback: t('syncWarningFallback')
-        }}
-      />
+        <article className="flex h-full min-w-0 flex-col rounded-lg border border-blue-500 bg-white p-2 shadow-lg ring-2 ring-blue-100 sm:p-2.5">
+          <div className="flex items-start justify-between gap-2">
+            <h2 className="text-lg font-black text-slate-950">{t('proPlan')}</h2>
+            <span className="rounded-full bg-blue-800 px-2.5 py-1 text-xs font-black text-white">
+              {t('recommended')}
+            </span>
+          </div>
+          <div className="mt-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5">
+            <p className="text-sm font-black leading-5 text-amber-900">{t('earlyBirdTitle')}</p>
+            <p className="text-xs font-black leading-4 text-slate-800">{t('earlyBirdChoosePlan')}</p>
+          </div>
+          <ul className="mt-1.5 space-y-0.5 text-sm leading-5 text-slate-700">
+            {[1, 2, 3, 4].map((item) => (
+              <li key={item} className="flex gap-2">
+                <span className="mt-1.5 size-1.5 rounded-full bg-blue-700" />
+                <span>{t(`proPoint${item}`)}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 grid items-stretch gap-1.5 sm:grid-cols-3">
+            {pricingOptions.map((option) => (
+              <div key={option.key} className={`flex min-h-[150px] min-w-0 flex-col rounded-lg border p-1.5 ${option.featured ? 'border-blue-300 bg-blue-50' : 'border-slate-200 bg-white'}`}>
+                <div className="flex min-h-4 flex-wrap items-start gap-1">
+                  {option.key === 'quarterly' ? <span className="whitespace-nowrap rounded-full bg-blue-800 px-2 py-0.5 text-xs font-black text-white">{t('quarterlyBadge')}</span> : null}
+                  {option.key === 'yearly' ? <span className="whitespace-nowrap rounded-full bg-amber-500 px-2 py-0.5 text-xs font-black text-white">{t('yearlyBadge')}</span> : null}
+                </div>
+                <div className="flex flex-1 flex-col">
+                  <h3 className="mt-0.5 text-sm font-black text-slate-950">{t(`${option.key}Title`)}</h3>
+                  <div className="mt-0.5 min-h-[52px]">
+                    {option.key === 'monthly' ? <div className="h-1.5" /> : (
+                      <p className="text-xs font-bold text-slate-500 line-through">{t(`${option.key}OriginalPrice`)}</p>
+                    )}
+                    <p className="text-xl font-black text-slate-950">{t(`${option.key}Price`)}</p>
+                    {option.key === 'monthly' ? <p className="text-xs font-bold text-slate-600">{t('monthlyUnit')}</p> : null}
+                    <p className="min-h-4 text-xs font-black text-blue-800">{t(`${option.key}Save`)}</p>
+                  </div>
+                  <p className="text-xs font-bold leading-4 text-slate-500">{t(`${option.key}Billing`)}</p>
+                </div>
+                <div className="mt-auto [&>div]:mt-1 [&_button]:min-h-[32px] [&_button]:whitespace-normal [&_button]:px-1.5 [&_button]:py-1 [&_button]:text-center [&_button]:text-xs [&_button]:font-semibold [&_button]:leading-tight">
+                  <PricingSubscribeButton
+                    plan={option.plan}
+                    labels={{
+                      idle: option.key === 'monthly' ? t('monthlyCta') : t(`${option.key}Cta`),
+                      loading: t('subscribeMonthlyLoading'),
+                      error: t('subscribeMonthlyError')
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs font-semibold leading-4 text-slate-500">{t('earlyBirdNote')}</p>
+        </article>
+
+        <aside className="grid h-full gap-1.5 md:col-span-2 lg:col-span-1 lg:grid-rows-[auto_minmax(0,1fr)]">
+          <div className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm sm:p-2.5">
+            <h2 className="text-base font-black text-slate-950">{copy.featureTitle}</h2>
+            <div className="mt-1.5 overflow-hidden rounded-lg border border-slate-200">
+              <div className="grid grid-cols-[1.18fr_0.62fr_0.88fr_0.52fr] text-center text-xs font-bold leading-4">
+                <div className="bg-slate-100 px-1 py-1 text-left text-slate-600">&nbsp;</div>
+                <div className="bg-blue-50 px-1 py-1 text-blue-800">{copy.freeLabel}</div>
+                <div className="bg-blue-50 px-1 py-1 text-blue-800">{copy.partialLabel}</div>
+                <div className="bg-amber-50 px-1 py-1 text-amber-800">{copy.proLabel}</div>
+                {copy.accessRows.map((row) => (
+                  <div key={row.feature} className="contents">
+                    <div className="min-w-0 break-words border-t border-slate-200 px-1 py-1 text-left font-black text-slate-800">{row.feature}</div>
+                    <div className="min-w-0 break-words border-t border-slate-200 px-1 py-1 text-slate-800">{row.free}</div>
+                    <div className="min-w-0 break-words border-t border-slate-200 px-1 py-1 text-slate-800">{row.partial}</div>
+                    <div className="min-w-0 break-words border-t border-slate-200 px-1 py-1 text-slate-800">{row.pro}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="h-full [&_section]:mt-0 [&_section]:flex [&_section]:h-full [&_section]:flex-col [&_section]:p-2 [&_section]:sm:p-2.5 [&_section>div:first-child>span]:hidden [&_section>div:first-child_p]:hidden [&_section>div:first-child]:gap-1 [&_section_dl]:mt-1.5 [&_section_dl]:gap-1.5 [&_section_h2]:text-base [&_section_p]:leading-5 [&_section_p]:text-xs [&_section_.rounded-md]:px-2 [&_section_.rounded-md]:py-1.5 [&_section>div:last-child]:mt-auto [&_section_button]:min-h-[32px] [&_section_button]:px-2.5 [&_section_button]:py-1.5">
+            <MembershipFlowClient
+              variant="account"
+              labels={{
+                panelTitle: copy.membershipTitle,
+                panelText: copy.membershipText,
+                statusLabel: t('demoStatusLabel'),
+                membershipLabel: copy.membershipLabel,
+                loggedOut: t('demoLoggedOut'),
+                loggedIn: t('demoLoggedInStatus'),
+                freePlan: t('freePlan'),
+                proPlan: t('proPlan'),
+                login: t('demoLogin'),
+                logout: t('demoLogout'),
+                activatePro: t('demoActivatePro'),
+                switchFree: t('demoSwitchFree'),
+                syncWarningPrefix: t('syncWarningPrefix'),
+                syncWarningFallback: t('syncWarningFallback')
+              }}
+            />
+          </div>
+        </aside>
+      </section>
     </main>
   );
 }
