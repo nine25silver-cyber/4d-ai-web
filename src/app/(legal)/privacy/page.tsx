@@ -7,25 +7,41 @@ export const metadata: Metadata = {
 
 const sections = [
   {
+    title: 'Scope',
+    body: [
+      'This Privacy Policy applies to the 4D AI website (https://4dai88.com) and related web services operated under the 4D AI name.',
+      'By using the website, users acknowledge that information may be processed as described in this Privacy Policy.'
+    ]
+  },
+  {
     title: 'Information We Collect',
     body: [
-      'App name: 4D AI.',
       '4D AI may collect basic account information when users sign in with Google, such as email address, display name, and profile image if provided by Google.',
-      '4D AI may also process app usage data needed to provide, operate, secure, and improve the service.'
+      '4D AI may also process website usage data needed to provide, operate, secure, and improve the service.'
     ]
   },
   {
     title: 'How We Use Information',
     body: [
-      'The information is used for authentication, account access, app functionality, security, support, and service improvement.',
-      'Google login is used only for account sign-in and basic profile identification.'
+      'The information is used for authentication, account access, website features, security, support, payment-related account handling, and service improvement.',
+      'Google Sign-In is used as a login method for account sign-in and basic profile identification.'
     ]
   },
   {
     title: 'Third-Party Services',
     body: [
-      '4D AI uses third-party services such as Google Sign-In and Supabase authentication to provide account access and related app functionality.',
+      '4D AI uses Google Sign-In as a login method and Supabase for authentication and account management.',
+      '4D AI uses Stripe for website payment and subscription processing, and Google AdSense for website advertising services.',
       'These third-party services may process information according to their own privacy policies.'
+    ]
+  },
+  {
+    title: 'Payments and Subscriptions',
+    body: [
+      'Web subscriptions are processed securely by Stripe. 4D AI does not store full credit card details.',
+      'Stripe may process payment information, billing details, transaction identifiers, and related subscription information according to its own Privacy Policy.',
+      'Android App subscriptions are managed by Google Play. Users should manage cancellation, renewal, and payment methods through the relevant platform or payment service used for the purchase.',
+      '4D AI may receive limited payment or subscription status information from Stripe or Google Play to provide account access and support.'
     ]
   },
   {
@@ -41,7 +57,7 @@ const sections = [
   {
     title: 'Data and Results',
     body: [
-      'Lottery results, related data, and app information shown in 4D AI are for informational purposes only.',
+      'Lottery results, related data, and website information shown in 4D AI are for informational purposes only.',
       '4D AI does not sell users personal information.'
     ]
   },
@@ -52,7 +68,7 @@ const sections = [
       '4dai88@gmail.com',
       'Please include the email address associated with your account.',
       "Upon verification of the request, we will delete the user's account and associated personal data within 30 days, unless retention is required by law or for legitimate business purposes.",
-      "Google Play subscription purchases are managed by Google Play and must be cancelled through the user's Google Play account.",
+      'Web subscriptions processed by Stripe and Android App subscriptions managed by Google Play may need to be cancelled or managed through the relevant payment service or platform account.',
       'Users may request full account deletion. Partial data deletion while retaining the account is not currently supported.'
     ]
   },
@@ -71,7 +87,7 @@ export default function PrivacyPage() {
       <article className="mx-auto max-w-3xl rounded border border-slate-200 bg-white p-8 shadow-sm">
         <p className="text-sm font-semibold uppercase tracking-normal text-blue-700">4D AI</p>
         <h1 className="mt-3 text-3xl font-bold">4D AI Privacy Policy</h1>
-        <p className="mt-2 text-sm text-slate-600">Last updated: 2026-06-24</p>
+        <p className="mt-2 text-sm text-slate-600">Last updated: 2026-07-09</p>
 
         <div className="mt-8 space-y-7">
           {sections.map((section) => (
