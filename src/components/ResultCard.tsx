@@ -20,7 +20,8 @@ export type ResultCardLabels = {
 type Props = {provider: ProviderConfig; result: ProviderResultState; labels: ResultCardLabels; compact?: boolean};
 type NumberCell = {label?: string; number: string};
 type TopPrizeCell = {label: string; number?: string; slot?: string};
-const providersWithoutGridLabels = new Set(['da_ma_cai', 'singapore', 'sarawak']);
+const providersWithoutEntryLabels = new Set(['da_ma_cai', 'singapore', 'sarawak', 'sabah88', 'sandakan']);
+const grandDragonSpecialLabels = 'ABCDEFGHIJKLM'.split('');
 const tableBorder = 'border-[#D6E0EA]';
 const tableHeader = 'bg-[#F1F5F9]';
 const tableText = 'text-[#1E293B]';
@@ -80,26 +81,32 @@ function maskPromotedGrandDragonSpecials(result: ProviderResultState, slotItems:
   return slotItems.map((number) => topPrizeNumbers.has(String(number ?? '').trim()) ? '----' : number);
 }
 
+function prizeEntryLabel(providerCode: string, section: 'top3' | 'special' | 'consolation', index: number, sourceLabel?: string) {
+  if (providersWithoutEntryLabels.has(providerCode)) return undefined;
+  if (section === 'top3') return sourceLabel;
+  if (providerCode === 'grand_dragon' && section === 'special') return grandDragonSpecialLabels[index] ?? String(index + 1);
+  return sourceLabel || String(index + 1);
+}
+
 function displayItems(provider: ProviderConfig, result: ProviderResultState, section: 'special' | 'consolation'): NumberCell[] {
   if (!result.ok) return [];
   const payload = result.payload;
-  const showLabels = !providersWithoutGridLabels.has(provider.code);
   const slotItems = section === 'special' ? payload.slot_layout?.special_slots : payload.slot_layout?.consolation_slots;
   if (provider.code === 'grand_dragon' && section === 'special' && slotItems && slotItems.length > 0) {
-    return maskPromotedGrandDragonSpecials(result, slotItems).map((number, index) => ({label: showLabels ? String(index + 1) : undefined, number}));
+    return maskPromotedGrandDragonSpecials(result, slotItems).map((number, index) => ({label: prizeEntryLabel(provider.code, section, index), number}));
   }
   const display = payload.display_payload?.[section];
   if (display && display.length > 0) {
     return display.map((item, index) => ({
-      label: showLabels ? item.label || String(index + 1) : undefined,
+      label: prizeEntryLabel(provider.code, section, index, item.label),
       number: item.number || '----'
     }));
   }
   if (slotItems && slotItems.length > 0) {
-    return slotItems.map((number, index) => ({label: showLabels ? String(index + 1) : undefined, number}));
+    return slotItems.map((number, index) => ({label: prizeEntryLabel(provider.code, section, index), number}));
   }
   const compactItems = section === 'special' ? payload.special_numbers : payload.consolation_numbers;
-  return (compactItems ?? []).map((number, index) => ({label: showLabels ? String(index + 1) : undefined, number}));
+  return (compactItems ?? []).map((number, index) => ({label: prizeEntryLabel(provider.code, section, index), number}));
 }
 
 function rowsFor(items: NumberCell[]) {
@@ -200,9 +207,9 @@ export function ResultCard({provider, result, labels, compact}: Props) {
   const specialItems = displayItems(provider, result, 'special');
   const consolationItems = displayItems(provider, result, 'consolation');
   const topPrizeItems: TopPrizeCell[] = [
-    {label: labels.firstPrize, number: payload.first_prize, slot: payload.display_payload?.top3?.find((item) => item.key === 'first')?.slot ?? payload.slot_layout?.top3_slots?.first},
-    {label: labels.secondPrize, number: payload.second_prize, slot: payload.display_payload?.top3?.find((item) => item.key === 'second')?.slot ?? payload.slot_layout?.top3_slots?.second},
-    {label: labels.thirdPrize, number: payload.third_prize, slot: payload.display_payload?.top3?.find((item) => item.key === 'third')?.slot ?? payload.slot_layout?.top3_slots?.third}
+    {label: labels.firstPrize, number: payload.first_prize, slot: prizeEntryLabel(provider.code, 'top3', 0, payload.display_payload?.top3?.find((item) => item.key === 'first')?.slot ?? payload.slot_layout?.top3_slots?.first)},
+    {label: labels.secondPrize, number: payload.second_prize, slot: prizeEntryLabel(provider.code, 'top3', 1, payload.display_payload?.top3?.find((item) => item.key === 'second')?.slot ?? payload.slot_layout?.top3_slots?.second)},
+    {label: labels.thirdPrize, number: payload.third_prize, slot: prizeEntryLabel(provider.code, 'top3', 2, payload.display_payload?.top3?.find((item) => item.key === 'third')?.slot ?? payload.slot_layout?.top3_slots?.third)}
   ];
   return (
     <article className={`overflow-hidden rounded-lg border bg-white shadow-sm ${tableBorder}`}>
