@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import Link from 'next/link';
 import {getTranslations} from 'next-intl/server';
+import {GoogleAdBanner} from '@/components/GoogleAdBanner';
 import {LiveResultsGrid} from '@/components/LiveResultsGrid';
 import {StructuredData} from '@/components/StructuredData';
 import {fetchRegionLatest} from '@/lib/cloudflare';
@@ -102,7 +103,7 @@ export default async function RegionResultsPage({params}: {params: Promise<{loca
         </div>
       </div>
       <LiveResultsGrid regionSlug={region.slug} refreshRegionSlugs={[...activeMarket.refreshRegions]} providers={providers} initialResults={results} />
-      <div className="my-4 rounded-md border border-dashed border-slate-300 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-500">Ad slot placeholder for free users</div>
+      <GoogleAdBanner placement="home" />
     </main>
   );
 }
