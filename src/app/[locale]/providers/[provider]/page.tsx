@@ -168,14 +168,187 @@ const daMaCaiMeta = {
   }
 };
 
-function withDaMaCaiGuide(page: ProviderPayoutPage): ProviderPayoutPage {
-  if (page.slug !== 'da-ma-cai') return page;
-  return {
-    ...page,
-    metaTitle: daMaCaiMeta.title,
-    metaDescription: daMaCaiMeta.description,
-    guide: daMaCaiGuide
-  };
+const sportsTotoGuide: ProviderGuideContent = {
+  heroTitle: {
+    en: 'Sports Toto Game Guide',
+    zh: '多多博彩游戏指南',
+    ms: 'Panduan Permainan Sports Toto'
+  },
+  heroIntro: {
+    en: 'Review Sports Toto game categories, common terminology and prize structures in one independent information guide. This page is for general reference and is not an official Sports Toto publication.',
+    zh: '本指南整理多多博彩相关游戏类别、常见术语与派彩结构，供用户作一般资讯和研究参考。本页面并非 Sports Toto 官方发布内容。',
+    ms: 'Semak kategori permainan Sports Toto, istilah lazim dan struktur hadiah dalam satu panduan maklumat bebas. Halaman ini untuk rujukan umum dan bukan penerbitan rasmi Sports Toto.'
+  },
+  tags: [
+    {en: 'Malaysia', zh: '马来西亚', ms: 'Malaysia'},
+    {en: 'Game Structure', zh: '游戏结构', ms: 'Struktur Permainan'},
+    {en: 'Reference Only', zh: '仅供参考', ms: 'Untuk Rujukan Sahaja'}
+  ],
+  breadcrumb: {
+    home: {en: 'Home', zh: '首页', ms: 'Laman Utama'},
+    more: {en: 'More', zh: '更多', ms: 'Lagi'},
+    providerGuides: {en: 'Provider Guides', zh: 'Provider 指南', ms: 'Panduan Penyedia'}
+  },
+  aboutTitle: {
+    en: 'About Sports Toto',
+    zh: '关于多多博彩',
+    ms: 'Mengenai Sports Toto'
+  },
+  aboutParagraphs: [
+    {
+      en: 'This page organises Sports Toto game categories, common terms and payout structures so users can compare the available information in a clearer format.',
+      zh: '本页面整理多多博彩相关游戏类别、常见术语与派彩结构，让用户能以更清楚的方式比较现有资料。',
+      ms: 'Halaman ini menyusun kategori permainan Sports Toto, istilah lazim dan struktur bayaran supaya pengguna boleh membandingkan maklumat yang tersedia dengan lebih jelas.'
+    },
+    {
+      en: '4D AI is an independent information platform. It does not operate Sports Toto games, sell tickets, accept bets or process prize claims. The content is not betting advice and does not promise prizes or future results.',
+      zh: '4D AI 是独立资讯平台，不经营 Sports Toto 游戏、不销售票券、不接受投注，也不处理兑奖。本页面内容不构成投注建议，也不承诺中奖或未来结果。',
+      ms: '4D AI ialah platform maklumat bebas. Ia tidak mengendalikan permainan Sports Toto, tidak menjual tiket, tidak menerima pertaruhan dan tidak memproses tuntutan hadiah. Kandungan ini bukan nasihat pertaruhan dan tidak menjanjikan hadiah atau keputusan masa hadapan.'
+    },
+    {
+      en: 'Game rules, payout amounts and jackpot arrangements may change. Users should verify official rules and payout information with the provider latest official publication before relying on any figure.',
+      zh: '游戏规则、派彩金额及奖池安排可能调整。用户在依赖任何数字前，应以相关 Provider 最新官方公布的规则与派彩资料为准。',
+      ms: 'Peraturan permainan, jumlah bayaran dan aturan jackpot boleh berubah. Pengguna perlu menyemak peraturan rasmi dan maklumat bayaran melalui penerbitan rasmi terkini penyedia sebelum bergantung pada mana-mana angka.'
+    }
+  ],
+  summaryTitle: {
+    en: 'Provider Summary',
+    zh: 'Provider 摘要',
+    ms: 'Ringkasan Penyedia'
+  },
+  summary: [
+    {label: {en: 'Provider', zh: 'Provider', ms: 'Penyedia'}, value: {en: 'Sports Toto', zh: '多多博彩', ms: 'Sports Toto'}},
+    {label: {en: 'Guide coverage', zh: '指南涵盖', ms: 'Liputan panduan'}, value: {en: '4D, Permutation, Jackpot, 5D, 6D, 6/50, 6/55, 6/58', zh: '4D、全保、Jackpot、5D、6D、6/50、6/55、6/58', ms: '4D, Susunan, Jackpot, 5D, 6D, 6/50, 6/55, 6/58'}},
+    {label: {en: 'Information type', zh: '资料类型', ms: 'Jenis maklumat'}, value: {en: 'Game structure and payout reference', zh: '游戏结构与派彩参考', ms: 'Rujukan struktur permainan dan bayaran'}},
+    {label: {en: 'Official status', zh: '官方状态', ms: 'Status rasmi'}, value: {en: 'Independent informational guide', zh: '独立资讯指南', ms: 'Panduan maklumat bebas'}},
+    {label: {en: 'Verification', zh: '核对方式', ms: 'Pengesahan'}, value: {en: 'Check latest official publication', zh: '请核对最新官方公布', ms: 'Semak penerbitan rasmi terkini'}}
+  ],
+  availableGamesTitle: {
+    en: 'Available Games',
+    zh: '主要游戏',
+    ms: 'Permainan Tersedia'
+  },
+  availableGames: [
+    {title: {en: '4D', zh: '4D', ms: '4D'}, description: {en: 'A four-digit game category with listed prize tiers and Big / Small payout coverage.', zh: '四位数字游戏类别，按资料列出的奖级与 Big / Small 派彩覆盖方式呈现。', ms: 'Kategori permainan empat digit dengan peringkat hadiah dan liputan bayaran Big / Small yang disenaraikan.'}},
+    {title: {en: '4D Permutation', zh: '4D 全保', ms: '4D Susunan'}, description: {en: 'A permutation format where valid arrangements depend on the selected digits and repeated-number pattern.', zh: '全保排列形式，有效排列数量取决于所选数字及是否存在重复数字。', ms: 'Format susunan yang bergantung pada digit pilihan dan corak digit berulang.'}},
+    {title: {en: '4D Jackpot', zh: '4D Jackpot', ms: '4D Jackpot'}, description: {en: 'A jackpot category that separates minimum jackpot references from fixed lower-group payout rows.', zh: 'Jackpot 类别，表格区分最低奖池参考与较低组别固定派彩。', ms: 'Kategori jackpot yang membezakan rujukan jackpot minimum daripada baris bayaran tetap kumpulan lain.'}},
+    {title: {en: '5D', zh: '5D', ms: '5D'}, description: {en: 'A five-digit game category using listed prize tiers for selected number matches.', zh: '五位数字游戏类别，按资料列出的奖级与号码匹配条件整理。', ms: 'Kategori permainan lima digit menggunakan peringkat hadiah yang disenaraikan untuk padanan nombor pilihan.'}},
+    {title: {en: '6D', zh: '6D', ms: '6D'}, description: {en: 'A six-digit game category with exact and partial digit-match prize references.', zh: '六位数字游戏类别，包含完整匹配及部分位数匹配的派彩参考。', ms: 'Kategori permainan enam digit dengan rujukan hadiah padanan tepat dan padanan separa digit.'}},
+    {title: {en: 'Star Toto 6/50', zh: 'Star Toto 6/50', ms: 'Star Toto 6/50'}, description: {en: 'A lotto-style format using six selected numbers from a 1 to 50 number pool.', zh: 'Lotto 类游戏形式，从 1 至 50 的号码池选择六个号码。', ms: 'Format gaya lotto menggunakan enam nombor pilihan daripada kumpulan nombor 1 hingga 50.'}},
+    {title: {en: 'Supreme Toto 6/55', zh: 'Supreme Toto 6/55', ms: 'Supreme Toto 6/55'}, description: {en: 'A lotto-style format using six selected numbers from a 1 to 55 number pool.', zh: 'Lotto 类游戏形式，从 1 至 55 的号码池选择六个号码。', ms: 'Format gaya lotto menggunakan enam nombor pilihan daripada kumpulan nombor 1 hingga 55.'}},
+    {title: {en: 'Power Toto 6/58', zh: 'Power Toto 6/58', ms: 'Power Toto 6/58'}, description: {en: 'A lotto-style format using six selected numbers from a 1 to 58 number pool.', zh: 'Lotto 类游戏形式，从 1 至 58 的号码池选择六个号码。', ms: 'Format gaya lotto menggunakan enam nombor pilihan daripada kumpulan nombor 1 hingga 58.'}}
+  ],
+  prizeStructureTitle: {
+    en: 'Prize Structure',
+    zh: '派彩结构',
+    ms: 'Struktur Hadiah'
+  },
+  informationNotesTitle: {
+    en: 'Information Notes',
+    zh: '资讯说明',
+    ms: 'Nota Maklumat'
+  },
+  informationNotes: [
+    {
+      en: '4D, 5D and 6D use different number formats and prize-tier structures.',
+      zh: '4D、5D 和 6D 使用不同号码格式及奖级结构。',
+      ms: '4D, 5D dan 6D menggunakan format nombor serta struktur peringkat hadiah yang berbeza.'
+    },
+    {
+      en: 'Permutation refers to valid arrangements of selected digits. The applicable rules should be checked against the provider latest information.',
+      zh: 'Permutation / 全保涉及所选号码的有效排列组合，具体规则应以 Provider 最新资料为准。',
+      ms: 'Susunan merujuk kepada aturan sah bagi digit pilihan. Peraturan berkaitan perlu disemak berdasarkan maklumat terkini penyedia.'
+    },
+    {
+      en: 'Jackpot games may involve prize pools, matching combinations and distribution rules. Minimum jackpot references are not stated as amounts every winner will receive.',
+      zh: 'Jackpot 游戏可能涉及奖池、中奖组合及分配规则；最低奖池参考不代表每位得主可获得该金额。',
+      ms: 'Permainan jackpot mungkin melibatkan kumpulan hadiah, kombinasi padanan dan peraturan agihan. Rujukan jackpot minimum tidak dinyatakan sebagai jumlah yang akan diterima oleh setiap pemenang.'
+    },
+    {
+      en: 'Star Toto 6/50, Supreme Toto 6/55 and Power Toto 6/58 use different number pools and game structures.',
+      zh: 'Star Toto 6/50、Supreme Toto 6/55 与 Power Toto 6/58 属于不同号码池与游戏结构。',
+      ms: 'Star Toto 6/50, Supreme Toto 6/55 dan Power Toto 6/58 menggunakan kumpulan nombor serta struktur permainan yang berbeza.'
+    },
+    {
+      en: 'The payout tables are an informational organisation of available reference data. Official results, rules, amounts and jackpot arrangements should be checked against the provider latest official publication.',
+      zh: '派彩表只是对可用参考资料的一般资讯整理。正式结果、规则、金额及奖池安排应以 Provider 最新官方公布为准。',
+      ms: 'Jadual bayaran ialah susunan maklumat rujukan yang tersedia. Keputusan rasmi, peraturan, jumlah dan aturan jackpot perlu disemak berdasarkan penerbitan rasmi terkini penyedia.'
+    }
+  ],
+  faqTitle: {
+    en: 'Frequently Asked Questions',
+    zh: '常见问题',
+    ms: 'Soalan Lazim'
+  },
+  faqs: [
+    {question: {en: 'What is this Sports Toto guide for?', zh: '本多多博彩指南用于什么？', ms: 'Untuk apakah panduan Sports Toto ini?'}, answer: {en: 'It organises Sports Toto game categories, terminology and payout structures for general information and research reference.', zh: '本指南整理多多博彩游戏类别、术语与派彩结构，用于一般资讯和研究参考。', ms: 'Ia menyusun kategori permainan Sports Toto, istilah dan struktur bayaran untuk maklumat umum serta rujukan kajian.'}},
+    {question: {en: 'Does 4D AI sell Sports Toto tickets?', zh: '4D AI 是否销售 Sports Toto 票券？', ms: 'Adakah 4D AI menjual tiket Sports Toto?'}, answer: {en: 'No. 4D AI does not sell tickets, accept bets, operate draws or process prize claims.', zh: '不是。4D AI 不销售票券、不接受投注、不经营开奖，也不处理兑奖。', ms: 'Tidak. 4D AI tidak menjual tiket, menerima pertaruhan, mengendalikan cabutan atau memproses tuntutan hadiah.'}},
+    {question: {en: 'Is 4D AI officially affiliated with Sports Toto?', zh: '4D AI 是否与 Sports Toto 有官方合作？', ms: 'Adakah 4D AI mempunyai hubungan rasmi dengan Sports Toto?'}, answer: {en: 'No official relationship is claimed on this page. The guide is independent informational content and is not an official Sports Toto publication.', zh: '本页面不声称任何官方关系。本指南属于独立资讯内容，并非 Sports Toto 官方发布内容。', ms: 'Tiada hubungan rasmi dituntut di halaman ini. Panduan ini ialah kandungan maklumat bebas dan bukan penerbitan rasmi Sports Toto.'}},
+    {question: {en: 'What is the difference between 4D, 5D and 6D?', zh: '4D、5D 与 6D 有什么区别？', ms: 'Apakah perbezaan antara 4D, 5D dan 6D?'}, answer: {en: 'They use different number lengths and prize structures. The payout tables separate each game so users can compare the listed reference information.', zh: '它们使用不同号码长度与奖级结构。本页面将各游戏分开呈现，方便用户比较资料列出的参考信息。', ms: 'Permainan ini menggunakan panjang nombor dan struktur hadiah yang berbeza. Jadual bayaran memisahkan setiap permainan supaya pengguna boleh membandingkan maklumat rujukan yang disenaraikan.'}},
+    {question: {en: 'What does permutation mean?', zh: 'Permutation / 全保是什么意思？', ms: 'Apakah maksud susunan?'}, answer: {en: 'Permutation refers to valid arrangements of selected digits. The number of arrangements can differ when digits repeat.', zh: 'Permutation / 全保指所选数字可组成的有效排列；如果数字重复，排列数量可能不同。', ms: 'Susunan merujuk kepada aturan sah bagi digit yang dipilih. Bilangan susunan boleh berbeza apabila digit berulang.'}},
+    {question: {en: 'How are 6/50, 6/55 and 6/58 different?', zh: '6/50、6/55 与 6/58 有什么不同？', ms: 'Bagaimanakah 6/50, 6/55 dan 6/58 berbeza?'}, answer: {en: 'They use different number pools and prize structures. This guide keeps Star Toto 6/50, Supreme Toto 6/55 and Power Toto 6/58 in separate sections.', zh: '它们使用不同号码池与奖级结构。本指南将 Star Toto 6/50、Supreme Toto 6/55 与 Power Toto 6/58 分开呈现。', ms: 'Permainan ini menggunakan kumpulan nombor dan struktur hadiah yang berbeza. Panduan ini memisahkan Star Toto 6/50, Supreme Toto 6/55 dan Power Toto 6/58 dalam seksyen berasingan.'}},
+    {question: {en: 'Are jackpot amounts guaranteed?', zh: 'Jackpot 金额是否固定承诺？', ms: 'Adakah jumlah jackpot dijanjikan?'}, answer: {en: 'No. Jackpot figures may be minimum pool or payout references and do not mean every winner receives the full amount shown.', zh: '不是。Jackpot 数字可能是最低奖池或派彩参考，并不代表每名得主获得页面显示的全部金额。', ms: 'Tidak. Angka jackpot mungkin rujukan kumpulan minimum atau bayaran dan tidak bermaksud setiap pemenang menerima keseluruhan jumlah yang dipaparkan.'}},
+    {question: {en: 'Where should users verify official rules and payouts?', zh: '用户应在哪里核对官方规则和派彩？', ms: 'Di manakah pengguna perlu menyemak peraturan dan bayaran rasmi?'}, answer: {en: 'Users should verify game rules, payout amounts and jackpot arrangements with the provider latest official publication.', zh: '用户应以相关 Provider 最新官方公布核对游戏规则、派彩金额及奖池安排。', ms: 'Pengguna perlu menyemak peraturan permainan, jumlah bayaran dan aturan jackpot melalui penerbitan rasmi terkini penyedia.'}}
+  ],
+  verificationTitle: {
+    en: 'Verification notice',
+    zh: '资料核对提示',
+    ms: 'Notis pengesahan'
+  },
+  verificationText: {
+    en: 'Please verify game rules, payout amounts and jackpot arrangements with the provider\'s latest official publication.',
+    zh: '请以相关 Provider 最新官方公布的游戏规则、派彩金额及奖池安排为准。',
+    ms: 'Sila semak peraturan permainan, jumlah bayaran hadiah dan aturan jackpot berdasarkan penerbitan rasmi terkini daripada penyedia berkaitan.'
+  },
+  disclaimerTitle: {
+    en: 'Disclaimer',
+    zh: '免责声明',
+    ms: 'Penafian'
+  },
+  disclaimerText: {
+    en: 'This is an independent informational guide and not official Sports Toto content. 4D AI does not sell tickets, accept bets, operate draws or process prize claims. It does not promise results, historical information does not determine future outcomes, AI analysis is not an official prediction, and official provider information takes precedence.',
+    zh: '本页面是独立资讯指南，并非 Sports Toto 官方内容。4D AI 不销售票券、不接受投注、不经营开奖，也不处理兑奖。页面不承诺任何结果，历史资料不能决定未来结果，AI 分析并非官方预测，并且应以官方 Provider 资料为优先。',
+    ms: 'Ini ialah panduan maklumat bebas dan bukan kandungan rasmi Sports Toto. 4D AI tidak menjual tiket, menerima pertaruhan, mengendalikan cabutan atau memproses tuntutan hadiah. Ia tidak menjanjikan keputusan, maklumat sejarah tidak menentukan keputusan masa hadapan, analisis AI bukan ramalan rasmi, dan maklumat rasmi penyedia perlu diutamakan.'
+  },
+  relatedGuidesTitle: {
+    en: 'Related Provider Guides',
+    zh: '相关 Provider 指南',
+    ms: 'Panduan Penyedia Berkaitan'
+  },
+  relatedSlugs: ['magnum', 'da-ma-cai', 'singapore-pools', 'stc', 'sabah-88', 'sarawak']
+};
+
+const sportsTotoMeta = {
+  title: {
+    en: 'Sports Toto Game Guide | 4D AI',
+    zh: '多多博彩游戏指南 | 4D AI',
+    ms: 'Panduan Permainan Sports Toto | 4D AI'
+  },
+  description: {
+    en: 'Sports Toto game guide covering prize structure, terminology and 4D, 5D, 6D and jackpot games. This is an independent informational reference and official provider information takes precedence.',
+    zh: '多多博彩游戏指南，整理派彩结构、游戏术语以及 4D、5D、6D 与 Jackpot 游戏资料。本页面为独立资讯参考，并以官方 Provider 资料为优先。',
+    ms: 'Panduan permainan Sports Toto yang merangkumi struktur hadiah, istilah serta permainan 4D, 5D, 6D dan jackpot. Ini ialah rujukan maklumat bebas dan maklumat rasmi penyedia perlu diutamakan.'
+  }
+};
+
+function withProviderGuide(page: ProviderPayoutPage): ProviderPayoutPage {
+  if (page.slug === 'da-ma-cai') {
+    return {
+      ...page,
+      metaTitle: daMaCaiMeta.title,
+      metaDescription: daMaCaiMeta.description,
+      guide: daMaCaiGuide
+    };
+  }
+  if (page.slug === 'sports-toto') {
+    return {
+      ...page,
+      metaTitle: sportsTotoMeta.title,
+      metaDescription: sportsTotoMeta.description,
+      guide: sportsTotoGuide
+    };
+  }
+  return page;
 }
 
 export function generateStaticParams() {
@@ -186,7 +359,7 @@ export async function generateMetadata({params}: {params: Promise<{locale: Local
   const {locale, provider} = await params;
   const rawPage = providerPayoutsBySlug.get(provider as ProviderPayoutSlug);
   if (!rawPage) return {};
-  const page = withDaMaCaiGuide(rawPage);
+  const page = withProviderGuide(rawPage);
   return buildMetadata({
     locale,
     path: `/providers/${page.slug}`,
@@ -199,7 +372,7 @@ export default async function ProviderPayoutPage({params}: {params: Promise<{loc
   const {locale, provider} = await params;
   const rawPage = providerPayoutsBySlug.get(provider as ProviderPayoutSlug);
   if (!rawPage) notFound();
-  const page = withDaMaCaiGuide(rawPage);
+  const page = withProviderGuide(rawPage);
 
   return <ProviderPayoutContent locale={locale} page={page} />;
 }

@@ -59,7 +59,12 @@ const guideGameAnchorIds: Record<string, string> = {
   'Super 1+3D Permutation': 'game-super-1-plus-3d-permutation',
   '1+3D Jackpot': 'game-1-plus-3d-jackpot',
   'DMC Jackpot': 'game-dmc-jackpot',
-  '3D Jackpot': 'game-3d-jackpot'
+  '3D Jackpot': 'game-3d-jackpot',
+  '5D': 'game-5d',
+  '6D': 'game-6d',
+  'Star Toto 6/50': 'game-star-toto-6-50',
+  'Supreme Toto 6/55': 'game-supreme-toto-6-55',
+  'Power Toto 6/58': 'game-power-toto-6-58'
 };
 
 export function ProviderPayoutContent({locale, page}: {locale: Locale; page: ProviderPayoutPage}) {
@@ -146,7 +151,7 @@ export function ProviderPayoutContent({locale, page}: {locale: Locale; page: Pro
           <p className="mt-2 text-sm font-bold text-slate-500">{labels.tableScroll}</p>
           <div className="mt-5 space-y-8">
             {page.games.map((game) => (
-              <section key={game.title.en} id={guideGameAnchorId(game.title.en)} className="scroll-mt-24">
+              <section key={game.title.en} id={guideGameAnchorId(game.title.en)} className="scroll-mt-56 md:scroll-mt-40 lg:scroll-mt-32">
                 <div className="border-b border-slate-200 pb-3">
                   <p className="text-sm font-black text-blue-800">{game.stake[locale]}</p>
                   <h3 className="mt-1 text-2xl font-black text-slate-950">{game.title[locale]}</h3>
