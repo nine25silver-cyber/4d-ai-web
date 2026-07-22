@@ -51,7 +51,15 @@ const guideGameAnchorIds: Record<string, string> = {
   '4D Jackpot Powerball': 'game-jackpot-powerball',
   'Jackpot M-System': 'game-jackpot-m-system',
   'Gold Jackpot': 'game-gold-jackpot',
-  'Jackpot Powerball': 'game-jackpot-powerball'
+  'Jackpot Powerball': 'game-jackpot-powerball',
+  '3D': 'game-3d',
+  '1+3D': 'game-1-plus-3d',
+  '1+3D Permutation': 'game-1-plus-3d-permutation',
+  'Super 1+3D': 'game-super-1-plus-3d',
+  'Super 1+3D Permutation': 'game-super-1-plus-3d-permutation',
+  '1+3D Jackpot': 'game-1-plus-3d-jackpot',
+  'DMC Jackpot': 'game-dmc-jackpot',
+  '3D Jackpot': 'game-3d-jackpot'
 };
 
 export function ProviderPayoutContent({locale, page}: {locale: Locale; page: ProviderPayoutPage}) {
@@ -192,7 +200,7 @@ export function ProviderPayoutContent({locale, page}: {locale: Locale; page: Pro
           <div className="mt-4 space-y-3">
             {guide.faqs.map((faq) => (
               <details key={faq.question.en} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                <summary className="cursor-pointer text-base font-black text-slate-950">{faq.question[locale]}</summary>
+                <summary className="cursor-pointer text-base font-black text-slate-950 outline-none focus-visible:ring-2 focus-visible:ring-blue-600">{faq.question[locale]}</summary>
                 <p className="mt-3 text-sm leading-6 text-slate-600">{faq.answer[locale]}</p>
               </details>
             ))}
