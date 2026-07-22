@@ -1,6 +1,7 @@
 import type {MetadataRoute} from 'next';
 import {routing} from '@/i18n/routing';
 import {regions} from '@/lib/providers';
+import {providerPayoutPages} from '@/lib/provider-payouts';
 import {siteUrl} from '@/lib/seo';
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -15,6 +16,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/tools/thousand-hits',
     '/tools/digit-map',
     '/tools/favorites',
+    '/about',
+    '/faq',
     '/pricing'
   ];
   const resultPages = regions.map((region) => `/results/${region.slug}`);
@@ -22,8 +25,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const historyProviderPages = regions.flatMap((region) => region.providers.map((provider) => `/history/${region.slug}/${provider.code}`));
   const aiRegionPages = regions.map((region) => `/ai/${region.slug}`);
   const aiProviderPages = regions.flatMap((region) => region.providers.map((provider) => `/ai/${region.slug}/${provider.code}`));
+  const providerPayoutRoutePages = providerPayoutPages.map((page) => `/providers/${page.slug}`);
   const now = new Date();
-  const pages = [...staticPages, ...resultPages, ...historyRegionPages, ...historyProviderPages, ...aiRegionPages, ...aiProviderPages];
+  const pages = [...staticPages, ...resultPages, ...historyRegionPages, ...historyProviderPages, ...aiRegionPages, ...aiProviderPages, ...providerPayoutRoutePages];
   const localizedPages: MetadataRoute.Sitemap = routing.locales.flatMap((locale) => pages.map((path) => ({
     url: siteUrl(`/${locale}${path}`),
     lastModified: now,

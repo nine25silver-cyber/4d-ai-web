@@ -5,6 +5,10 @@
     "ai": "AI",
     "tools": "Tools",
     "pricing": "Pricing",
+    "more": "More",
+    "about": "About Us",
+    "faq": "FAQ",
+    "providerPayoutStructure": "Provider Guides",
     "login": "Login",
     "goPro": "Go Pro",
     "logout": "Logout",
@@ -496,6 +500,41 @@
     "demoSwitchFree": "Switch to Free",
     "syncWarningPrefix": "Membership sync warning",
     "syncWarningFallback": "Unable to confirm Pro status right now"
+  },
+  "About": {
+    "metaTitle": "About 4D AI - 4D Results and Data Tools",
+    "metaDescription": "Learn how 4D AI organises historical 4D results, analysis tools and responsible-use information for Malaysia and nearby markets.",
+    "eyebrow": "About 4D AI",
+    "title": "4D results, history and analysis tools for clearer research",
+    "intro": "4D AI is an information platform that organises public 4D result data for Malaysia and related markets. The site helps users review historical draws, compare trends and understand provider payout structures without implying that past patterns can control future results.",
+    "providerLinksTitle": "Provider payout pages",
+    "providerLinksIntro": "Each provider has its own page so payout tables stay separated by game and brand.",
+    "sections": [
+      {
+        "title": "What 4D AI Does",
+        "body": "4D AI collects and presents 4D result information, historical records and data-analysis views in a format built for quick reading. The goal is to make past draw information easier to inspect, compare and research."
+      },
+      {
+        "title": "Our Approach",
+        "body": "The platform focuses on structured data, readable result pages and practical tools such as history, frequency views and provider-specific pages. These tools can reduce the amount of manual checking a user needs to do when studying older results."
+      },
+      {
+        "title": "What The Data Can Help Users Understand",
+        "body": "Historical data can help users observe how often numbers appeared, how results were distributed and how trends looked across previous draw periods. It describes past outcomes only; it does not determine the next draw."
+      },
+      {
+        "title": "What We Do Not Promise",
+        "body": "4D AI does not promise prizes, does not guarantee that any number will appear and does not claim that analysis can predict future results with certainty. Every draw remains uncertain."
+      },
+      {
+        "title": "Transparency And Responsible Use",
+        "body": "Analysis on 4D AI is provided for information and research reference. Users should treat every table, tool and recommendation as supporting context, not as a betting instruction."
+      },
+      {
+        "title": "Official Results Come First",
+        "body": "Official draw results, game rules and payout details should always be checked against the relevant provider official publications. Provider rules and payout structures can change."
+      }
+    ]
   },
   "Account": {
     "metaTitle": "4D AI Account - Login, Membership and Favorites",

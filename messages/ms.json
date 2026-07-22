@@ -5,6 +5,10 @@
     "ai": "AI",
     "tools": "Alat",
     "pricing": "Harga",
+    "more": "Lagi",
+    "about": "Tentang Kami",
+    "faq": "Soalan Lazim",
+    "providerPayoutStructure": "Panduan Penyedia",
     "login": "Log Masuk",
     "goPro": "Go Pro",
     "logout": "Log Keluar",
@@ -496,6 +500,41 @@
     "demoSwitchFree": "Tukar ke pelan Percuma",
     "syncWarningPrefix": "Amaran sync keahlian",
     "syncWarningFallback": "Status Pro belum dapat disahkan sekarang"
+  },
+  "About": {
+    "metaTitle": "Tentang 4D AI - Keputusan 4D dan Alat Data",
+    "metaDescription": "Ketahui cara 4D AI menyusun keputusan sejarah 4D, alat analisis dan maklumat penggunaan bertanggungjawab untuk Malaysia dan pasaran berkaitan.",
+    "eyebrow": "Tentang 4D AI",
+    "title": "Keputusan 4D, sejarah dan alat analisis untuk kajian yang lebih jelas",
+    "intro": "4D AI ialah platform maklumat yang menyusun data keputusan 4D awam untuk Malaysia dan pasaran berkaitan. Laman ini membantu pengguna menyemak cabutan sejarah, membandingkan corak dan memahami struktur bayaran provider tanpa membayangkan bahawa corak lalu boleh mengawal keputusan akan datang.",
+    "providerLinksTitle": "Halaman bayaran provider",
+    "providerLinksIntro": "Setiap provider mempunyai halaman sendiri supaya jadual bayaran kekal terpisah mengikut permainan dan jenama.",
+    "sections": [
+      {
+        "title": "Apa Yang 4D AI Sediakan",
+        "body": "4D AI mengumpulkan dan memaparkan maklumat keputusan 4D, rekod sejarah dan paparan analisis data dalam format yang mudah dibaca. Tujuannya ialah memudahkan pengguna menyemak, membandingkan dan mengkaji keputusan lalu."
+      },
+      {
+        "title": "Pendekatan Kami",
+        "body": "Platform ini memberi tumpuan kepada data tersusun, halaman keputusan yang jelas dan alat praktikal seperti sejarah, paparan kekerapan dan halaman khusus provider. Alat ini boleh mengurangkan semakan manual apabila pengguna meneliti keputusan lama."
+      },
+      {
+        "title": "Perkara Yang Boleh Difahami Daripada Data",
+        "body": "Data sejarah boleh membantu pengguna melihat kekerapan nombor, taburan keputusan dan corak dalam tempoh cabutan terdahulu. Ia menerangkan keputusan lalu sahaja dan tidak menentukan cabutan seterusnya."
+      },
+      {
+        "title": "Perkara Yang Tidak Kami Janjikan",
+        "body": "4D AI tidak menjanjikan hadiah, tidak menjamin mana-mana nombor akan muncul dan tidak mendakwa analisis boleh meramal keputusan masa depan dengan pasti. Setiap cabutan kekal tidak menentu."
+      },
+      {
+        "title": "Ketelusan Dan Penggunaan Bertanggungjawab",
+        "body": "Analisis di 4D AI disediakan untuk maklumat dan rujukan kajian. Pengguna harus menganggap jadual, alat dan cadangan sebagai konteks sokongan, bukan arahan pertaruhan."
+      },
+      {
+        "title": "Keputusan Rasmi Diutamakan",
+        "body": "Keputusan cabutan rasmi, peraturan permainan dan butiran bayaran hendaklah disemak melalui penerbitan rasmi provider berkaitan. Peraturan dan struktur bayaran boleh berubah."
+      }
+    ]
   },
   "Account": {
     "metaTitle": "Akaun 4D AI - Login, Ahli dan Kegemaran",
