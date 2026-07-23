@@ -331,6 +331,164 @@ const sportsTotoMeta = {
   }
 };
 
+const singaporePoolsGuide: ProviderGuideContent = {
+  heroTitle: {
+    en: 'Singapore Pools Game Guide',
+    zh: '新加坡博彩游戏指南',
+    ms: 'Panduan Permainan Singapore Pools'
+  },
+  heroIntro: {
+    en: 'Review Singapore Pools game categories, common terminology and prize structures in one independent information guide. This page is for general reference and is not an official Singapore Pools publication.',
+    zh: '本指南整理 Singapore Pools 相关游戏类别、常见术语与派彩结构，供用户作一般资讯和研究参考。本页面并非 Singapore Pools 官方发布内容。',
+    ms: 'Semak kategori permainan Singapore Pools, istilah lazim dan struktur hadiah dalam satu panduan maklumat bebas. Halaman ini untuk rujukan umum dan bukan penerbitan rasmi Singapore Pools.'
+  },
+  tags: [
+    {en: 'Singapore', zh: '新加坡', ms: 'Singapura'},
+    {en: 'Game Structure', zh: '游戏结构', ms: 'Struktur Permainan'},
+    {en: 'Reference Only', zh: '仅供参考', ms: 'Untuk Rujukan Sahaja'}
+  ],
+  breadcrumb: {
+    home: {en: 'Home', zh: '首页', ms: 'Laman Utama'},
+    more: {en: 'More', zh: '更多', ms: 'Lagi'},
+    providerGuides: {en: 'Provider Guides', zh: 'Provider 指南', ms: 'Panduan Penyedia'}
+  },
+  aboutTitle: {
+    en: 'About Singapore Pools',
+    zh: '关于新加坡博彩',
+    ms: 'Mengenai Singapore Pools'
+  },
+  aboutParagraphs: [
+    {
+      en: 'This page organises Singapore Pools game categories, common terms and payout structures so users can compare the available information in a clearer format.',
+      zh: '本页面整理 Singapore Pools 相关游戏类别、常见术语与派彩结构，让用户能以更清楚的方式比较现有资料。',
+      ms: 'Halaman ini menyusun kategori permainan Singapore Pools, istilah lazim dan struktur bayaran supaya pengguna boleh membandingkan maklumat yang tersedia dengan lebih jelas.'
+    },
+    {
+      en: '4D AI is an independent information platform. It does not operate Singapore Pools games, sell tickets, accept bets or process prize claims. The content is not betting advice and does not promise prizes or future results.',
+      zh: '4D AI 是独立资讯平台，不经营 Singapore Pools 游戏、不销售票券、不接受投注，也不处理兑奖。本页面内容不构成投注建议，也不承诺中奖或未来结果。',
+      ms: '4D AI ialah platform maklumat bebas. Ia tidak mengendalikan permainan Singapore Pools, tidak menjual tiket, tidak menerima pertaruhan dan tidak memproses tuntutan hadiah. Kandungan ini bukan nasihat pertaruhan dan tidak menjanjikan hadiah atau keputusan masa hadapan.'
+    },
+    {
+      en: 'Game rules, payout amounts, prize tiers and jackpot arrangements may change. Users should verify official rules and payout information with the provider latest official publication before relying on any figure.',
+      zh: '游戏规则、派彩金额、奖级及奖池安排可能调整。用户在依赖任何数字前，应以相关 Provider 最新官方公布的规则与派彩资料为准。',
+      ms: 'Peraturan permainan, jumlah bayaran, peringkat hadiah dan aturan jackpot boleh berubah. Pengguna perlu menyemak peraturan rasmi dan maklumat bayaran melalui penerbitan rasmi terkini penyedia sebelum bergantung pada mana-mana angka.'
+    }
+  ],
+  summaryTitle: {
+    en: 'Provider Summary',
+    zh: 'Provider 摘要',
+    ms: 'Ringkasan Penyedia'
+  },
+  summary: [
+    {label: {en: 'Provider', zh: 'Provider', ms: 'Penyedia'}, value: {en: 'Singapore Pools', zh: '新加坡博彩', ms: 'Singapore Pools'}},
+    {label: {en: 'Guide coverage', zh: '指南涵盖', ms: 'Liputan panduan'}, value: {en: '4D, 4D iBet, Toto 6/49', zh: '4D、4D iBet、Toto 6/49', ms: '4D, 4D iBet, Toto 6/49'}},
+    {label: {en: 'Information type', zh: '资料类型', ms: 'Jenis maklumat'}, value: {en: 'Game structure and payout reference', zh: '游戏结构与派彩参考', ms: 'Rujukan struktur permainan dan bayaran'}},
+    {label: {en: 'Official status', zh: '官方状态', ms: 'Status rasmi'}, value: {en: 'Independent informational guide', zh: '独立资讯指南', ms: 'Panduan maklumat bebas'}},
+    {label: {en: 'Verification', zh: '核对方式', ms: 'Pengesahan'}, value: {en: 'Check latest official publication', zh: '请核对最新官方公布', ms: 'Semak penerbitan rasmi terkini'}}
+  ],
+  availableGamesTitle: {
+    en: 'Available Games',
+    zh: '主要游戏',
+    ms: 'Permainan Tersedia'
+  },
+  availableGames: [
+    {title: {en: '4D', zh: '4D', ms: '4D'}, description: {en: 'A four-digit game category with listed prize tiers and Big / Small payout coverage.', zh: '四位数字游戏类别，按资料列出的奖级与 Big / Small 派彩覆盖方式呈现。', ms: 'Kategori permainan empat digit dengan peringkat hadiah dan liputan bayaran Big / Small yang disenaraikan.'}},
+    {title: {en: '4D iBet', zh: '4D iBet', ms: '4D iBet'}, description: {en: 'An iBet format where payout references vary by the listed arrangement category.', zh: 'iBet 形式，派彩参考按资料列出的不同排列类别区分。', ms: 'Format iBet dengan rujukan bayaran yang berbeza mengikut kategori susunan yang disenaraikan.'}},
+    {title: {en: 'Toto 6/49', zh: 'Toto 6/49', ms: 'Toto 6/49'}, description: {en: 'A lotto-style format using six selected numbers from a 1 to 49 number pool.', zh: 'Lotto 类游戏形式，从 1 至 49 的号码池选择六个号码。', ms: 'Format gaya lotto menggunakan enam nombor pilihan daripada kumpulan nombor 1 hingga 49.'}}
+  ],
+  prizeStructureTitle: {
+    en: 'Prize Structure',
+    zh: '派彩结构',
+    ms: 'Struktur Hadiah'
+  },
+  informationNotesTitle: {
+    en: 'Information Notes',
+    zh: '资讯说明',
+    ms: 'Nota Maklumat'
+  },
+  informationNotes: [
+    {
+      en: '4D uses a four-digit number format and its own listed prize-tier structure.',
+      zh: '4D 使用四位号码格式及其对应的资料列出奖级结构。',
+      ms: '4D menggunakan format nombor empat digit dan struktur peringkat hadiah yang disenaraikan.'
+    },
+    {
+      en: '4D iBet involves different arrangement categories. The applicable rules should be checked against the provider latest information.',
+      zh: '4D iBet 涉及不同组合或排列类别，具体规则应以 Provider 最新资料为准。',
+      ms: '4D iBet melibatkan kategori susunan yang berbeza. Peraturan berkaitan perlu disemak berdasarkan maklumat terkini penyedia.'
+    },
+    {
+      en: 'Toto 6/49 uses a number pool and prize structure that differs from 4D games.',
+      zh: 'Toto 6/49 使用不同于 4D 的号码池和奖级结构。',
+      ms: 'Toto 6/49 menggunakan kumpulan nombor dan struktur hadiah yang berbeza daripada permainan 4D.'
+    },
+    {
+      en: 'Different games may use different prize tiers, rules and payout methods, and pool or distribution arrangements may change.',
+      zh: '不同游戏的奖级、规则和派彩方式并不相同，奖池和分配安排也可能变化。',
+      ms: 'Permainan berbeza mungkin menggunakan peringkat hadiah, peraturan dan kaedah bayaran yang berbeza, manakala aturan kumpulan hadiah atau agihan boleh berubah.'
+    },
+    {
+      en: 'The payout tables are an informational organisation of available reference data. Official results, rules, amounts and jackpot arrangements should be checked against the provider latest official publication.',
+      zh: '派彩表只是对可用参考资料的一般资讯整理。正式结果、规则、金额及奖池安排应以 Provider 最新官方公布为准。',
+      ms: 'Jadual bayaran ialah susunan maklumat rujukan yang tersedia. Keputusan rasmi, peraturan, jumlah dan aturan jackpot perlu disemak berdasarkan penerbitan rasmi terkini penyedia.'
+    }
+  ],
+  faqTitle: {
+    en: 'Frequently Asked Questions',
+    zh: '常见问题',
+    ms: 'Soalan Lazim'
+  },
+  faqs: [
+    {question: {en: 'What is this Singapore Pools guide for?', zh: '本新加坡博彩指南用于什么？', ms: 'Untuk apakah panduan Singapore Pools ini?'}, answer: {en: 'It organises Singapore Pools game categories, terminology and payout structures for general information and research reference.', zh: '本指南整理 Singapore Pools 游戏类别、术语与派彩结构，用于一般资讯和研究参考。', ms: 'Ia menyusun kategori permainan Singapore Pools, istilah dan struktur bayaran untuk maklumat umum serta rujukan kajian.'}},
+    {question: {en: 'Does 4D AI sell Singapore Pools tickets?', zh: '4D AI 是否销售 Singapore Pools 票券？', ms: 'Adakah 4D AI menjual tiket Singapore Pools?'}, answer: {en: 'No. 4D AI does not sell tickets, accept bets, operate draws or process prize claims.', zh: '不是。4D AI 不销售票券、不接受投注、不经营开奖，也不处理兑奖。', ms: 'Tidak. 4D AI tidak menjual tiket, menerima pertaruhan, mengendalikan cabutan atau memproses tuntutan hadiah.'}},
+    {question: {en: 'Is 4D AI officially affiliated with Singapore Pools?', zh: '4D AI 是否与 Singapore Pools 有官方合作？', ms: 'Adakah 4D AI mempunyai hubungan rasmi dengan Singapore Pools?'}, answer: {en: 'No official relationship is claimed on this page. The guide is independent informational content and is not an official Singapore Pools publication.', zh: '本页面不声称任何官方关系。本指南属于独立资讯内容，并非 Singapore Pools 官方发布内容。', ms: 'Tiada hubungan rasmi dituntut di halaman ini. Panduan ini ialah kandungan maklumat bebas dan bukan penerbitan rasmi Singapore Pools.'}},
+    {question: {en: 'What is the difference between 4D and Toto 6/49?', zh: '4D 与 Toto 6/49 有什么区别？', ms: 'Apakah perbezaan antara 4D dan Toto 6/49?'}, answer: {en: '4D uses a four-digit number format, while Toto 6/49 uses six selected numbers from a 1 to 49 number pool. Their prize structures are listed separately.', zh: '4D 使用四位号码格式；Toto 6/49 从 1 至 49 的号码池选择六个号码。两者的奖级结构分开呈现。', ms: '4D menggunakan format nombor empat digit, manakala Toto 6/49 menggunakan enam nombor pilihan daripada kumpulan nombor 1 hingga 49. Struktur hadiah kedua-duanya disenaraikan secara berasingan.'}},
+    {question: {en: 'What is 4D iBet?', zh: '4D iBet 是什么？', ms: 'Apakah 4D iBet?'}, answer: {en: '4D iBet is shown as a separate 4D arrangement format where payout references vary by arrangement category. Users should verify current rules with the provider latest information.', zh: '4D iBet 在本页作为独立的 4D 排列形式呈现，派彩参考按排列类别区分。用户应以 Provider 最新资料核对现行规则。', ms: '4D iBet dipaparkan sebagai format susunan 4D berasingan dengan rujukan bayaran yang berbeza mengikut kategori susunan. Pengguna perlu menyemak peraturan semasa melalui maklumat terkini penyedia.'}},
+    {question: {en: 'Are payout or jackpot amounts guaranteed?', zh: '派彩或 Jackpot 金额是否固定承诺？', ms: 'Adakah jumlah bayaran atau jackpot dijanjikan?'}, answer: {en: 'No. Figures may be payout, pool or percentage references and do not mean every winner receives a specific full amount shown.', zh: '不是。页面数字可能是派彩、奖池或比例参考，并不代表每名得主获得某个页面显示的完整金额。', ms: 'Tidak. Angka mungkin rujukan bayaran, kumpulan hadiah atau peratusan dan tidak bermaksud setiap pemenang menerima jumlah penuh tertentu yang dipaparkan.'}},
+    {question: {en: 'Does historical data predict future results?', zh: '历史数据是否能预测未来结果？', ms: 'Adakah data sejarah meramalkan keputusan masa hadapan?'}, answer: {en: 'No. Historical information can be used for reference, but it does not determine future outcomes and AI analysis is not an official prediction.', zh: '不能。历史资料可用于参考，但不能决定未来结果，AI 分析也不是官方预测。', ms: 'Tidak. Maklumat sejarah boleh digunakan sebagai rujukan, tetapi ia tidak menentukan keputusan masa hadapan dan analisis AI bukan ramalan rasmi.'}},
+    {question: {en: 'Where should users verify official rules and payouts?', zh: '用户应在哪里核对官方规则和派彩？', ms: 'Di manakah pengguna perlu menyemak peraturan dan bayaran rasmi?'}, answer: {en: 'Users should verify game rules, payout amounts and jackpot arrangements with the provider latest official publication.', zh: '用户应以相关 Provider 最新官方公布核对游戏规则、派彩金额及奖池安排。', ms: 'Pengguna perlu menyemak peraturan permainan, jumlah bayaran dan aturan jackpot melalui penerbitan rasmi terkini penyedia.'}}
+  ],
+  verificationTitle: {
+    en: 'Verification notice',
+    zh: '资料核对提示',
+    ms: 'Notis pengesahan'
+  },
+  verificationText: {
+    en: 'Please verify game rules, payout amounts and jackpot arrangements with the provider\'s latest official publication.',
+    zh: '请以相关 Provider 最新官方公布的游戏规则、派彩金额及奖池安排为准。',
+    ms: 'Sila semak peraturan permainan, jumlah bayaran hadiah dan aturan jackpot berdasarkan penerbitan rasmi terkini daripada penyedia berkaitan.'
+  },
+  disclaimerTitle: {
+    en: 'Disclaimer',
+    zh: '免责声明',
+    ms: 'Penafian'
+  },
+  disclaimerText: {
+    en: 'This is an independent informational guide and not official Singapore Pools content. 4D AI does not sell tickets, accept bets, operate draws or process prize claims. It does not promise results, historical information does not determine future outcomes, AI analysis is not an official prediction, and official provider information takes precedence.',
+    zh: '本页面是独立资讯指南，并非 Singapore Pools 官方内容。4D AI 不销售票券、不接受投注、不经营开奖，也不处理兑奖。页面不承诺任何结果，历史资料不能决定未来结果，AI 分析并非官方预测，并且应以官方 Provider 资料为优先。',
+    ms: 'Ini ialah panduan maklumat bebas dan bukan kandungan rasmi Singapore Pools. 4D AI tidak menjual tiket, menerima pertaruhan, mengendalikan cabutan atau memproses tuntutan hadiah. Ia tidak menjanjikan keputusan, maklumat sejarah tidak menentukan keputusan masa hadapan, analisis AI bukan ramalan rasmi, dan maklumat rasmi penyedia perlu diutamakan.'
+  },
+  relatedGuidesTitle: {
+    en: 'Related Provider Guides',
+    zh: '相关 Provider 指南',
+    ms: 'Panduan Penyedia Berkaitan'
+  },
+  relatedSlugs: ['magnum', 'da-ma-cai', 'sports-toto', 'stc', 'sabah-88', 'sarawak']
+};
+
+const singaporePoolsMeta = {
+  title: {
+    en: 'Singapore Pools Game Guide | 4D AI',
+    zh: '新加坡博彩游戏指南 | 4D AI',
+    ms: 'Panduan Permainan Singapore Pools | 4D AI'
+  },
+  description: {
+    en: 'Singapore Pools game guide covering prize structure, terminology, 4D, 4D iBet and Toto 6/49. This is an independent informational reference and official provider information takes precedence.',
+    zh: '新加坡博彩游戏指南，整理派彩结构、游戏术语、4D、4D iBet 与 Toto 6/49 资料。本页面为独立资讯参考，并以官方 Provider 资料为优先。',
+    ms: 'Panduan permainan Singapore Pools yang merangkumi struktur hadiah, istilah, 4D, 4D iBet dan Toto 6/49. Ini ialah rujukan maklumat bebas dan maklumat rasmi penyedia perlu diutamakan.'
+  }
+};
+
 function withProviderGuide(page: ProviderPayoutPage): ProviderPayoutPage {
   if (page.slug === 'da-ma-cai') {
     return {
@@ -346,6 +504,14 @@ function withProviderGuide(page: ProviderPayoutPage): ProviderPayoutPage {
       metaTitle: sportsTotoMeta.title,
       metaDescription: sportsTotoMeta.description,
       guide: sportsTotoGuide
+    };
+  }
+  if (page.slug === 'singapore-pools') {
+    return {
+      ...page,
+      metaTitle: singaporePoolsMeta.title,
+      metaDescription: singaporePoolsMeta.description,
+      guide: singaporePoolsGuide
     };
   }
   return page;
