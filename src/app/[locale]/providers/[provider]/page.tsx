@@ -489,6 +489,162 @@ const singaporePoolsMeta = {
   }
 };
 
+const stcGuide: ProviderGuideContent = {
+  heroTitle: {
+    en: 'Sandakan Turf Club Game Guide',
+    zh: '山打根赛马会游戏指南',
+    ms: 'Panduan Permainan Sandakan Turf Club'
+  },
+  heroIntro: {
+    en: 'Review Sandakan Turf Club (STC) 4D game categories, common terminology and prize structures in one independent information guide. This page is for general reference and is not an official Sandakan Turf Club publication.',
+    zh: '本指南整理山打根赛马会（STC）现有 4D 游戏类别、常见术语与派彩结构，供用户作一般资讯和研究参考。本页面并非 STC 官方发布内容。',
+    ms: 'Semak kategori permainan 4D Sandakan Turf Club (STC), istilah lazim dan struktur hadiah dalam satu panduan maklumat bebas. Halaman ini untuk rujukan umum dan bukan penerbitan rasmi Sandakan Turf Club.'
+  },
+  tags: [
+    {en: 'STC', zh: 'STC', ms: 'STC'},
+    {en: '4D Structure', zh: '4D 结构', ms: 'Struktur 4D'},
+    {en: 'Reference Only', zh: '仅供参考', ms: 'Untuk Rujukan Sahaja'}
+  ],
+  breadcrumb: {
+    home: {en: 'Home', zh: '首页', ms: 'Laman Utama'},
+    more: {en: 'More', zh: '更多', ms: 'Lagi'},
+    providerGuides: {en: 'Provider Guides', zh: 'Provider 指南', ms: 'Panduan Penyedia'}
+  },
+  aboutTitle: {
+    en: 'About Sandakan Turf Club',
+    zh: '关于山打根赛马会',
+    ms: 'Mengenai Sandakan Turf Club'
+  },
+  aboutParagraphs: [
+    {
+      en: 'This page organises the STC 4D game categories, common terms and payout structures currently available in the typed provider data.',
+      zh: '本页面整理 typed Provider data 中目前已有的 STC 4D 游戏类别、常见术语与派彩结构。',
+      ms: 'Halaman ini menyusun kategori permainan 4D STC, istilah lazim dan struktur bayaran yang tersedia dalam data penyedia bertip.'
+    },
+    {
+      en: '4D AI is an independent information platform. It does not operate STC games, sell tickets, accept bets or process prize claims. The content is not betting advice and does not promise prizes or future results.',
+      zh: '4D AI 是独立资讯平台，不经营 STC 游戏、不销售票券、不接受投注，也不处理兑奖。本页面内容不构成投注建议，也不承诺中奖或未来结果。',
+      ms: '4D AI ialah platform maklumat bebas. Ia tidak mengendalikan permainan STC, tidak menjual tiket, tidak menerima pertaruhan dan tidak memproses tuntutan hadiah. Kandungan ini bukan nasihat pertaruhan dan tidak menjanjikan hadiah atau keputusan masa hadapan.'
+    },
+    {
+      en: 'Game rules and payout amounts may change. Users should verify official rules and payout information with the provider latest official publication before relying on any figure.',
+      zh: '游戏规则与派彩金额可能调整。用户在依赖任何数字前，应以相关 Provider 最新官方公布的规则与派彩资料为准。',
+      ms: 'Peraturan permainan dan jumlah bayaran boleh berubah. Pengguna perlu menyemak peraturan rasmi dan maklumat bayaran melalui penerbitan rasmi terkini penyedia sebelum bergantung pada mana-mana angka.'
+    }
+  ],
+  summaryTitle: {
+    en: 'Provider Summary',
+    zh: 'Provider 摘要',
+    ms: 'Ringkasan Penyedia'
+  },
+  summary: [
+    {label: {en: 'Provider', zh: 'Provider', ms: 'Penyedia'}, value: {en: 'Sandakan Turf Club (STC)', zh: '山打根赛马会（STC）', ms: 'Sandakan Turf Club (STC)'}},
+    {label: {en: 'Guide coverage', zh: '指南涵盖', ms: 'Liputan panduan'}, value: {en: '4D, 4D Permutation', zh: '4D、4D 全保', ms: '4D, 4D Susunan'}},
+    {label: {en: 'Information type', zh: '资料类型', ms: 'Jenis maklumat'}, value: {en: 'Game structure and payout reference', zh: '游戏结构与派彩参考', ms: 'Rujukan struktur permainan dan bayaran'}},
+    {label: {en: 'Official status', zh: '官方状态', ms: 'Status rasmi'}, value: {en: 'Independent informational guide', zh: '独立资讯指南', ms: 'Panduan maklumat bebas'}},
+    {label: {en: 'Verification', zh: '核对方式', ms: 'Pengesahan'}, value: {en: 'Check latest official publication', zh: '请核对最新官方公布', ms: 'Semak penerbitan rasmi terkini'}}
+  ],
+  availableGamesTitle: {
+    en: 'Available Games',
+    zh: '主要游戏',
+    ms: 'Permainan Tersedia'
+  },
+  availableGames: [
+    {title: {en: '4D', zh: '4D', ms: '4D'}, description: {en: 'A four-digit game category with listed prize tiers and Big / Small payout coverage.', zh: '四位数字游戏类别，按资料列出的奖级与 Big / Small 派彩覆盖方式呈现。', ms: 'Kategori permainan empat digit dengan peringkat hadiah dan liputan bayaran Big / Small yang disenaraikan.'}},
+    {title: {en: '4D Permutation', zh: '4D 全保', ms: '4D Susunan'}, description: {en: 'A permutation format where valid arrangements depend on the selected digits and repeated-number pattern.', zh: '全保排列形式，有效排列数量取决于所选数字及是否存在重复数字。', ms: 'Format susunan yang bergantung pada digit pilihan dan corak digit berulang.'}}
+  ],
+  prizeStructureTitle: {
+    en: 'Prize Structure',
+    zh: '派彩结构',
+    ms: 'Struktur Hadiah'
+  },
+  informationNotesTitle: {
+    en: 'Information Notes',
+    zh: '资讯说明',
+    ms: 'Nota Maklumat'
+  },
+  informationNotes: [
+    {
+      en: '4D uses a four-digit number format and its own listed prize-tier structure.',
+      zh: '4D 使用四位号码格式及其对应的资料列出奖级结构。',
+      ms: '4D menggunakan format nombor empat digit dan struktur peringkat hadiah yang disenaraikan.'
+    },
+    {
+      en: '4D Permutation refers to different valid arrangements of selected digits.',
+      zh: '4D Permutation / 全保指所选数字可形成的不同有效排列结构。',
+      ms: '4D Susunan merujuk kepada aturan sah yang berbeza bagi digit pilihan.'
+    },
+    {
+      en: 'When selected digits repeat, the number of valid arrangements may differ from entries where all four digits are different.',
+      zh: '当所选数字有重复时，有效排列数量可能不同于四个数字都不同的情况。',
+      ms: 'Apabila digit pilihan berulang, bilangan susunan sah mungkin berbeza daripada entri yang mempunyai empat digit berlainan.'
+    },
+    {
+      en: 'The applicable combinations, prize tiers and payout rules should be checked against the provider latest official information.',
+      zh: '具体组合、奖级与派彩规则应以 Provider 最新官方资料为准。',
+      ms: 'Kombinasi, peringkat hadiah dan peraturan bayaran berkaitan perlu disemak berdasarkan maklumat rasmi terkini penyedia.'
+    },
+    {
+      en: 'The payout tables are an informational organisation of available reference data. Official results, rules and payout amounts should be checked against the provider latest official publication.',
+      zh: '派彩表只是对可用参考资料的一般资讯整理。正式结果、规则和派彩金额应以 Provider 最新官方公布为准。',
+      ms: 'Jadual bayaran ialah susunan maklumat rujukan yang tersedia. Keputusan rasmi, peraturan dan jumlah bayaran perlu disemak berdasarkan penerbitan rasmi terkini penyedia.'
+    }
+  ],
+  faqTitle: {
+    en: 'Frequently Asked Questions',
+    zh: '常见问题',
+    ms: 'Soalan Lazim'
+  },
+  faqs: [
+    {question: {en: 'What is this STC guide for?', zh: '本 STC 指南用于什么？', ms: 'Untuk apakah panduan STC ini?'}, answer: {en: 'It organises STC 4D game categories, terminology and payout structures for general information and research reference.', zh: '本指南整理 STC 4D 游戏类别、术语与派彩结构，用于一般资讯和研究参考。', ms: 'Ia menyusun kategori permainan 4D STC, istilah dan struktur bayaran untuk maklumat umum serta rujukan kajian.'}},
+    {question: {en: 'Does 4D AI sell STC tickets?', zh: '4D AI 是否销售 STC 票券？', ms: 'Adakah 4D AI menjual tiket STC?'}, answer: {en: 'No. 4D AI does not sell tickets, accept bets, operate draws or process prize claims.', zh: '不是。4D AI 不销售票券、不接受投注、不经营开奖，也不处理兑奖。', ms: 'Tidak. 4D AI tidak menjual tiket, menerima pertaruhan, mengendalikan cabutan atau memproses tuntutan hadiah.'}},
+    {question: {en: 'Is 4D AI officially affiliated with Sandakan Turf Club?', zh: '4D AI 是否与山打根赛马会有官方合作？', ms: 'Adakah 4D AI mempunyai hubungan rasmi dengan Sandakan Turf Club?'}, answer: {en: 'No official relationship is claimed on this page. The guide is independent informational content and is not an official Sandakan Turf Club publication.', zh: '本页面不声称任何官方关系。本指南属于独立资讯内容，并非山打根赛马会官方发布内容。', ms: 'Tiada hubungan rasmi dituntut di halaman ini. Panduan ini ialah kandungan maklumat bebas dan bukan penerbitan rasmi Sandakan Turf Club.'}},
+    {question: {en: 'What is STC 4D?', zh: 'STC 4D 是什么？', ms: 'Apakah STC 4D?'}, answer: {en: 'STC 4D is presented here as a four-digit game category with payout references organised by the typed provider data.', zh: '本页面将 STC 4D 作为四位数字游戏类别呈现，并按 typed Provider data 整理派彩参考。', ms: 'STC 4D dipaparkan di sini sebagai kategori permainan empat digit dengan rujukan bayaran yang disusun berdasarkan data penyedia bertip.'}},
+    {question: {en: 'What does 4D Permutation mean?', zh: '4D Permutation / 全保是什么意思？', ms: 'Apakah maksud 4D Susunan?'}, answer: {en: 'It refers to different valid arrangements of selected digits. Repeated digits can change the number of arrangements, and current rules should be verified with the provider latest official information.', zh: '它指所选数字可形成的不同有效排列。数字重复时排列数量可能改变，现行规则应以 Provider 最新官方资料核对。', ms: 'Ia merujuk kepada aturan sah yang berbeza bagi digit pilihan. Digit berulang boleh mengubah bilangan susunan, dan peraturan semasa perlu disemak melalui maklumat rasmi terkini penyedia.'}},
+    {question: {en: 'Does permutation guarantee more winning chances?', zh: 'Permutation / 全保是否承诺更容易中奖？', ms: 'Adakah susunan menjanjikan peluang menang yang lebih tinggi?'}, answer: {en: 'No. Permutation is a number-arrangement structure. It does not promise prizes, does not make future results predictable and does not replace official rules or payout information.', zh: '不是。Permutation / 全保只是号码排列结构，不承诺中奖，不代表未来结果可预测，也不能取代官方规则或派彩资料。', ms: 'Tidak. Susunan ialah struktur aturan nombor. Ia tidak menjanjikan hadiah, tidak menjadikan keputusan masa hadapan boleh diramal dan tidak menggantikan peraturan atau maklumat bayaran rasmi.'}},
+    {question: {en: 'Where should users verify official rules and payouts?', zh: '用户应在哪里核对官方规则和派彩？', ms: 'Di manakah pengguna perlu menyemak peraturan dan bayaran rasmi?'}, answer: {en: 'Users should verify game rules and payout amounts with the provider latest official publication.', zh: '用户应以相关 Provider 最新官方公布核对游戏规则和派彩金额。', ms: 'Pengguna perlu menyemak peraturan permainan dan jumlah bayaran melalui penerbitan rasmi terkini penyedia.'}}
+  ],
+  verificationTitle: {
+    en: 'Verification notice',
+    zh: '资料核对提示',
+    ms: 'Notis pengesahan'
+  },
+  verificationText: {
+    en: 'Please verify game rules, payout amounts and jackpot arrangements with the provider\'s latest official publication.',
+    zh: '请以相关 Provider 最新官方公布的游戏规则、派彩金额及奖池安排为准。',
+    ms: 'Sila semak peraturan permainan, jumlah bayaran hadiah dan aturan jackpot berdasarkan penerbitan rasmi terkini daripada penyedia berkaitan.'
+  },
+  disclaimerTitle: {
+    en: 'Disclaimer',
+    zh: '免责声明',
+    ms: 'Penafian'
+  },
+  disclaimerText: {
+    en: 'This is an independent informational guide and not official Sandakan Turf Club content. 4D AI does not sell tickets, accept bets, operate draws or process prize claims. It does not promise results, historical information does not determine future outcomes, AI analysis is not an official prediction, and official provider information takes precedence.',
+    zh: '本页面是独立资讯指南，并非山打根赛马会官方内容。4D AI 不销售票券、不接受投注、不经营开奖，也不处理兑奖。页面不承诺任何结果，历史资料不能决定未来结果，AI 分析并非官方预测，并且应以官方 Provider 资料为优先。',
+    ms: 'Ini ialah panduan maklumat bebas dan bukan kandungan rasmi Sandakan Turf Club. 4D AI tidak menjual tiket, menerima pertaruhan, mengendalikan cabutan atau memproses tuntutan hadiah. Ia tidak menjanjikan keputusan, maklumat sejarah tidak menentukan keputusan masa hadapan, analisis AI bukan ramalan rasmi, dan maklumat rasmi penyedia perlu diutamakan.'
+  },
+  relatedGuidesTitle: {
+    en: 'Related Provider Guides',
+    zh: '相关 Provider 指南',
+    ms: 'Panduan Penyedia Berkaitan'
+  },
+  relatedSlugs: ['magnum', 'da-ma-cai', 'sports-toto', 'singapore-pools', 'sabah-88', 'sarawak']
+};
+
+const stcMeta = {
+  title: {
+    en: 'Sandakan Turf Club Game Guide | 4D AI',
+    zh: '山打根赛马会游戏指南 | 4D AI',
+    ms: 'Panduan Permainan Sandakan Turf Club | 4D AI'
+  },
+  description: {
+    en: 'Sandakan Turf Club STC game guide covering 4D, 4D Permutation, prize structure and terminology. This is an independent informational reference and official provider information takes precedence.',
+    zh: '山打根赛马会 STC 游戏指南，整理 4D、4D 全保、派彩结构与游戏术语。本页面为独立资讯参考，并以官方 Provider 资料为优先。',
+    ms: 'Panduan permainan Sandakan Turf Club STC yang merangkumi 4D, 4D Susunan, struktur hadiah dan istilah. Ini ialah rujukan maklumat bebas dan maklumat rasmi penyedia perlu diutamakan.'
+  }
+};
+
 function withProviderGuide(page: ProviderPayoutPage): ProviderPayoutPage {
   if (page.slug === 'da-ma-cai') {
     return {
@@ -512,6 +668,14 @@ function withProviderGuide(page: ProviderPayoutPage): ProviderPayoutPage {
       metaTitle: singaporePoolsMeta.title,
       metaDescription: singaporePoolsMeta.description,
       guide: singaporePoolsGuide
+    };
+  }
+  if (page.slug === 'stc') {
+    return {
+      ...page,
+      metaTitle: stcMeta.title,
+      metaDescription: stcMeta.description,
+      guide: stcGuide
     };
   }
   return page;
