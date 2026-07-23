@@ -66,7 +66,8 @@ const guideGameAnchorIds: Record<string, string> = {
   'Supreme Toto 6/55': 'game-supreme-toto-6-55',
   'Power Toto 6/58': 'game-power-toto-6-58',
   '4D iBet': 'game-4d-ibet',
-  'Toto 6/49': 'game-toto-6-49'
+  'Toto 6/49': 'game-toto-6-49',
+  'Lotto 6/45': 'game-lotto-6-45'
 };
 
 export function ProviderPayoutContent({locale, page}: {locale: Locale; page: ProviderPayoutPage}) {

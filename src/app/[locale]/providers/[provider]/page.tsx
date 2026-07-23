@@ -645,6 +645,165 @@ const stcMeta = {
   }
 };
 
+const sabah88Guide: ProviderGuideContent = {
+  heroTitle: {
+    en: 'Sabah 88 Game Guide',
+    zh: 'Sabah 88 游戏指南',
+    ms: 'Panduan Permainan Sabah 88'
+  },
+  heroIntro: {
+    en: 'Review Sabah 88 game categories, common terminology and prize structures for 3D, 4D, 4D Permutation and Lotto 6/45 in one independent information guide. This page is for general reference and is not an official Sabah 88 publication.',
+    zh: '本指南整理 Sabah 88 现有 3D、4D、4D 全保与 Lotto 6/45 游戏类别、常见术语与派彩结构，供用户作一般资讯和研究参考。本页面并非 Sabah 88 官方发布内容。',
+    ms: 'Semak kategori permainan Sabah 88, istilah lazim dan struktur hadiah untuk 3D, 4D, 4D Susunan dan Lotto 6/45 dalam satu panduan maklumat bebas. Halaman ini untuk rujukan umum dan bukan penerbitan rasmi Sabah 88.'
+  },
+  tags: [
+    {en: 'Sabah 88', zh: 'Sabah 88', ms: 'Sabah 88'},
+    {en: '3D, 4D and Lotto', zh: '3D、4D 与 Lotto', ms: '3D, 4D dan Lotto'},
+    {en: 'Reference Only', zh: '仅供参考', ms: 'Untuk Rujukan Sahaja'}
+  ],
+  breadcrumb: {
+    home: {en: 'Home', zh: '首页', ms: 'Laman Utama'},
+    more: {en: 'More', zh: '更多', ms: 'Lagi'},
+    providerGuides: {en: 'Provider Guides', zh: 'Provider 指南', ms: 'Panduan Penyedia'}
+  },
+  aboutTitle: {
+    en: 'About Sabah 88',
+    zh: '关于 Sabah 88',
+    ms: 'Mengenai Sabah 88'
+  },
+  aboutParagraphs: [
+    {
+      en: 'This page organises the Sabah 88 game categories, common terms and payout structures currently available in the typed provider data.',
+      zh: '本页面整理 typed Provider data 中目前已有的 Sabah 88 游戏类别、常见术语与派彩结构。',
+      ms: 'Halaman ini menyusun kategori permainan Sabah 88, istilah lazim dan struktur bayaran yang tersedia dalam data penyedia bertip.'
+    },
+    {
+      en: '4D AI is an independent information platform. It does not operate Sabah 88 games, sell tickets, accept bets or process prize claims. The content is not betting advice and does not promise prizes or future results.',
+      zh: '4D AI 是独立资讯平台，不经营 Sabah 88 游戏、不销售票券、不接受投注，也不处理兑奖。本页面内容不构成投注建议，也不承诺中奖或未来结果。',
+      ms: '4D AI ialah platform maklumat bebas. Ia tidak mengendalikan permainan Sabah 88, tidak menjual tiket, tidak menerima pertaruhan dan tidak memproses tuntutan hadiah. Kandungan ini bukan nasihat pertaruhan dan tidak menjanjikan hadiah atau keputusan masa hadapan.'
+    },
+    {
+      en: 'Official rules, payout amounts, prize tiers and Lotto jackpot arrangements may change. Users should verify the latest official provider publication before relying on any figure.',
+      zh: '正式规则、派彩金额、奖级及 Lotto 奖池安排可能调整。用户在依赖任何数字前，应以相关 Provider 最新官方公布为准。',
+      ms: 'Peraturan rasmi, jumlah bayaran, peringkat hadiah dan aturan jackpot Lotto boleh berubah. Pengguna perlu menyemak penerbitan rasmi terkini penyedia sebelum bergantung pada mana-mana angka.'
+    }
+  ],
+  summaryTitle: {
+    en: 'Provider Summary',
+    zh: 'Provider 摘要',
+    ms: 'Ringkasan Penyedia'
+  },
+  summary: [
+    {label: {en: 'Provider', zh: 'Provider', ms: 'Penyedia'}, value: {en: 'Sabah 88', zh: 'Sabah 88', ms: 'Sabah 88'}},
+    {label: {en: 'Guide coverage', zh: '指南涵盖', ms: 'Liputan panduan'}, value: {en: '3D, 4D, 4D Permutation, Lotto 6/45', zh: '3D、4D、4D 全保、Lotto 6/45', ms: '3D, 4D, 4D Susunan, Lotto 6/45'}},
+    {label: {en: 'Information type', zh: '资料类型', ms: 'Jenis maklumat'}, value: {en: 'Game structure and payout reference', zh: '游戏结构与派彩参考', ms: 'Rujukan struktur permainan dan bayaran'}},
+    {label: {en: 'Official status', zh: '官方状态', ms: 'Status rasmi'}, value: {en: 'Independent informational guide', zh: '独立资讯指南', ms: 'Panduan maklumat bebas'}},
+    {label: {en: 'Verification', zh: '核对方式', ms: 'Pengesahan'}, value: {en: 'Check latest official publication', zh: '请核对最新官方公布', ms: 'Semak penerbitan rasmi terkini'}}
+  ],
+  availableGamesTitle: {
+    en: 'Available Games',
+    zh: '主要游戏',
+    ms: 'Permainan Tersedia'
+  },
+  availableGames: [
+    {title: {en: '3D', zh: '3D', ms: '3D'}, description: {en: 'A three-digit game category using numbers from 000 to 999 with listed prize tiers.', zh: '三位数字游戏类别，号码范围为 000 至 999，并按资料列出的奖级呈现。', ms: 'Kategori permainan tiga digit menggunakan nombor 000 hingga 999 dengan peringkat hadiah yang disenaraikan.'}},
+    {title: {en: '4D', zh: '4D', ms: '4D'}, description: {en: 'A four-digit game category with listed prize tiers and Big / Small payout coverage.', zh: '四位数字游戏类别，按资料列出的奖级与 Big / Small 派彩覆盖方式呈现。', ms: 'Kategori permainan empat digit dengan peringkat hadiah dan liputan bayaran Big / Small yang disenaraikan.'}},
+    {title: {en: '4D Permutation', zh: '4D 全保', ms: '4D Susunan'}, description: {en: 'A permutation format where valid arrangements depend on the selected digits and repeated-number pattern.', zh: '全保排列形式，有效排列数量取决于所选数字及是否存在重复数字。', ms: 'Format susunan yang bergantung pada digit pilihan dan corak digit berulang.'}},
+    {title: {en: 'Lotto 6/45', zh: 'Lotto 6/45', ms: 'Lotto 6/45'}, description: {en: 'A lotto-style category with a separate number pool, prize groups and jackpot references.', zh: 'Lotto 类游戏，使用不同号码池、奖级结构与 Jackpot 参考资料。', ms: 'Kategori gaya lotto dengan kolam nombor, kumpulan hadiah dan rujukan jackpot yang berasingan.'}}
+  ],
+  prizeStructureTitle: {
+    en: 'Prize Structure',
+    zh: '派彩结构',
+    ms: 'Struktur Hadiah'
+  },
+  informationNotesTitle: {
+    en: 'Information Notes',
+    zh: '资讯说明',
+    ms: 'Nota Maklumat'
+  },
+  informationNotes: [
+    {
+      en: '3D and 4D use different number lengths and prize-tier structures.',
+      zh: '3D 与 4D 使用不同号码长度及奖级结构。',
+      ms: '3D dan 4D menggunakan panjang nombor dan struktur peringkat hadiah yang berbeza.'
+    },
+    {
+      en: '4D Permutation refers to different valid arrangements of selected digits, and repeated digits can change the number of valid arrangements.',
+      zh: '4D Permutation / 全保指所选数字可形成的不同有效排列；当数字重复时，有效排列数量可能改变。',
+      ms: '4D Susunan merujuk kepada aturan sah yang berbeza bagi digit pilihan, dan digit berulang boleh mengubah bilangan susunan sah.'
+    },
+    {
+      en: 'Lotto 6/45 uses a number pool and prize-group structure that is different from 3D and 4D games.',
+      zh: 'Lotto 6/45 使用不同于 3D 与 4D 的号码池和奖级结构。',
+      ms: 'Lotto 6/45 menggunakan kolam nombor dan struktur kumpulan hadiah yang berbeza daripada permainan 3D dan 4D.'
+    },
+    {
+      en: 'Lotto jackpot pools and distribution arrangements may change according to the provider latest rules, and jackpot references are not guaranteed amounts for every winner.',
+      zh: 'Lotto 奖池和分配安排可能依 Provider 最新规则调整；Jackpot 参考金额并不代表每名得主保证获得该金额。',
+      ms: 'Kumpulan jackpot Lotto dan aturan agihan boleh berubah mengikut peraturan terkini penyedia, dan rujukan jackpot bukan jumlah terjamin untuk setiap pemenang.'
+    },
+    {
+      en: 'The payout tables are an informational organisation of available reference data. Official results, rules, payout amounts and jackpot arrangements should be checked against the provider latest official publication.',
+      zh: '派彩表只是对可用参考资料的一般资讯整理。正式结果、规则、派彩金额及奖池安排应以 Provider 最新官方公布为准。',
+      ms: 'Jadual bayaran ialah susunan maklumat rujukan yang tersedia. Keputusan rasmi, peraturan, jumlah bayaran dan aturan jackpot perlu disemak berdasarkan penerbitan rasmi terkini penyedia.'
+    }
+  ],
+  faqTitle: {
+    en: 'Frequently Asked Questions',
+    zh: '常见问题',
+    ms: 'Soalan Lazim'
+  },
+  faqs: [
+    {question: {en: 'What is this Sabah 88 guide for?', zh: '本 Sabah 88 指南用于什么？', ms: 'Untuk apakah panduan Sabah 88 ini?'}, answer: {en: 'It organises Sabah 88 game categories, terminology and payout structures for general information and research reference.', zh: '本指南整理 Sabah 88 游戏类别、术语与派彩结构，用于一般资讯和研究参考。', ms: 'Ia menyusun kategori permainan Sabah 88, istilah dan struktur bayaran untuk maklumat umum serta rujukan kajian.'}},
+    {question: {en: 'Does 4D AI sell Sabah 88 tickets?', zh: '4D AI 是否销售 Sabah 88 票券？', ms: 'Adakah 4D AI menjual tiket Sabah 88?'}, answer: {en: 'No. 4D AI does not sell tickets, accept bets, operate draws or process prize claims.', zh: '不是。4D AI 不销售票券、不接受投注、不经营开奖，也不处理兑奖。', ms: 'Tidak. 4D AI tidak menjual tiket, menerima pertaruhan, mengendalikan cabutan atau memproses tuntutan hadiah.'}},
+    {question: {en: 'Is 4D AI officially affiliated with Sabah 88?', zh: '4D AI 是否与 Sabah 88 有官方合作？', ms: 'Adakah 4D AI mempunyai hubungan rasmi dengan Sabah 88?'}, answer: {en: 'No official relationship is claimed on this page. The guide is independent informational content and is not an official Sabah 88 publication.', zh: '本页面不声称任何官方关系。本指南属于独立资讯内容，并非 Sabah 88 官方发布内容。', ms: 'Tiada hubungan rasmi dituntut di halaman ini. Panduan ini ialah kandungan maklumat bebas dan bukan penerbitan rasmi Sabah 88.'}},
+    {question: {en: 'What is the difference between 3D and 4D?', zh: '3D 与 4D 有什么区别？', ms: 'Apakah perbezaan antara 3D dan 4D?'}, answer: {en: '3D uses a three-digit number format, while 4D uses a four-digit number format and has a different prize-tier structure.', zh: '3D 使用三位号码格式；4D 使用四位号码格式，并采用不同奖级结构。', ms: '3D menggunakan format nombor tiga digit, manakala 4D menggunakan format nombor empat digit dan mempunyai struktur peringkat hadiah yang berbeza.'}},
+    {question: {en: 'What does 4D Permutation mean?', zh: '4D Permutation / 全保是什么意思？', ms: 'Apakah maksud 4D Susunan?'}, answer: {en: 'It refers to different valid arrangements of selected digits. Permutation does not promise prizes, does not make future results predictable and does not replace official rules or payout information.', zh: '它指所选数字可形成的不同有效排列。Permutation / 全保不承诺中奖，不代表未来结果可预测，也不能取代官方规则或派彩资料。', ms: 'Ia merujuk kepada aturan sah yang berbeza bagi digit pilihan. Susunan tidak menjanjikan hadiah, tidak menjadikan keputusan masa hadapan boleh diramal dan tidak menggantikan peraturan atau maklumat bayaran rasmi.'}},
+    {question: {en: 'What is Lotto 6/45?', zh: 'Lotto 6/45 是什么？', ms: 'Apakah Lotto 6/45?'}, answer: {en: 'Lotto 6/45 is presented here as a lotto-style game category using six selected numbers from a 1 to 45 number pool and listed prize groups.', zh: '本页面将 Lotto 6/45 作为 Lotto 类游戏呈现，使用 1 至 45 的号码池选择六个号码，并按资料列出的奖级整理。', ms: 'Lotto 6/45 dipaparkan di sini sebagai kategori permainan gaya lotto yang menggunakan enam nombor pilihan daripada kolam nombor 1 hingga 45 dan kumpulan hadiah yang disenaraikan.'}},
+    {question: {en: 'Are Lotto prize pools guaranteed?', zh: 'Lotto 奖池金额是否保证？', ms: 'Adakah kumpulan hadiah Lotto dijamin?'}, answer: {en: 'No. Lotto prize pools and jackpot references may change, and a pool reference is not a guaranteed amount for every winner. Historical information and AI analysis do not determine future outcomes.', zh: '不是。Lotto 奖池及 Jackpot 参考金额可能变化，奖池参考并不代表每名得主保证获得该金额。历史资料与 AI 分析不能决定未来结果。', ms: 'Tidak. Kumpulan hadiah Lotto dan rujukan jackpot boleh berubah, dan rujukan kumpulan bukan jumlah terjamin untuk setiap pemenang. Maklumat sejarah dan analisis AI tidak menentukan keputusan masa hadapan.'}},
+    {question: {en: 'Where should users verify official rules and payouts?', zh: '用户应在哪里核对官方规则和派彩？', ms: 'Di manakah pengguna perlu menyemak peraturan dan bayaran rasmi?'}, answer: {en: 'Users should verify game rules, payout amounts and jackpot arrangements with the provider latest official publication.', zh: '用户应以相关 Provider 最新官方公布核对游戏规则、派彩金额及奖池安排。', ms: 'Pengguna perlu menyemak peraturan permainan, jumlah bayaran dan aturan jackpot melalui penerbitan rasmi terkini penyedia.'}}
+  ],
+  verificationTitle: {
+    en: 'Verification notice',
+    zh: '资料核对提示',
+    ms: 'Notis pengesahan'
+  },
+  verificationText: {
+    en: 'Please verify game rules, payout amounts and jackpot arrangements with the provider\'s latest official publication.',
+    zh: '请以相关 Provider 最新官方公布的游戏规则、派彩金额及奖池安排为准。',
+    ms: 'Sila semak peraturan permainan, jumlah bayaran hadiah dan aturan jackpot berdasarkan penerbitan rasmi terkini daripada penyedia berkaitan.'
+  },
+  disclaimerTitle: {
+    en: 'Disclaimer',
+    zh: '免责声明',
+    ms: 'Penafian'
+  },
+  disclaimerText: {
+    en: 'This is an independent informational guide and not official Sabah 88 content. 4D AI does not sell tickets, accept bets, operate draws or process prize claims. It does not promise results, historical information does not determine future outcomes, AI analysis is not an official prediction, and official provider information takes precedence.',
+    zh: '本页面是独立资讯指南，并非 Sabah 88 官方内容。4D AI 不销售票券、不接受投注、不经营开奖，也不处理兑奖。页面不承诺任何结果，历史资料不能决定未来结果，AI 分析并非官方预测，并且应以官方 Provider 资料为优先。',
+    ms: 'Ini ialah panduan maklumat bebas dan bukan kandungan rasmi Sabah 88. 4D AI tidak menjual tiket, menerima pertaruhan, mengendalikan cabutan atau memproses tuntutan hadiah. Ia tidak menjanjikan keputusan, maklumat sejarah tidak menentukan keputusan masa hadapan, analisis AI bukan ramalan rasmi, dan maklumat rasmi penyedia perlu diutamakan.'
+  },
+  relatedGuidesTitle: {
+    en: 'Related Provider Guides',
+    zh: '相关 Provider 指南',
+    ms: 'Panduan Penyedia Berkaitan'
+  },
+  relatedSlugs: ['magnum', 'da-ma-cai', 'sports-toto', 'singapore-pools', 'stc', 'sarawak']
+};
+
+const sabah88Meta = {
+  title: {
+    en: 'Sabah 88 Game Guide | 4D AI',
+    zh: 'Sabah 88 游戏指南 | 4D AI',
+    ms: 'Panduan Permainan Sabah 88 | 4D AI'
+  },
+  description: {
+    en: 'Sabah 88 game guide covering 3D, 4D, 4D Permutation, Lotto 6/45, prize structure and terminology. This is an independent informational reference and official provider information takes precedence.',
+    zh: 'Sabah 88 游戏指南，整理 3D、4D、4D 全保、Lotto 6/45、派彩结构与游戏术语。本页面为独立资讯参考，并以官方 Provider 资料为优先。',
+    ms: 'Panduan permainan Sabah 88 yang merangkumi 3D, 4D, 4D Susunan, Lotto 6/45, struktur hadiah dan istilah. Ini ialah rujukan maklumat bebas dan maklumat rasmi penyedia perlu diutamakan.'
+  }
+};
+
 function withProviderGuide(page: ProviderPayoutPage): ProviderPayoutPage {
   if (page.slug === 'da-ma-cai') {
     return {
@@ -676,6 +835,14 @@ function withProviderGuide(page: ProviderPayoutPage): ProviderPayoutPage {
       metaTitle: stcMeta.title,
       metaDescription: stcMeta.description,
       guide: stcGuide
+    };
+  }
+  if (page.slug === 'sabah-88') {
+    return {
+      ...page,
+      metaTitle: sabah88Meta.title,
+      metaDescription: sabah88Meta.description,
+      guide: sabah88Guide
     };
   }
   return page;
