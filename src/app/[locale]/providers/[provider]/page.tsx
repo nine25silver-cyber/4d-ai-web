@@ -804,6 +804,222 @@ const sabah88Meta = {
   }
 };
 
+const sarawakGuide: ProviderGuideContent = {
+  heroTitle: {
+    en: 'Sarawak 4D Game Guide',
+    zh: '砂拉越 4D 游戏指南',
+    ms: 'Panduan Permainan Sarawak 4D'
+  },
+  heroIntro: {
+    en: 'Review Sarawak 4D game information, common terminology and prize structure in one independent information guide. This page currently reflects only the 4D game available in the typed provider data and is not an official Sarawak 4D publication.',
+    zh: '本指南整理 Sarawak 4D 的游戏资料、常见术语与派彩结构，供用户作一般资讯和研究参考。本页面目前只反映 typed Provider data 中已有的 4D 游戏，并非 Sarawak 4D 官方发布内容。',
+    ms: 'Semak maklumat permainan Sarawak 4D, istilah lazim dan struktur hadiah dalam satu panduan maklumat bebas. Halaman ini buat masa ini hanya mencerminkan permainan 4D yang tersedia dalam data penyedia bertip dan bukan penerbitan rasmi Sarawak 4D.'
+  },
+  tags: [
+    {en: 'Sarawak 4D', zh: '砂拉越 4D', ms: 'Sarawak 4D'},
+    {en: '4D Structure', zh: '4D 结构', ms: 'Struktur 4D'},
+    {en: 'Reference Only', zh: '仅供参考', ms: 'Untuk Rujukan Sahaja'}
+  ],
+  breadcrumb: {
+    home: {en: 'Home', zh: '首页', ms: 'Laman Utama'},
+    more: {en: 'More', zh: '更多', ms: 'Lagi'},
+    providerGuides: {en: 'Provider Guides', zh: 'Provider 指南', ms: 'Panduan Penyedia'}
+  },
+  aboutTitle: {
+    en: 'About Sarawak 4D',
+    zh: '关于砂拉越 4D',
+    ms: 'Mengenai Sarawak 4D'
+  },
+  aboutParagraphs: [
+    {
+      en: 'This page organises Sarawak 4D game categories, common terms and payout structures currently available in the typed provider data.',
+      zh: '本页面整理 typed Provider data 中目前已有的 Sarawak 4D 游戏类别、常见术语与派彩结构。',
+      ms: 'Halaman ini menyusun kategori permainan Sarawak 4D, istilah lazim dan struktur bayaran yang tersedia dalam data penyedia bertip.'
+    },
+    {
+      en: 'The current page displays only 4D because that is the only Sarawak game currently represented in the typed data. 4D AI does not add jackpot, permutation, 3D, Lotto or other game formats that are not present in the source data.',
+      zh: '当前页面只展示 4D，因为这是 typed data 中目前代表的唯一 Sarawak 游戏。4D AI 不补充 Jackpot、全保、3D、Lotto 或其他源数据中不存在的玩法。',
+      ms: 'Halaman semasa hanya memaparkan 4D kerana itulah satu-satunya permainan Sarawak yang diwakili dalam data bertip. 4D AI tidak menambah jackpot, susunan, 3D, Lotto atau format permainan lain yang tiada dalam data sumber.'
+    },
+    {
+      en: '4D AI is an independent information platform. It does not operate Sarawak 4D games, sell tickets, accept bets or process prize claims. The content is not betting advice and does not promise prizes or future results.',
+      zh: '4D AI 是独立资讯平台，不经营 Sarawak 4D 游戏、不销售票券、不接受投注，也不处理兑奖。本页面内容不构成投注建议，也不承诺中奖或未来结果。',
+      ms: '4D AI ialah platform maklumat bebas. Ia tidak mengendalikan permainan Sarawak 4D, tidak menjual tiket, tidak menerima pertaruhan dan tidak memproses tuntutan hadiah. Kandungan ini bukan nasihat pertaruhan dan tidak menjanjikan hadiah atau keputusan masa hadapan.'
+    },
+    {
+      en: 'Official rules, results and payout amounts may change. Users should verify the latest official provider publication before relying on any figure.',
+      zh: '正式规则、开奖结果与派彩金额可能调整。用户在依赖任何数字前，应以相关 Provider 最新官方公布为准。',
+      ms: 'Peraturan rasmi, keputusan dan jumlah bayaran boleh berubah. Pengguna perlu menyemak penerbitan rasmi terkini penyedia sebelum bergantung pada mana-mana angka.'
+    }
+  ],
+  summaryTitle: {
+    en: 'Provider Summary',
+    zh: 'Provider 摘要',
+    ms: 'Ringkasan Penyedia'
+  },
+  summary: [
+    {label: {en: 'Provider', zh: 'Provider', ms: 'Penyedia'}, value: {en: 'Sarawak 4D', zh: 'Sarawak 4D', ms: 'Sarawak 4D'}},
+    {label: {en: 'Guide coverage', zh: '指南范围', ms: 'Liputan panduan'}, value: {en: '4D', zh: '4D', ms: '4D'}},
+    {label: {en: 'Information type', zh: '资讯类型', ms: 'Jenis maklumat'}, value: {en: 'Game structure and payout reference', zh: '游戏结构与派彩参考', ms: 'Rujukan struktur permainan dan bayaran'}},
+    {label: {en: 'Platform role', zh: '平台角色', ms: 'Peranan platform'}, value: {en: 'Independent informational guide', zh: '独立资讯指南', ms: 'Panduan maklumat bebas'}},
+    {label: {en: 'Verification', zh: '资料核对', ms: 'Pengesahan'}, value: {en: 'Check the provider latest official publication', zh: '请核对 Provider 最新官方公布', ms: 'Semak penerbitan rasmi terkini penyedia'}}
+  ],
+  availableGamesTitle: {
+    en: 'Available Games',
+    zh: '主要游戏',
+    ms: 'Permainan Tersedia'
+  },
+  availableGames: [
+    {
+      title: {en: '4D', zh: '4D', ms: '4D'},
+      description: {
+        en: 'A four-digit game category with listed prize tiers and Big / Small payout coverage in the available typed data.',
+        zh: '四位数字游戏类别，按当前 typed data 中已有的奖级与 Big / Small 派彩覆盖方式呈现。',
+        ms: 'Kategori permainan empat digit dengan peringkat hadiah dan liputan bayaran Big / Small dalam data bertip yang tersedia.'
+      }
+    }
+  ],
+  prizeStructureTitle: {
+    en: 'Prize Structure',
+    zh: '派彩结构',
+    ms: 'Struktur Hadiah'
+  },
+  informationNotesTitle: {
+    en: 'Information Notes',
+    zh: '资料说明',
+    ms: 'Nota Maklumat'
+  },
+  informationNotes: [
+    {
+      en: 'Sarawak 4D is presented here as a four-digit number format using the prize-tier structure available in the typed data.',
+      zh: 'Sarawak 4D 在本页面以四位数字格式呈现，并使用 typed data 中已有的奖级结构。',
+      ms: 'Sarawak 4D dipaparkan di sini sebagai format nombor empat digit menggunakan struktur peringkat hadiah yang tersedia dalam data bertip.'
+    },
+    {
+      en: 'Different prize tiers may have different payout arrangements, and users should read the payout table carefully before comparing figures.',
+      zh: '不同奖级可能有不同派彩安排，用户在比较数字前应仔细阅读派彩表。',
+      ms: 'Peringkat hadiah yang berbeza mungkin mempunyai aturan bayaran yang berbeza, dan pengguna perlu membaca jadual bayaran dengan teliti sebelum membandingkan angka.'
+    },
+    {
+      en: 'This page only organises existing Sarawak 4D typed data. It does not add jackpot, permutation, 3D, Lotto or other game formats that are not currently listed.',
+      zh: '本页面只整理现有 Sarawak 4D typed data，不新增目前未列出的 Jackpot、全保、3D、Lotto 或其他玩法。',
+      ms: 'Halaman ini hanya menyusun data bertip Sarawak 4D yang sedia ada. Ia tidak menambah jackpot, susunan, 3D, Lotto atau format permainan lain yang belum disenaraikan.'
+    },
+    {
+      en: 'This guide is not betting instruction, number selection advice or a winning strategy. Historical results do not determine future draw outcomes.',
+      zh: '本指南不是投注指示、选号建议或结果预测方案。历史开奖结果不能决定未来开奖结果。',
+      ms: 'Panduan ini bukan arahan pertaruhan, nasihat pemilihan nombor atau strategi menang. Keputusan sejarah tidak menentukan keputusan cabutan masa hadapan.'
+    },
+    {
+      en: 'The payout table is general information only. Official results, rules and payout amounts from the latest provider publication take precedence.',
+      zh: '派彩表仅供一般资讯参考。开奖结果、规则与派彩金额应以 Provider 最新官方公布为准。',
+      ms: 'Jadual bayaran adalah maklumat umum sahaja. Keputusan, peraturan dan jumlah bayaran rasmi daripada penerbitan terkini penyedia perlu diutamakan.'
+    }
+  ],
+  faqTitle: {
+    en: 'Sarawak 4D FAQ',
+    zh: 'Sarawak 4D 常见问题',
+    ms: 'Soalan Lazim Sarawak 4D'
+  },
+  faqs: [
+    {
+      question: {en: 'What is this Sarawak 4D guide for?', zh: '这个 Sarawak 4D 指南用途是什么？', ms: 'Apakah tujuan panduan Sarawak 4D ini?'},
+      answer: {
+        en: 'It is an independent information guide that organises Sarawak 4D game structure, common terms and available payout reference details for easier review.',
+        zh: '这是独立资讯指南，用于整理 Sarawak 4D 的游戏结构、常见术语与当前可用的派彩参考资料，方便用户查看。',
+        ms: 'Ia ialah panduan maklumat bebas yang menyusun struktur permainan Sarawak 4D, istilah lazim dan butiran rujukan bayaran yang tersedia untuk semakan lebih mudah.'
+      }
+    },
+    {
+      question: {en: 'Does 4D AI sell Sarawak 4D tickets?', zh: '4D AI 是否销售 Sarawak 4D 票券？', ms: 'Adakah 4D AI menjual tiket Sarawak 4D?'},
+      answer: {
+        en: 'No. 4D AI does not sell tickets, accept bets, operate draws or process prize claims for Sarawak 4D.',
+        zh: '不是。4D AI 不销售 Sarawak 4D 票券、不接受投注、不经营开奖，也不处理兑奖。',
+        ms: 'Tidak. 4D AI tidak menjual tiket, menerima pertaruhan, mengendalikan cabutan atau memproses tuntutan hadiah Sarawak 4D.'
+      }
+    },
+    {
+      question: {en: 'Is 4D AI officially affiliated with Sarawak 4D?', zh: '4D AI 是否与 Sarawak 4D 官方有关联？', ms: 'Adakah 4D AI mempunyai hubungan rasmi dengan Sarawak 4D?'},
+      answer: {
+        en: 'No. This page is an independent reference and is not official Sarawak 4D content or an official provider channel.',
+        zh: '没有。本页面是独立参考资料，并非 Sarawak 4D 官方内容或官方 Provider 渠道。',
+        ms: 'Tidak. Halaman ini ialah rujukan bebas dan bukan kandungan rasmi Sarawak 4D atau saluran rasmi penyedia.'
+      }
+    },
+    {
+      question: {en: 'What is Sarawak 4D?', zh: 'Sarawak 4D 是什么？', ms: 'Apakah Sarawak 4D?'},
+      answer: {
+        en: 'On this page, Sarawak 4D refers to the 4D game category represented in the typed provider data, with listed prize tiers and payout reference information.',
+        zh: '在本页面中，Sarawak 4D 指 typed Provider data 中已有的 4D 游戏类别，并按资料列出奖级与派彩参考信息。',
+        ms: 'Pada halaman ini, Sarawak 4D merujuk kepada kategori permainan 4D yang diwakili dalam data penyedia bertip, dengan peringkat hadiah dan maklumat rujukan bayaran yang disenaraikan.'
+      }
+    },
+    {
+      question: {en: 'Does historical data predict future Sarawak 4D results?', zh: '历史数据是否能预测未来 Sarawak 4D 结果？', ms: 'Adakah data sejarah meramalkan keputusan Sarawak 4D masa hadapan?'},
+      answer: {
+        en: 'No. Historical result information can be reviewed for reference, but it does not determine or make future draw outcomes predictable.',
+        zh: '不能。历史开奖结果可作为参考资料查看，但不能决定未来开奖结果，也不能让未来结果变得可预测。',
+        ms: 'Tidak. Maklumat keputusan sejarah boleh disemak sebagai rujukan, tetapi ia tidak menentukan atau menjadikan keputusan cabutan masa hadapan boleh diramal.'
+      }
+    },
+    {
+      question: {en: 'Does AI analysis guarantee winning numbers?', zh: 'AI 分析是否能确定中奖号码？', ms: 'Adakah analisis AI menjamin nombor menang?'},
+      answer: {
+        en: 'No. AI analysis on 4D AI is informational only, is not an official prediction and does not promise prizes or future results.',
+        zh: '不能。4D AI 的 AI 分析仅供资讯参考，并非官方预测，也不承诺中奖或未来结果。',
+        ms: 'Tidak. Analisis AI di 4D AI hanya untuk maklumat, bukan ramalan rasmi dan tidak menjanjikan hadiah atau keputusan masa hadapan.'
+      }
+    },
+    {
+      question: {en: 'Where should users verify official rules and payouts?', zh: '用户应在哪里核对官方规则和派彩？', ms: 'Di manakah pengguna perlu menyemak peraturan dan bayaran rasmi?'},
+      answer: {
+        en: 'Users should verify game rules, payout amounts and jackpot arrangements with the provider latest official publication.',
+        zh: '用户应以相关 Provider 最新官方公布核对游戏规则、派彩金额及奖池安排。',
+        ms: 'Pengguna perlu menyemak peraturan permainan, jumlah bayaran dan aturan jackpot melalui penerbitan rasmi terkini penyedia.'
+      }
+    }
+  ],
+  verificationTitle: {
+    en: 'Verification notice',
+    zh: '资料核对提示',
+    ms: 'Notis pengesahan'
+  },
+  verificationText: {
+    en: 'Please verify game rules, payout amounts and jackpot arrangements with the provider\'s latest official publication.',
+    zh: '请以相关 Provider 最新官方公布的游戏规则、派彩金额及奖池安排为准。',
+    ms: 'Sila semak peraturan permainan, jumlah bayaran hadiah dan aturan jackpot berdasarkan penerbitan rasmi terkini daripada penyedia berkaitan.'
+  },
+  disclaimerTitle: {
+    en: 'Disclaimer',
+    zh: '免责声明',
+    ms: 'Penafian'
+  },
+  disclaimerText: {
+    en: 'This is an independent informational guide and not official Sarawak 4D content. 4D AI does not sell tickets, accept bets, operate draws or process prize claims. It does not promise results, historical information does not determine future outcomes, AI analysis is not an official prediction, and official provider information takes precedence.',
+    zh: '本页面是独立资讯指南，并非 Sarawak 4D 官方内容。4D AI 不销售票券、不接受投注、不经营开奖，也不处理兑奖。页面不承诺任何结果，历史资料不能决定未来结果，AI 分析并非官方预测，并且应以官方 Provider 资料为优先。',
+    ms: 'Ini ialah panduan maklumat bebas dan bukan kandungan rasmi Sarawak 4D. 4D AI tidak menjual tiket, menerima pertaruhan, mengendalikan cabutan atau memproses tuntutan hadiah. Ia tidak menjanjikan keputusan, maklumat sejarah tidak menentukan keputusan masa hadapan, analisis AI bukan ramalan rasmi, dan maklumat rasmi penyedia perlu diutamakan.'
+  },
+  relatedGuidesTitle: {
+    en: 'Related Provider Guides',
+    zh: '相关 Provider 指南',
+    ms: 'Panduan Penyedia Berkaitan'
+  },
+  relatedSlugs: ['magnum', 'da-ma-cai', 'sports-toto', 'singapore-pools', 'stc', 'sabah-88']
+};
+
+const sarawakMeta = {
+  title: {
+    en: 'Sarawak 4D Game Guide | 4D AI',
+    zh: '砂拉越 4D 游戏指南 | 4D AI',
+    ms: 'Panduan Permainan Sarawak 4D | 4D AI'
+  },
+  description: {
+    en: 'Sarawak 4D game guide covering 4D prize structure and terminology. This is an independent informational reference and official provider information takes precedence.',
+    zh: '砂拉越 4D 游戏指南，整理 4D 派彩结构与游戏术语。本页面为独立资讯参考，并以官方 Provider 资料为优先。',
+    ms: 'Panduan permainan Sarawak 4D yang merangkumi struktur hadiah 4D dan istilah. Ini ialah rujukan maklumat bebas dan maklumat rasmi penyedia perlu diutamakan.'
+  }
+};
+
 function withProviderGuide(page: ProviderPayoutPage): ProviderPayoutPage {
   if (page.slug === 'da-ma-cai') {
     return {
@@ -843,6 +1059,14 @@ function withProviderGuide(page: ProviderPayoutPage): ProviderPayoutPage {
       metaTitle: sabah88Meta.title,
       metaDescription: sabah88Meta.description,
       guide: sabah88Guide
+    };
+  }
+  if (page.slug === 'sarawak') {
+    return {
+      ...page,
+      metaTitle: sarawakMeta.title,
+      metaDescription: sarawakMeta.description,
+      guide: sarawakGuide
     };
   }
   return page;
