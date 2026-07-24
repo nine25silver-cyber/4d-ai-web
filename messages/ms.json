@@ -9,6 +9,7 @@
     "about": "Tentang Kami",
     "faq": "Soalan Lazim",
     "responsibleGaming": "Permainan Bertanggungjawab",
+    "how4dAiWorks": "Bagaimana 4D AI Berfungsi",
     "providerPayoutStructure": "Panduan Penyedia",
     "login": "Log Masuk",
     "goPro": "Go Pro",
@@ -511,6 +512,9 @@
     "responsibleGamingTitle": "Panduan permainan bertanggungjawab",
     "responsibleGamingIntro": "Ketahui cara menggunakan 4D AI sebagai alat maklumat, memahami ketidakpastian, dan menjaga had kewangan dengan jelas.",
     "responsibleGamingLink": "Buka Permainan Bertanggungjawab",
+    "how4dAiWorksTitle": "Bagaimana 4D AI berfungsi",
+    "how4dAiWorksIntro": "Lihat cara keputusan sejarah, paparan kekerapan dan analisis bantuan AI digunakan sebagai rujukan kajian.",
+    "how4dAiWorksLink": "Buka Bagaimana 4D AI Berfungsi",
     "providerLinksTitle": "Halaman bayaran provider",
     "providerLinksIntro": "Setiap provider mempunyai halaman sendiri supaya jadual bayaran kekal terpisah mengikut permainan dan jenama.",
     "sections": [

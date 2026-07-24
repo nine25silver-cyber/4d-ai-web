@@ -44,6 +44,14 @@ export default async function AboutPage({params}: {params: Promise<{locale: Loca
         </div>
 
         <aside className="h-fit space-y-5">
+          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-black text-slate-950">{t('how4dAiWorksTitle')}</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{t('how4dAiWorksIntro')}</p>
+            <Link href={`/${locale}/how-4d-ai-works`} className="mt-4 inline-flex rounded-md border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-900">
+              {t('how4dAiWorksLink')}
+            </Link>
+          </section>
+
           <section className="rounded-lg border border-blue-100 bg-blue-50 p-5">
             <h2 className="text-lg font-black text-blue-950">{t('responsibleGamingTitle')}</h2>
             <p className="mt-2 text-sm leading-6 text-blue-950">{t('responsibleGamingIntro')}</p>

@@ -28,9 +28,10 @@ export function SiteHeader({locale}: {locale: Locale}) {
     {href: `${base}/about`, label: t('about')},
     {href: `${base}/faq`, label: t('faq')},
     {href: `${base}/responsible-gaming`, label: t('responsibleGaming')},
+    {href: `${base}/how-4d-ai-works`, label: t('how4dAiWorks')},
     ...providerPayoutPages.map((page) => ({href: `${base}/providers/${page.slug}`, label: page.menuLabel[locale]}))
   ];
-  const moreActive = pathname === `${base}/about` || pathname === `${base}/faq` || pathname === `${base}/responsible-gaming` || pathname?.startsWith(`${base}/providers/`);
+  const moreActive = pathname === `${base}/about` || pathname === `${base}/faq` || pathname === `${base}/responsible-gaming` || pathname === `${base}/how-4d-ai-works` || pathname?.startsWith(`${base}/providers/`);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -99,10 +100,13 @@ export function SiteHeader({locale}: {locale: Locale}) {
                 <Link href={`${base}/responsible-gaming`} onClick={() => setMoreOpen(false)} className={`block rounded-md px-3 py-2 font-bold outline-none hover:bg-white/10 focus-visible:bg-white/10 ${pathname === `${base}/responsible-gaming` ? 'bg-white/15 text-white' : 'text-white'}`}>
                   {t('responsibleGaming')}
                 </Link>
+                <Link href={`${base}/how-4d-ai-works`} onClick={() => setMoreOpen(false)} className={`block rounded-md px-3 py-2 font-bold outline-none hover:bg-white/10 focus-visible:bg-white/10 ${pathname === `${base}/how-4d-ai-works` ? 'bg-white/15 text-white' : 'text-white'}`}>
+                  {t('how4dAiWorks')}
+                </Link>
                 <div className="my-2 border-t border-slate-700 pt-2">
                   <p className="px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-slate-400">{t('providerPayoutStructure')}</p>
                   <div className="mt-1">
-                    {moreLinks.slice(3).map((item) => (
+                    {moreLinks.slice(4).map((item) => (
                       <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)} className={`block w-full rounded-md px-3 py-2 font-bold leading-5 outline-none hover:bg-white/10 focus-visible:bg-white/10 ${pathname === item.href ? 'bg-white/15 text-white' : 'text-slate-100'}`}>
                         {item.label}
                       </Link>

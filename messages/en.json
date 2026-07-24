@@ -9,6 +9,7 @@
     "about": "About Us",
     "faq": "FAQ",
     "responsibleGaming": "Responsible Gaming",
+    "how4dAiWorks": "How 4D AI Works",
     "providerPayoutStructure": "Provider Guides",
     "login": "Login",
     "goPro": "Go Pro",
@@ -199,7 +200,7 @@
     "hotColdTitle": "Hot and cold signals",
     "regionMetaDescription": "Company AI recommendation entry pages for {region} 4D results.",
     "hotColdText": "Recommendation pages will explain how recent trend windows, cold gaps and company-specific rules are blended.",
-    "hitBacktestText": "Past hit review and sample count, shown carefully as informational analysis rather than a guarantee.",
+    "hitBacktestText": "Past hit review and sample count, shown carefully as informational analysis rather than a promise.",
     "lockedPanelText": "The visible structure is ready; live recommendation data, entitlement checks and rewarded-ad credits will be connected later.",
     "signalSummaryLabel": "Signal summary",
     "providerTitle": "{provider} AI Recommendations",
@@ -511,6 +512,9 @@
     "responsibleGamingTitle": "Responsible gaming guide",
     "responsibleGamingIntro": "Learn how to use 4D AI as an information tool, understand uncertainty, and keep financial boundaries clear.",
     "responsibleGamingLink": "Open Responsible Gaming",
+    "how4dAiWorksTitle": "How 4D AI works",
+    "how4dAiWorksIntro": "See how historical results, frequency views and AI-assisted analysis are used as research references.",
+    "how4dAiWorksLink": "Open How 4D AI Works",
     "providerLinksTitle": "Provider payout pages",
     "providerLinksIntro": "Each provider has its own page so payout tables stay separated by game and brand.",
     "sections": [
@@ -528,7 +532,7 @@
       },
       {
         "title": "What We Do Not Promise",
-        "body": "4D AI does not promise prizes, does not guarantee that any number will appear and does not claim that analysis can predict future results with certainty. Every draw remains uncertain."
+        "body": "4D AI does not promise prizes, does not claim that any number will appear and does not claim that analysis can predict future results with certainty. Every draw remains uncertain."
       },
       {
         "title": "Transparency And Responsible Use",

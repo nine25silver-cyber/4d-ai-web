@@ -102,7 +102,7 @@ const responsibleGamingCopy: Record<Locale, ResponsibleGamingCopy> = {
           '4D AI can organise historical results, provider information, frequency views, and general research. Recommendations may change when inputs, draw history, data updates, or ranking conditions change. They remain informational and cannot remove uncertainty.',
         items: [
           'AI output is not an official result, official prediction, or provider instruction.',
-          'AI cannot see future draws or guarantee accuracy.',
+          'AI cannot see future draws or promise accuracy.',
           'Different filters can produce different suggestions.',
           'Users remain responsible for whether and how they use the information.'
         ]
@@ -170,6 +170,7 @@ const responsibleGamingCopy: Record<Locale, ResponsibleGamingCopy> = {
     relatedLinks: [
       { href: '/about', label: 'About 4D AI' },
       { href: '/faq', label: 'FAQ' },
+      { href: '/how-4d-ai-works', label: 'How 4D AI Works' },
       { href: '/providers/magnum', label: 'Magnum Guide' },
       { href: '/providers/sports-toto', label: 'Sports Toto Guide' }
     ]
@@ -308,6 +309,7 @@ const responsibleGamingCopy: Record<Locale, ResponsibleGamingCopy> = {
     relatedLinks: [
       { href: '/about', label: '关于 4D AI' },
       { href: '/faq', label: '常见问题' },
+      { href: '/how-4d-ai-works', label: '4D AI 如何运作' },
       { href: '/providers/magnum', label: 'Magnum 指南' },
       { href: '/providers/sports-toto', label: 'Sports Toto 指南' }
     ]
@@ -446,6 +448,7 @@ const responsibleGamingCopy: Record<Locale, ResponsibleGamingCopy> = {
     relatedLinks: [
       { href: '/about', label: 'Tentang 4D AI' },
       { href: '/faq', label: 'FAQ' },
+      { href: '/how-4d-ai-works', label: 'Bagaimana 4D AI Berfungsi' },
       { href: '/providers/magnum', label: 'Panduan Magnum' },
       { href: '/providers/sports-toto', label: 'Panduan Sports Toto' }
     ]
