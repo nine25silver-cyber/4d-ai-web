@@ -8,6 +8,7 @@
     "more": "更多",
     "about": "关于我们",
     "faq": "常见问题",
+    "responsibleGaming": "负责任参与",
     "providerPayoutStructure": "Provider 指南",
     "login": "登录",
     "goPro": "升级Pro",
@@ -507,6 +508,9 @@
     "eyebrow": "关于 4D AI",
     "title": "让 4D 成绩、历史记录和数据分析更容易查阅",
     "intro": "4D AI 是一个整理马来西亚及相关地区 4D 开奖资讯、历史数据和分析工具的资讯平台。网站帮助用户更方便查看过去成绩、比较趋势和理解 Provider 派彩结构，但不会暗示历史规律可以控制未来结果。",
+    "responsibleGamingTitle": "负责任参与指南",
+    "responsibleGamingIntro": "了解如何把 4D AI 作为资讯工具使用，认识不确定性，并保持清楚的财务边界。",
+    "responsibleGamingLink": "打开负责任参与指南",
     "providerLinksTitle": "Provider 派彩页面",
     "providerLinksIntro": "每一家 Provider 都有独立页面，避免不同品牌和游戏的派彩表混在一起。",
     "sections": [

@@ -8,6 +8,7 @@
     "more": "Lagi",
     "about": "Tentang Kami",
     "faq": "Soalan Lazim",
+    "responsibleGaming": "Permainan Bertanggungjawab",
     "providerPayoutStructure": "Panduan Penyedia",
     "login": "Log Masuk",
     "goPro": "Go Pro",
@@ -507,6 +508,9 @@
     "eyebrow": "Tentang 4D AI",
     "title": "Keputusan 4D, sejarah dan alat analisis untuk kajian yang lebih jelas",
     "intro": "4D AI ialah platform maklumat yang menyusun data keputusan 4D awam untuk Malaysia dan pasaran berkaitan. Laman ini membantu pengguna menyemak cabutan sejarah, membandingkan corak dan memahami struktur bayaran provider tanpa membayangkan bahawa corak lalu boleh mengawal keputusan akan datang.",
+    "responsibleGamingTitle": "Panduan permainan bertanggungjawab",
+    "responsibleGamingIntro": "Ketahui cara menggunakan 4D AI sebagai alat maklumat, memahami ketidakpastian, dan menjaga had kewangan dengan jelas.",
+    "responsibleGamingLink": "Buka Permainan Bertanggungjawab",
     "providerLinksTitle": "Halaman bayaran provider",
     "providerLinksIntro": "Setiap provider mempunyai halaman sendiri supaya jadual bayaran kekal terpisah mengikut permainan dan jenama.",
     "sections": [

@@ -18,6 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/tools/favorites',
     '/about',
     '/faq',
+    '/responsible-gaming',
     '/pricing'
   ];
   const resultPages = regions.map((region) => `/results/${region.slug}`);

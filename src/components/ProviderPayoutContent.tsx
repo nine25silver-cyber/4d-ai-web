@@ -14,6 +14,7 @@ const copy = {
     verificationTitle: 'Verification notice',
     verificationText: 'Please verify game rules, payout amounts and jackpot arrangements with the provider\'s latest official publication.',
     backToAbout: 'About 4D AI',
+    responsibleGaming: 'Responsible Gaming',
     providerIndex: 'Provider pages'
   },
   zh: {
@@ -26,6 +27,7 @@ const copy = {
     verificationTitle: '资料核对提示',
     verificationText: '请以相关 Provider 最新官方公布的游戏规则、派彩金额及奖池安排为准。',
     backToAbout: '关于 4D AI',
+    responsibleGaming: '负责任参与',
     providerIndex: 'Provider 页面'
   },
   ms: {
@@ -38,6 +40,7 @@ const copy = {
     verificationTitle: 'Notis pengesahan',
     verificationText: 'Sila semak peraturan permainan, jumlah bayaran hadiah dan aturan jackpot berdasarkan penerbitan rasmi terkini daripada penyedia berkaitan.',
     backToAbout: 'Tentang 4D AI',
+    responsibleGaming: 'Permainan Bertanggungjawab',
     providerIndex: 'Halaman provider'
   }
 } as const;
@@ -228,6 +231,9 @@ export function ProviderPayoutContent({locale, page}: {locale: Locale; page: Pro
         <section className="mt-8">
           <h2 className="text-lg font-black text-slate-950">{guide.relatedGuidesTitle[locale]}</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Link href={`/${locale}/responsible-gaming`} className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-black text-slate-700 transition hover:border-blue-300 hover:text-blue-900">
+              {labels.responsibleGaming}
+            </Link>
             {relatedPages.map((providerPage) => (
               <Link key={providerPage.slug} href={`/${locale}/providers/${providerPage.slug}`} className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-black text-slate-700 transition hover:border-blue-300 hover:text-blue-900">
                 {providerPage.menuLabel[locale]}
@@ -338,6 +344,9 @@ export function ProviderPayoutContent({locale, page}: {locale: Locale; page: Pro
       <section className="mt-8">
         <h2 className="text-lg font-black text-slate-950">{labels.providerIndex}</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <Link href={`/${locale}/responsible-gaming`} className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-black text-slate-700 transition hover:border-blue-300 hover:text-blue-900">
+            {labels.responsibleGaming}
+          </Link>
           {providerPayoutPages.map((providerPage) => (
             <Link key={providerPage.slug} href={`/${locale}/providers/${providerPage.slug}`} className={`rounded-lg border p-4 text-sm font-black transition ${providerPage.slug === page.slug ? 'border-blue-700 bg-blue-50 text-blue-900' : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-900'}`}>
               {providerPage.menuLabel[locale]}

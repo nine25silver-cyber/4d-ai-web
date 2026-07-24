@@ -8,6 +8,7 @@
     "more": "More",
     "about": "About Us",
     "faq": "FAQ",
+    "responsibleGaming": "Responsible Gaming",
     "providerPayoutStructure": "Provider Guides",
     "login": "Login",
     "goPro": "Go Pro",
@@ -507,6 +508,9 @@
     "eyebrow": "About 4D AI",
     "title": "4D results, history and analysis tools for clearer research",
     "intro": "4D AI is an information platform that organises public 4D result data for Malaysia and related markets. The site helps users review historical draws, compare trends and understand provider payout structures without implying that past patterns can control future results.",
+    "responsibleGamingTitle": "Responsible gaming guide",
+    "responsibleGamingIntro": "Learn how to use 4D AI as an information tool, understand uncertainty, and keep financial boundaries clear.",
+    "responsibleGamingLink": "Open Responsible Gaming",
     "providerLinksTitle": "Provider payout pages",
     "providerLinksIntro": "Each provider has its own page so payout tables stay separated by game and brand.",
     "sections": [

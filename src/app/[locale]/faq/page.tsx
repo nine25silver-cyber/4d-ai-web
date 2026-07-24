@@ -138,7 +138,7 @@ const faqCopy: Record<Locale, FaqPageCopy> = {
           },
           {
             question: 'How should 4D information and analysis be used responsibly?',
-            answer: 'Treat number games as activities involving chance and uncertainty. Do not rely on historical analysis as a source of guaranteed income, and do not spend money needed for essential living costs. Users should follow applicable age restrictions and local laws.'
+            answer: 'Treat number games as activities involving chance and uncertainty. Do not rely on historical analysis as a source of promised income, and do not spend money needed for essential living costs. Users should follow applicable age restrictions and local laws.'
           }
         ]
       }
@@ -148,6 +148,7 @@ const faqCopy: Record<Locale, FaqPageCopy> = {
     relatedTitle: 'Related information',
     relatedLinks: [
       {href: '/about', label: 'About 4D AI'},
+      {href: '/responsible-gaming', label: 'Responsible Gaming Guide'},
       {href: '/providers/magnum', label: 'Magnum Provider Guide'},
       {href: '/providers/da-ma-cai', label: 'Da Ma Cai Provider Guide'},
       {href: '/providers/sports-toto', label: 'Sports Toto Provider Guide'}
@@ -253,7 +254,7 @@ const faqCopy: Record<Locale, FaqPageCopy> = {
           },
           {
             question: '应该如何负责任地使用 4D 资讯和分析？',
-            answer: '数字游戏涉及机会与不确定性，不应把历史分析视为保证收入的来源，也不应使用生活必需资金参与。用户应遵守适用的年龄限制和当地法律。'
+            answer: '数字游戏涉及机会与不确定性，不应把历史分析视为承诺收入的来源，也不应使用生活必需资金参与。用户应遵守适用的年龄限制和当地法律。'
           }
         ]
       }
@@ -263,6 +264,7 @@ const faqCopy: Record<Locale, FaqPageCopy> = {
     relatedTitle: '相关资讯',
     relatedLinks: [
       {href: '/about', label: '关于 4D AI'},
+      {href: '/responsible-gaming', label: '负责任参与指南'},
       {href: '/providers/magnum', label: 'Magnum Provider 指南'},
       {href: '/providers/da-ma-cai', label: '大马彩 Provider 指南'},
       {href: '/providers/sports-toto', label: '多多博彩 Provider 指南'}
@@ -378,6 +380,7 @@ const faqCopy: Record<Locale, FaqPageCopy> = {
     relatedTitle: 'Maklumat berkaitan',
     relatedLinks: [
       {href: '/about', label: 'Tentang 4D AI'},
+      {href: '/responsible-gaming', label: 'Panduan Permainan Bertanggungjawab'},
       {href: '/providers/magnum', label: 'Panduan Penyedia Magnum'},
       {href: '/providers/da-ma-cai', label: 'Panduan Penyedia Da Ma Cai'},
       {href: '/providers/sports-toto', label: 'Panduan Penyedia Sports Toto'}
