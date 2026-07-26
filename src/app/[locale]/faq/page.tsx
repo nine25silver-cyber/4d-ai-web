@@ -149,6 +149,7 @@ const faqCopy: Record<Locale, FaqPageCopy> = {
     relatedLinks: [
       {href: '/about', label: 'About 4D AI'},
       {href: '/how-4d-ai-works', label: 'How 4D AI Works'},
+      {href: '/data-sources', label: 'Data Sources'},
       {href: '/responsible-gaming', label: 'Responsible Gaming Guide'},
       {href: '/providers/magnum', label: 'Magnum Provider Guide'},
       {href: '/providers/da-ma-cai', label: 'Da Ma Cai Provider Guide'},
@@ -266,6 +267,7 @@ const faqCopy: Record<Locale, FaqPageCopy> = {
     relatedLinks: [
       {href: '/about', label: '关于 4D AI'},
       {href: '/how-4d-ai-works', label: '4D AI 如何运作'},
+      {href: '/data-sources', label: '资料来源'},
       {href: '/responsible-gaming', label: '负责任参与指南'},
       {href: '/providers/magnum', label: 'Magnum Provider 指南'},
       {href: '/providers/da-ma-cai', label: '大马彩 Provider 指南'},
@@ -383,6 +385,7 @@ const faqCopy: Record<Locale, FaqPageCopy> = {
     relatedLinks: [
       {href: '/about', label: 'Tentang 4D AI'},
       {href: '/how-4d-ai-works', label: 'Bagaimana 4D AI Berfungsi'},
+      {href: '/data-sources', label: 'Sumber Data'},
       {href: '/responsible-gaming', label: 'Panduan Permainan Bertanggungjawab'},
       {href: '/providers/magnum', label: 'Panduan Penyedia Magnum'},
       {href: '/providers/da-ma-cai', label: 'Panduan Penyedia Da Ma Cai'},

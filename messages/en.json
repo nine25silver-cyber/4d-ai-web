@@ -10,6 +10,7 @@
     "faq": "FAQ",
     "responsibleGaming": "Responsible Gaming",
     "how4dAiWorks": "How 4D AI Works",
+    "dataSources": "Data Sources",
     "providerPayoutStructure": "Provider Guides",
     "login": "Login",
     "goPro": "Go Pro",
@@ -515,6 +516,9 @@
     "how4dAiWorksTitle": "How 4D AI works",
     "how4dAiWorksIntro": "See how historical results, frequency views and AI-assisted analysis are used as research references.",
     "how4dAiWorksLink": "Open How 4D AI Works",
+    "dataSourcesTitle": "Data sources and verification",
+    "dataSourcesIntro": "Review how website data, latest results and Provider guides should be checked against official Provider information.",
+    "dataSourcesLink": "Open Data Sources",
     "providerLinksTitle": "Provider payout pages",
     "providerLinksIntro": "Each provider has its own page so payout tables stay separated by game and brand.",
     "sections": [

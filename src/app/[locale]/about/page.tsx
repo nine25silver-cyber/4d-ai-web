@@ -52,6 +52,14 @@ export default async function AboutPage({params}: {params: Promise<{locale: Loca
             </Link>
           </section>
 
+          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-black text-slate-950">{t('dataSourcesTitle')}</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{t('dataSourcesIntro')}</p>
+            <Link href={`/${locale}/data-sources`} className="mt-4 inline-flex rounded-md border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-900">
+              {t('dataSourcesLink')}
+            </Link>
+          </section>
+
           <section className="rounded-lg border border-blue-100 bg-blue-50 p-5">
             <h2 className="text-lg font-black text-blue-950">{t('responsibleGamingTitle')}</h2>
             <p className="mt-2 text-sm leading-6 text-blue-950">{t('responsibleGamingIntro')}</p>

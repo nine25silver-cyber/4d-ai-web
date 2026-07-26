@@ -10,6 +10,7 @@
     "faq": "常见问题",
     "responsibleGaming": "负责任参与",
     "how4dAiWorks": "4D AI 如何运作",
+    "dataSources": "资料来源",
     "providerPayoutStructure": "Provider 指南",
     "login": "登录",
     "goPro": "升级Pro",
@@ -515,6 +516,9 @@
     "how4dAiWorksTitle": "4D AI 如何运作",
     "how4dAiWorksIntro": "了解历史结果、频率视图和 AI 辅助分析如何作为研究参考使用。",
     "how4dAiWorksLink": "打开 4D AI 运作说明",
+    "dataSourcesTitle": "资料来源与核对说明",
+    "dataSourcesIntro": "了解网站资料、最新结果和 Provider 指南为何应与 Provider 官方资讯核对。",
+    "dataSourcesLink": "打开资料来源说明",
     "providerLinksTitle": "Provider 派彩页面",
     "providerLinksIntro": "每一家 Provider 都有独立页面，避免不同品牌和游戏的派彩表混在一起。",
     "sections": [

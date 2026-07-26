@@ -162,6 +162,7 @@ const worksCopy: Record<Locale, WorksCopy> = {
       {href: '/about', label: 'About 4D AI'},
       {href: '/faq', label: 'FAQ'},
       {href: '/responsible-gaming', label: 'Responsible Gaming'},
+      {href: '/data-sources', label: 'Data Sources'},
       {href: '/providers/magnum', label: 'Magnum Guide'},
       {href: '/providers/sports-toto', label: 'Sports Toto Guide'}
     ]
@@ -289,6 +290,7 @@ const worksCopy: Record<Locale, WorksCopy> = {
       {href: '/about', label: '关于 4D AI'},
       {href: '/faq', label: '常见问题'},
       {href: '/responsible-gaming', label: '负责任参与'},
+      {href: '/data-sources', label: '资料来源'},
       {href: '/providers/magnum', label: 'Magnum 指南'},
       {href: '/providers/sports-toto', label: 'Sports Toto 指南'}
     ]
@@ -416,6 +418,7 @@ const worksCopy: Record<Locale, WorksCopy> = {
       {href: '/about', label: 'Tentang 4D AI'},
       {href: '/faq', label: 'FAQ'},
       {href: '/responsible-gaming', label: 'Permainan Bertanggungjawab'},
+      {href: '/data-sources', label: 'Sumber Data'},
       {href: '/providers/magnum', label: 'Panduan Magnum'},
       {href: '/providers/sports-toto', label: 'Panduan Sports Toto'}
     ]

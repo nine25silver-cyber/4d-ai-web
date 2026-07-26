@@ -20,6 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/faq',
     '/responsible-gaming',
     '/how-4d-ai-works',
+    '/data-sources',
     '/pricing'
   ];
   const resultPages = regions.map((region) => `/results/${region.slug}`);
