@@ -121,7 +121,7 @@ function localizedCopy(locale: Locale) {
 }
 
 function getFeaturedHref(locale: Locale, tool: FeaturedTool) {
-  if (tool === 'ai') return `/${locale}/ai`;
+  if (tool === 'ai') return `/${locale}/ai/west-malaysia/magnum`;
   return `/${locale}/tools/package-ranking`;
 }
 
