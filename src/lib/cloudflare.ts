@@ -122,6 +122,49 @@ export type AiRecommendationState =
   | {ok: true; providerCode: string; url: string; payload: AiRecommendationPayload}
   | {ok: false; providerCode: string; url: string; reason: string};
 
+export type ThreePlusOneAiRecommendationPayload = {
+  providerCode: string;
+  providerName?: string;
+  recommendation4: string[];
+  generatedAt?: string;
+  sourceDrawDate?: string;
+  sourceDrawNo?: string;
+  status?: string;
+};
+
+export type ThreePlusOneAiRecommendationState =
+  | {ok: true; providerCode: string; url: string; payload: ThreePlusOneAiRecommendationPayload}
+  | {ok: false; providerCode: string; url: string; reason: string};
+
+export type ThreePlusOneAiHitHistoryPrize = {
+  label: string;
+  number: string;
+  hit: boolean;
+};
+
+export type ThreePlusOneAiHitHistoryRecord = {
+  id: string;
+  drawDate: string;
+  recommendation4: string[];
+  prizes: ThreePlusOneAiHitHistoryPrize[];
+  hitCount: number;
+};
+
+export type ThreePlusOneAiHitHistoryPayload = {
+  providerCode: string;
+  providerName?: string;
+  latestDrawDate?: string;
+  totalPeriods: number | null;
+  anyHitDraws: number | null;
+  totalHits: number | null;
+  records: ThreePlusOneAiHitHistoryRecord[];
+  generatedAt?: string;
+};
+
+export type ThreePlusOneAiHitHistoryState =
+  | {ok: true; providerCode: string; url: string; payload: ThreePlusOneAiHitHistoryPayload}
+  | {ok: false; providerCode: string; url: string; reason: string};
+
 export type CombinationRankingItem = {
   rank: number;
   key: string;
@@ -181,6 +224,12 @@ const aiHitHistoryReplayBaseUrl = (process.env.CLOUDFLARE_AI_HIT_HISTORY_REPLAY_
 const aiRecommendationBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_AI_RECOMMENDATION_BASE_URL && process.env.NEXT_PUBLIC_CLOUDFLARE_AI_RECOMMENDATION_BASE_URL.trim().length > 0
   ? process.env.NEXT_PUBLIC_CLOUDFLARE_AI_RECOMMENDATION_BASE_URL
   : 'https://data.4dai88.com/ai_recommendations';
+const threePlusOneAiRecommendationBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_AI_RECOMMENDATION_BASE_URL && process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_AI_RECOMMENDATION_BASE_URL.trim().length > 0
+  ? process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_AI_RECOMMENDATION_BASE_URL
+  : 'https://data.4dai88.com/three_plus_one_ai_recommendations';
+const threePlusOneAiHitHistoryBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_AI_HIT_HISTORY_BASE_URL && process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_AI_HIT_HISTORY_BASE_URL.trim().length > 0
+  ? process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_AI_HIT_HISTORY_BASE_URL
+  : 'https://data.4dai88.com/three_plus_one_ai_hit_history';
 
 function parseJsonSafely(text: string): unknown | null {
   try {
@@ -533,6 +582,80 @@ function normalizeTop3ExpertDigits(map: Record<string, unknown>): string[] {
   return strategy ? normalizeAiTopDigitsFromValue(strategy.digits) : [];
 }
 
+function normalizeThreePlusOneRecommendation4(value: unknown): string[] {
+  const raw = Array.isArray(value)
+    ? value.map((item) => String(item ?? ''))
+    : typeof value === 'string'
+      ? value.split(/[,\s]+/)
+      : [];
+  return raw
+    .flatMap((item) => item.replace(/\D/g, '').split(''))
+    .filter((item) => /^\d$/.test(item))
+    .slice(0, 4);
+}
+
+function normalizeThreeDigitValue(value: unknown): string {
+  const digits = String(value ?? '').replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.slice(-3).padStart(3, '0');
+}
+
+function normalizeBooleanHit(value: unknown): boolean {
+  return value === true || value === 1 || value === '1' || String(value ?? '').toLowerCase() === 'true';
+}
+
+function normalizeThreePlusOneAiRecommendation(providerCode: string, raw: unknown): ThreePlusOneAiRecommendationPayload | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const map = raw as Record<string, unknown>;
+  const recommendation4 = normalizeThreePlusOneRecommendation4(map.recommendation4 ?? map.recommendation_4);
+  if (recommendation4.length !== 4) return null;
+  return {
+    providerCode: String(map.provider_code ?? map.providerCode ?? providerCode),
+    providerName: String(map.provider_name ?? map.providerName ?? '').trim() || undefined,
+    recommendation4,
+    generatedAt: String(map.generated_at ?? map.generatedAt ?? '').trim() || undefined,
+    sourceDrawDate: String(map.source_draw_date ?? map.sourceDrawDate ?? '').trim() || undefined,
+    sourceDrawNo: String(map.source_draw_no ?? map.sourceDrawNo ?? '').trim() || undefined,
+    status: String(map.status ?? '').trim() || undefined
+  };
+}
+
+function normalizeThreePlusOneAiHitHistory(providerCode: string, raw: unknown): ThreePlusOneAiHitHistoryPayload | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const map = raw as Record<string, unknown>;
+  const rawRecords = Array.isArray(map.records) ? map.records : [];
+  const records = rawRecords
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item))
+    .map((item, recordIndex) => {
+      const recommendation4 = normalizeThreePlusOneRecommendation4(item.recommendation4 ?? item.recommendation_4);
+      const prizes: ThreePlusOneAiHitHistoryPrize[] = [
+        {label: 'Top 1', number: normalizeThreeDigitValue(item.actual_top1_last3), hit: normalizeBooleanHit(item.top1_hit)},
+        {label: 'Top 2', number: normalizeThreeDigitValue(item.actual_top2_last3), hit: normalizeBooleanHit(item.top2_hit)},
+        {label: 'Top 3', number: normalizeThreeDigitValue(item.actual_top3_last3), hit: normalizeBooleanHit(item.top3_hit)}
+      ].filter((prize) => prize.number.length > 0);
+      return {
+        id: String(item.id ?? item.target_draw_date ?? item.targetDrawDate ?? `record-${recordIndex}`),
+        drawDate: String(item.target_draw_date ?? item.targetDrawDate ?? '').trim() || '----',
+        recommendation4,
+        prizes,
+        hitCount: normalizeRootCount(item.hit_count ?? item.hitCount) ?? 0
+      };
+    })
+    .filter((record) => record.recommendation4.length === 4 || record.prizes.length > 0)
+    .sort((a, b) => b.drawDate.localeCompare(a.drawDate))
+    .slice(0, 100);
+  return {
+    providerCode: String(map.provider_code ?? map.providerCode ?? providerCode),
+    providerName: String(map.provider_name ?? map.providerName ?? '').trim() || undefined,
+    latestDrawDate: String(map.latest_draw_date ?? map.latestDrawDate ?? '').trim() || undefined,
+    totalPeriods: normalizeRootCount(map.window_size ?? map.total_periods ?? map.totalPeriods),
+    anyHitDraws: normalizeRootCount(map.summary && typeof map.summary === 'object' && !Array.isArray(map.summary) ? (map.summary as Record<string, unknown>).any_hit_draws : map.any_hit_draws),
+    totalHits: normalizeRootCount(map.summary && typeof map.summary === 'object' && !Array.isArray(map.summary) ? (map.summary as Record<string, unknown>).total_hits : map.total_hits),
+    records,
+    generatedAt: String(map.generated_at ?? map.generatedAt ?? '').trim() || undefined
+  };
+}
+
 export async function fetchProviderLatest(providerCode: string, options?: {cache?: 'revalidate' | 'no-store'}): Promise<ProviderResultState> {
   const url = `${latestBaseUrl.replace(/\/$/, '')}/${providerCode}.json`;
   try {
@@ -707,6 +830,42 @@ export async function fetchAiRecommendation(providerCode: string): Promise<AiRec
     return {ok: true, providerCode, url, payload};
   } catch (error) {
     return {ok: false, providerCode, url, reason: error instanceof Error ? error.message : 'request_failed'};
+  }
+}
+
+export async function fetchThreePlusOneAiRecommendation(providerCode: string): Promise<ThreePlusOneAiRecommendationState> {
+  if (!threePlusOneAiRecommendationBaseUrl.trim()) {
+    return {ok: false, providerCode, url: '', reason: 'not_configured'};
+  }
+  const url = `${threePlusOneAiRecommendationBaseUrl.replace(/\/$/, '')}/${providerCode}.json`;
+  try {
+    const response = await fetch(url, {cache: 'no-store', headers: {accept: 'application/json'}});
+    if (!response.ok) return {ok: false, providerCode, url, reason: `status_${response.status}`};
+    const decoded = parseJsonSafely(await response.text());
+    if (!decoded) return {ok: false, providerCode, url, reason: 'invalid_json'};
+    const payload = normalizeThreePlusOneAiRecommendation(providerCode, decoded);
+    if (!payload) return {ok: false, providerCode, url, reason: 'invalid_json_shape'};
+    return {ok: true, providerCode, url, payload};
+  } catch (error) {
+    return {ok: false, providerCode, url, reason: compactErrorReason(error)};
+  }
+}
+
+export async function fetchThreePlusOneAiHitHistory(providerCode: string): Promise<ThreePlusOneAiHitHistoryState> {
+  if (!threePlusOneAiHitHistoryBaseUrl.trim()) {
+    return {ok: false, providerCode, url: '', reason: 'not_configured'};
+  }
+  const url = `${threePlusOneAiHitHistoryBaseUrl.replace(/\/$/, '')}/${providerCode}.json`;
+  try {
+    const response = await fetch(url, {cache: 'no-store', headers: {accept: 'application/json'}});
+    if (!response.ok) return {ok: false, providerCode, url, reason: `status_${response.status}`};
+    const decoded = parseJsonSafely(await response.text());
+    if (!decoded) return {ok: false, providerCode, url, reason: 'invalid_json'};
+    const payload = normalizeThreePlusOneAiHitHistory(providerCode, decoded);
+    if (!payload) return {ok: false, providerCode, url, reason: 'invalid_json_shape'};
+    return {ok: true, providerCode, url, payload};
+  } catch (error) {
+    return {ok: false, providerCode, url, reason: compactErrorReason(error)};
   }
 }
 

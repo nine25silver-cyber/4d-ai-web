@@ -8,11 +8,13 @@ type Props = {
   currentProviderCode: string;
   title: string;
   variant?: 'compact' | 'sidebar';
+  basePath?: string;
 };
 
-export function AiProviderSwitcher({locale, regions, currentProviderCode, title, variant = 'compact'}: Props) {
+export function AiProviderSwitcher({locale, regions, currentProviderCode, title, variant = 'compact', basePath = 'ai'}: Props) {
   const providerRows = regions.flatMap((region) => region.providers.map((provider) => ({region, provider})));
   const isSidebar = variant === 'sidebar';
+  const normalizedBasePath = basePath.replace(/^\/|\/$/g, '');
   return (
     <section className={`${isSidebar ? 'rounded-lg border border-slate-200 bg-white p-2 shadow-sm' : 'mt-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm'}`}>
       <div className={`${isSidebar ? 'mb-2' : 'mb-1.5'} flex items-center justify-between gap-2`}>
@@ -24,7 +26,7 @@ export function AiProviderSwitcher({locale, regions, currentProviderCode, title,
           return (
             <a
               key={provider.code}
-              href={`/${locale}/ai/${region.slug}/${provider.code}`}
+              href={`/${locale}/${normalizedBasePath}/${region.slug}/${provider.code}`}
               className={`${isSidebar ? 'flex items-center gap-2 px-2 py-1.5 text-left' : 'px-1.5 py-1 text-center'} rounded-md border transition ${
                 active
                   ? 'border-[#1e3a8a] bg-[#eff6ff]'

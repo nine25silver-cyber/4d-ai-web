@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type {Metadata} from 'next';
+import {getTranslations} from 'next-intl/server';
 import {buildMetadata} from '@/lib/seo';
 import type {Locale} from '@/i18n/routing';
 
@@ -7,17 +8,18 @@ export const dynamic = 'force-dynamic';
 
 const pagePath = 'tools';
 
-type FeaturedTool = 'ai' | 'packageRanking';
+type FeaturedTool = 'ai' | 'packageRanking' | 'ai3d' | 'packageRanking3d';
+type FeaturedCategory = 'ai' | 'box';
 type StandardTool = 'thousandHits' | 'numberSearch' | 'digitMap' | 'hotCold' | 'cold4d' | 'luckyNumber' | 'favorites' | 'history' | 'account';
-type ComingSoonTool = 'moreAi' | 'more3d' | 'moreAnalytics';
 
-const featuredTools: FeaturedTool[] = ['ai', 'packageRanking'];
+const featuredCategories: FeaturedCategory[] = ['ai', 'box'];
 const standardTools: StandardTool[] = ['thousandHits', 'numberSearch', 'digitMap', 'hotCold', 'cold4d', 'luckyNumber', 'favorites', 'history', 'account'];
-const comingSoonTools: ComingSoonTool[] = ['moreAi', 'more3d', 'moreAnalytics'];
 
-const featuredIcons: Record<FeaturedTool, string> = {
-  ai: 'AI',
-  packageRanking: 'BOX'
+const featuredDimensions: Record<FeaturedTool, '4D' | '3D'> = {
+  ai: '4D',
+  packageRanking: '4D',
+  ai3d: '3D',
+  packageRanking3d: '3D'
 };
 
 const standardIcons: Record<StandardTool, string> = {
@@ -46,18 +48,6 @@ const standardIconStyles: Record<StandardTool, string> = {
 
 function localizedCopy(locale: Locale) {
   return {
-    featured: {
-      ai: locale === 'zh'
-        ? {title: 'AI 推荐号码', subtitle: '智能组合推荐', note: '最新一期已更新'}
-        : locale === 'ms'
-          ? {title: 'Cadangan AI', subtitle: 'Cadangan kombinasi pintar', note: 'Cabutan terkini dikemas kini'}
-          : {title: 'AI Recommendations', subtitle: 'Smart number combinations', note: 'Latest draw updated'},
-      packageRanking: locale === 'zh'
-        ? {title: '包字排行榜', subtitle: '高频组合排行', note: '当前最热趋势'}
-        : locale === 'ms'
-          ? {title: 'Ranking Boxed', subtitle: 'Ranking kombinasi kerap', note: 'Trend paling panas sekarang'}
-          : {title: 'Boxed Ranking', subtitle: 'High-frequency combinations', note: 'Current hottest trends'}
-    },
     standard: {
       thousandHits: locale === 'zh'
         ? {title: '搜索千字中奖记录', subtitle: '历史号码开奖记录大全'}
@@ -122,7 +112,9 @@ function localizedCopy(locale: Locale) {
 
 function getFeaturedHref(locale: Locale, tool: FeaturedTool) {
   if (tool === 'ai') return `/${locale}/ai/west-malaysia/magnum`;
-  return `/${locale}/tools/package-ranking`;
+  if (tool === 'packageRanking') return `/${locale}/tools/package-ranking`;
+  if (tool === 'ai3d') return `/${locale}/tools/three-plus-one-ai/west-malaysia/magnum`;
+  return `/${locale}/tools/three-plus-one-box/west-malaysia/magnum`;
 }
 
 function getStandardHref(locale: Locale, tool: StandardTool) {
@@ -149,60 +141,111 @@ export async function generateMetadata({params}: {params: Promise<{locale: Local
 
 export default async function InfoPage({params}: {params: Promise<{locale: Locale}>}) {
   const {locale} = await params;
+  const t = await getTranslations({locale, namespace: 'Tools'});
   const copy = localizedCopy(locale);
+  const categoryCards: Record<FeaturedCategory, {title: string; description: string; showPro: boolean}> = {
+    ai: {
+      title: t('toolboxAiCategoryTitle'),
+      description: t('toolboxAiCategoryDescription'),
+      showPro: true
+    },
+    box: {
+      title: t('toolboxBoxCategoryTitle'),
+      description: t('toolboxBoxCategoryDescription'),
+      showPro: true
+    }
+  };
+  const featuredTitleParts: Record<FeaturedTool, {prefix: string; accent: string; suffix: string}> = {
+    ai: {prefix: t('toolboxAiEntryTitlePrefix'), accent: t('toolboxAiEntryTitleAccent'), suffix: t('toolboxAiEntryTitleSuffix')},
+    ai3d: {prefix: t('toolboxAiEntryTitlePrefix'), accent: t('toolboxAiEntryTitleAccent'), suffix: t('toolboxAiEntryTitleSuffix')},
+    packageRanking: {prefix: '', accent: '', suffix: t('toolboxBoxEntryTitle')},
+    packageRanking3d: {prefix: '', accent: '', suffix: t('toolboxBoxEntryTitle')}
+  };
 
   return (
-    <main className="bg-[#f7f4ee]">
+    <main data-tools-page="true" className="bg-[#f7f4ee]">
+      <style>{'main[data-tools-page="true"] + footer { margin-top: 1rem; }'}</style>
       <section className="pt-2 pb-2 sm:pt-3">
         <div className="container-shell">
-          <h2 className="mb-1.5 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-            {copy.sections.featured}
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:gap-4">
-            {featuredTools.map((tool) => {
-              const item = copy.featured[tool];
+          <div className="grid gap-2.5 lg:grid-cols-2">
+            {featuredCategories.map((category) => {
+              const item = categoryCards[category];
+              const tools = category === 'ai' ? (['ai', 'ai3d'] as const) : (['packageRanking', 'packageRanking3d'] as const);
               return (
-                <Link
-                  key={tool}
-                  href={getFeaturedHref(locale, tool)}
-                  className="group relative min-h-24 overflow-hidden rounded-[20px] bg-[#2f4b69] p-3 text-white shadow-md shadow-slate-300 transition-transform duration-200 hover:-translate-y-1 sm:min-h-32 lg:min-h-[132px]"
+                <article
+                  key={category}
+                  className="relative rounded-[24px] border border-white/[0.07] bg-[#2e4a6b] p-3 text-white shadow-[0_6px_14px_rgba(15,23,42,0.1)] sm:p-3.5"
                 >
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.2),transparent_28%),linear-gradient(145deg,rgba(20,34,54,0),rgba(14,24,39,0.45))]" />
-                  <div className="relative flex h-full flex-col justify-center gap-2.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/15 text-[10px] font-black text-white shadow-inner sm:h-10 sm:w-10">
-                        {featuredIcons[tool]}
-                      </span>
-                      {tool === 'ai' ? (
-                        <span className="rounded-md bg-[#f0c95a] px-2 py-0.5 text-[10px] font-black text-slate-900 shadow-sm">
-                          {copy.proLabel}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div>
-                      <h3 className="text-base font-black leading-tight text-white sm:text-lg">
-                        {item.title}
-                      </h3>
-                      <p className="mt-0.5 text-xs font-black leading-tight text-[#eef6ff] sm:text-sm">
-                        {item.subtitle}
-                      </p>
-                      <p className="mt-0.5 text-[11px] font-bold leading-tight text-[#cfe0f5] sm:text-xs">
-                        {item.note}
-                      </p>
-                    </div>
+                  {item.showPro ? (
+                    <span className="absolute right-5 top-3 rounded-full bg-[#f0c95a] px-2 py-0.5 text-[11px] font-black text-slate-900 shadow-sm">
+                      {copy.proLabel}
+                    </span>
+                  ) : null}
+                  <div className={item.showPro ? 'pr-10' : undefined}>
+                    <h3 className="text-base font-black leading-tight sm:text-lg">
+                      {category === 'ai' ? (
+                        <>
+                          {featuredTitleParts.ai.prefix ? (
+                            <span>{featuredTitleParts.ai.prefix}</span>
+                          ) : null}
+                          {featuredTitleParts.ai.prefix && featuredTitleParts.ai.accent ? ' ' : ''}
+                          <span className="text-[#f0c95a]">{featuredTitleParts.ai.accent}</span>
+                          {(featuredTitleParts.ai.prefix || featuredTitleParts.ai.accent) && featuredTitleParts.ai.suffix ? ' ' : ''}
+                          {featuredTitleParts.ai.suffix ? (
+                            <span>{featuredTitleParts.ai.suffix}</span>
+                          ) : null}
+                        </>
+                      ) : (
+                        item.title
+                      )}
+                    </h3>
+                    <p className="mt-0.5 text-sm font-bold leading-tight text-[#d8e6f6]">
+                      {item.description}
+                    </p>
                   </div>
-                </Link>
+                  <div className="mt-2.5 grid grid-cols-2 gap-2">
+                    {tools.map((tool) => {
+                      const title = featuredTitleParts[tool];
+                      return (
+                        <Link
+                          key={tool}
+                          href={getFeaturedHref(locale, tool)}
+                          className="group relative min-h-[88px] overflow-hidden rounded-[20px] bg-[#243f5f] p-2.5 text-white shadow-[0_9px_20px_rgba(15,23,42,0.2)] transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_11px_24px_rgba(15,23,42,0.24)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#f0c95a] sm:min-h-[94px] sm:p-3"
+                        >
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_16%,rgba(255,255,255,0.16),transparent_30%),linear-gradient(145deg,rgba(42,67,98,0.95),rgba(20,35,56,1))]" />
+                          <div className="relative flex h-full flex-col justify-center gap-1.5">
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-3xl font-black leading-none text-[#f0c95a] drop-shadow-sm">
+                                {featuredDimensions[tool]}
+                              </span>
+                            </div>
+                            <h4 className="text-sm font-black leading-tight text-white sm:text-base">
+                              {title.prefix ? (
+                                <span>{title.prefix}</span>
+                              ) : null}
+                              {title.prefix && title.accent ? ' ' : ''}
+                              {title.accent ? (
+                                <span className="text-[#f0c95a]">{title.accent}</span>
+                              ) : null}
+                              {(title.prefix || title.accent) && title.suffix ? ' ' : ''}
+                              {title.suffix ? (
+                                <span>{title.suffix}</span>
+                              ) : null}
+                            </h4>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </article>
               );
             })}
           </div>
         </div>
       </section>
 
-      <section className="pb-4">
+      <section className="pb-2">
         <div className="container-shell">
-          <h2 className="mb-1.5 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-            {copy.sections.all}
-          </h2>
           <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
             {standardTools.map((tool) => {
               const item = copy.standard[tool];
@@ -226,26 +269,6 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
                 </Link>
               );
             })}
-          </div>
-        </div>
-      </section>
-
-      <section className="pb-12">
-        <div className="container-shell">
-          <h2 className="mb-4 text-sm font-black uppercase tracking-[0.18em] text-slate-500">
-            {copy.sections.comingSoon}
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {comingSoonTools.map((tool) => (
-              <div
-                key={tool}
-                aria-disabled="true"
-                className="rounded-[22px] border border-dashed border-slate-300 bg-white/45 p-4 text-center text-sm font-black text-slate-500"
-              >
-                <div>{copy.comingSoon[tool]}</div>
-                <div className="mt-1 text-xs font-bold text-slate-400">{copy.soonLabel}</div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
