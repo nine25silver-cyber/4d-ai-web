@@ -2,6 +2,8 @@ import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {getTranslations} from 'next-intl/server';
 import {AiProviderSwitcher} from '@/components/AiProviderSwitcher';
+import {ThreePlusOneBoxRankingClient} from '@/components/ThreePlusOneBoxRankingClient';
+import {isThreePlusOneBoxSupportedProvider} from '@/lib/cloudflare';
 import {getProviderDisplayName, getRegion, regions} from '@/lib/providers';
 import {buildMetadata} from '@/lib/seo';
 import type {Locale} from '@/i18n/routing';
@@ -26,11 +28,17 @@ export default async function ThreePlusOneBoxProviderPage({params}: {params: Pro
   const {locale, region: regionSlug, provider: providerCode} = await params;
   const region = getRegion(regionSlug);
   const provider = region?.providers.find((item) => item.code === providerCode);
-  if (!region || !provider) notFound();
+  if (!region || !provider || !isThreePlusOneBoxSupportedProvider(provider.code)) notFound();
 
   const aiT = await getTranslations({locale, namespace: 'AI'});
   const toolsT = await getTranslations({locale, namespace: 'Tools'});
   const providerName = getProviderDisplayName(provider, locale);
+  const supportedRegions = regions
+    .map((item) => ({
+      ...item,
+      providers: item.providers.filter((providerItem) => isThreePlusOneBoxSupportedProvider(providerItem.code))
+    }))
+    .filter((item) => item.providers.length > 0);
 
   return (
     <main className="container-shell pt-2 pb-6">
@@ -38,7 +46,7 @@ export default async function ThreePlusOneBoxProviderPage({params}: {params: Pro
         <div className="hidden md:block">
           <AiProviderSwitcher
             locale={locale}
-            regions={regions}
+            regions={supportedRegions}
             currentProviderCode={provider.code}
             title={aiT('providerSwitcherTitle')}
             variant="sidebar"
@@ -55,19 +63,47 @@ export default async function ThreePlusOneBoxProviderPage({params}: {params: Pro
           <div className="block md:hidden">
             <AiProviderSwitcher
               locale={locale}
-              regions={regions}
+              regions={supportedRegions}
               currentProviderCode={provider.code}
               title={aiT('providerSwitcherTitle')}
               basePath="tools/three-plus-one-box"
             />
           </div>
 
-          <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-5">
-              <p className="text-sm font-black text-slate-950">{toolsT('threeDBoxUnavailableTitle')}</p>
-              <p className="mt-1 text-sm font-bold leading-6 text-slate-600">{toolsT('threeDBoxUnavailableText')}</p>
-            </div>
-          </section>
+          <ThreePlusOneBoxRankingClient
+            locale={locale}
+            provider={provider}
+            providerName={providerName}
+            labels={{
+              updatedAt: toolsT('threeDBoxUpdatedAt'),
+              generatedAt: toolsT('threeDBoxGeneratedAt'),
+              hotTitle: toolsT('threeDBoxHotTitle'),
+              coldTitle: toolsT('threeDBoxColdTitle'),
+              coldSummaryTitle: toolsT('threeDBoxColdSummaryTitle'),
+              modeTitle: toolsT('threeDBoxModeTitle'),
+              hotRangeTitle: toolsT('threeDBoxHotRangeTitle'),
+              range6m: toolsT('threeDBoxRange6m'),
+              range1y: toolsT('threeDBoxRange1y'),
+              rangeAll: toolsT('threeDBoxRangeAll'),
+              occurrences: toolsT('threeDBoxOccurrences'),
+              occurrenceUnit: toolsT('threeDBoxOccurrenceUnit'),
+              currentGap: toolsT('threeDBoxCurrentGap'),
+              historicalMaxGap: toolsT('threeDBoxHistoricalMaxGap'),
+              days: toolsT('threeDBoxDays'),
+              draws: toolsT('threeDBoxDraws'),
+              noData: toolsT('threeDBoxNoData'),
+              loading: toolsT('threeDBoxLoading'),
+              loadFailed: toolsT('threeDBoxLoadFailed'),
+              retry: toolsT('threeDBoxRetry'),
+              latestSeen: toolsT('threeDBoxLatestSeen'),
+              viewDetails: toolsT('threeDBoxViewDetails'),
+              hideDetails: toolsT('threeDBoxHideDetails'),
+              prizeWinsTitle: toolsT('threeDBoxPrizeWinsTitle'),
+              firstPrize: toolsT('threeDBoxFirstPrize'),
+              secondPrize: toolsT('threeDBoxSecondPrize'),
+              thirdPrize: toolsT('threeDBoxThirdPrize')
+            }}
+          />
         </div>
       </div>
     </main>

@@ -165,6 +165,67 @@ export type ThreePlusOneAiHitHistoryState =
   | {ok: true; providerCode: string; url: string; payload: ThreePlusOneAiHitHistoryPayload}
   | {ok: false; providerCode: string; url: string; reason: string};
 
+export type ThreePlusOneBoxRange = '6m' | '1y' | 'all';
+export type ThreePlusOneBoxMode = 'AAA' | 'AAB' | 'ABC';
+export type ThreePlusOneBoxRankingType = 'hot' | 'cold';
+
+export type ThreePlusOneBoxRankingItem = {
+  rank: number;
+  key3d: string;
+  totalCount: number;
+  firstCount: number;
+  secondCount: number;
+  thirdCount: number;
+  lastSeen?: string;
+  lastSeenDrawDate?: string;
+  lastSeenDrawNo?: string;
+  lastSeenProviderCode?: string;
+  lastSeenPrizeType?: string;
+  currentGapDays: number;
+  currentGapDraws: number;
+  historicalMaxGapDays?: number;
+  historicalMaxGapDraws?: number;
+  providers: string[];
+};
+
+export type ThreePlusOneBoxColdSummary = {
+  longestGapDays?: number;
+  longestGapDraws?: number;
+  combinationKey: string;
+  key3d: string;
+  description: string;
+};
+
+export type ThreePlusOneBoxRankingBucket = {
+  mode: ThreePlusOneBoxMode;
+  rankingType: ThreePlusOneBoxRankingType;
+  prizeScopeKey: string;
+  coldSummary: ThreePlusOneBoxColdSummary;
+  items: ThreePlusOneBoxRankingItem[];
+};
+
+export type ThreePlusOneBoxRankingFeed = {
+  sourceType: string;
+  rankingType: string;
+  window: ThreePlusOneBoxRange;
+  scopeType: string;
+  scope: string;
+  scopeLabel: string;
+  generatedAt?: string;
+  updatedAt?: string;
+  freshnessState: string;
+  completeForCurrentCycle: boolean;
+  includedProviders: string[];
+  pendingProviders: string[];
+  missingProviders: string[];
+  coldSummary: ThreePlusOneBoxColdSummary;
+  rankings: ThreePlusOneBoxRankingBucket[];
+};
+
+export type ThreePlusOneBoxRankingState =
+  | {ok: true; url: string; payload: ThreePlusOneBoxRankingFeed}
+  | {ok: false; url: string; reason: string};
+
 export type CombinationRankingItem = {
   rank: number;
   key: string;
@@ -230,6 +291,22 @@ const threePlusOneAiRecommendationBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_T
 const threePlusOneAiHitHistoryBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_AI_HIT_HISTORY_BASE_URL && process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_AI_HIT_HISTORY_BASE_URL.trim().length > 0
   ? process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_AI_HIT_HISTORY_BASE_URL
   : 'https://data.4dai88.com/three_plus_one_ai_hit_history';
+const threePlusOneBoxRankingBaseUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_BOX_RANKING_BASE_URL && process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_BOX_RANKING_BASE_URL.trim().length > 0
+  ? process.env.NEXT_PUBLIC_CLOUDFLARE_THREE_PLUS_ONE_BOX_RANKING_BASE_URL
+  : 'https://data.4dai88.com/latest/top3-3d-combination-ranking';
+const threePlusOneBoxRanges = ['6m', '1y', 'all'] as const;
+const threePlusOneBoxModes = ['AAA', 'AAB', 'ABC'] as const;
+const threePlusOneBoxProviderCodes = ['sports_toto', 'magnum', 'da_ma_cai', 'sarawak', 'nine_lotto', 'grand_dragon', 'singapore'] as const;
+
+export const threePlusOneBoxSupportedProviderCodes: readonly string[] = threePlusOneBoxProviderCodes;
+
+export function isThreePlusOneBoxRange(value: string): value is ThreePlusOneBoxRange {
+  return (threePlusOneBoxRanges as readonly string[]).includes(value);
+}
+
+export function isThreePlusOneBoxSupportedProvider(value: string): boolean {
+  return (threePlusOneBoxProviderCodes as readonly string[]).includes(value);
+}
 
 function parseJsonSafely(text: string): unknown | null {
   try {
@@ -656,6 +733,99 @@ function normalizeThreePlusOneAiHitHistory(providerCode: string, raw: unknown): 
   };
 }
 
+function normalizeThreePlusOneBoxMode(value: unknown): ThreePlusOneBoxMode | null {
+  const mode = String(value ?? '').trim();
+  return (threePlusOneBoxModes as readonly string[]).includes(mode) ? mode as ThreePlusOneBoxMode : null;
+}
+
+function normalizeThreePlusOneBoxRankingType(value: unknown): ThreePlusOneBoxRankingType | null {
+  const rankingType = String(value ?? '').trim();
+  return rankingType === 'hot' || rankingType === 'cold' ? rankingType : null;
+}
+
+function normalizeThreePlusOneBoxKey(value: unknown): string {
+  return typeof value === 'string' && /^\d{3}$/.test(value) ? value : '';
+}
+
+function normalizeThreePlusOneBoxColdSummary(raw: unknown): ThreePlusOneBoxColdSummary {
+  const map = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+  return {
+    longestGapDays: normalizeOptionalNumber(map.longest_gap_days ?? map.longestGapDays),
+    longestGapDraws: normalizeOptionalNumber(map.longest_gap_draws ?? map.longestGapDraws),
+    combinationKey: String(map.combination_key ?? map.combinationKey ?? '').trim(),
+    key3d: normalizeThreePlusOneBoxKey(map.key3d),
+    description: String(map.description ?? '').trim()
+  };
+}
+
+function normalizeThreePlusOneBoxItem(row: Record<string, unknown>): ThreePlusOneBoxRankingItem | null {
+  const key3d = normalizeThreePlusOneBoxKey(row.key3d);
+  if (!key3d) return null;
+  return {
+    rank: Number(row.rank ?? 0),
+    key3d,
+    totalCount: Number(row.total_count ?? row.totalCount ?? 0),
+    firstCount: Number(row.first_count ?? row.firstCount ?? 0),
+    secondCount: Number(row.second_count ?? row.secondCount ?? 0),
+    thirdCount: Number(row.third_count ?? row.thirdCount ?? 0),
+    lastSeen: String(row.last_seen ?? row.lastSeen ?? '').trim() || undefined,
+    lastSeenDrawDate: String(row.last_seen_draw_date ?? row.lastSeenDrawDate ?? '').trim() || undefined,
+    lastSeenDrawNo: String(row.last_seen_draw_no ?? row.lastSeenDrawNo ?? '').trim() || undefined,
+    lastSeenProviderCode: String(row.last_seen_provider_code ?? row.lastSeenProviderCode ?? '').trim() || undefined,
+    lastSeenPrizeType: String(row.last_seen_prize_type ?? row.lastSeenPrizeType ?? '').trim() || undefined,
+    currentGapDays: Number(row.current_gap_days ?? row.currentGapDays ?? 0),
+    currentGapDraws: Number(row.current_gap_draws ?? row.currentGapDraws ?? 0),
+    historicalMaxGapDays: normalizeOptionalNumber(row.historical_max_gap_days ?? row.historicalMaxGapDays),
+    historicalMaxGapDraws: normalizeOptionalNumber(row.historical_max_gap_draws ?? row.historicalMaxGapDraws),
+    providers: normalizeNumbers(row.providers)
+  };
+}
+
+function normalizeThreePlusOneBoxRankingFeed(raw: unknown): ThreePlusOneBoxRankingFeed | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const map = raw as Record<string, unknown>;
+  const window = String(map.window ?? '').trim();
+  if (!isThreePlusOneBoxRange(window)) return null;
+  const rankingItems = Array.isArray(map.rankings) ? map.rankings : [];
+  const rankings = rankingItems
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item))
+    .map((item) => {
+      const mode = normalizeThreePlusOneBoxMode(item.mode);
+      const rankingType = normalizeThreePlusOneBoxRankingType(item.ranking_type ?? item.rankingType);
+      if (!mode || !rankingType) return null;
+      const rawItems = Array.isArray(item.items) ? item.items : [];
+      return {
+        mode,
+        rankingType,
+        prizeScopeKey: String(item.prize_scope_key ?? item.prizeScopeKey ?? '').trim(),
+        coldSummary: normalizeThreePlusOneBoxColdSummary(item.cold_summary ?? item.coldSummary),
+        items: rawItems
+          .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object' && !Array.isArray(row))
+          .map(normalizeThreePlusOneBoxItem)
+          .filter((row): row is ThreePlusOneBoxRankingItem => Boolean(row))
+      };
+    })
+    .filter((item): item is ThreePlusOneBoxRankingBucket => item !== null && item.prizeScopeKey.length > 0);
+
+  return {
+    sourceType: String(map.source_type ?? map.sourceType ?? '').trim(),
+    rankingType: String(map.ranking_type ?? map.rankingType ?? '').trim(),
+    window,
+    scopeType: String(map.scope_type ?? map.scopeType ?? '').trim(),
+    scope: String(map.scope ?? '').trim(),
+    scopeLabel: String(map.scope_label ?? map.scopeLabel ?? '').trim(),
+    generatedAt: String(map.generated_at ?? map.generatedAt ?? '').trim() || undefined,
+    updatedAt: String(map.updated_at ?? map.updatedAt ?? '').trim() || undefined,
+    freshnessState: String(map.freshness_state ?? map.freshnessState ?? '').trim(),
+    completeForCurrentCycle: map.complete_for_current_cycle !== false && map.completeForCurrentCycle !== false,
+    includedProviders: normalizeNumbers(map.included_providers ?? map.includedProviders),
+    pendingProviders: normalizeNumbers(map.pending_providers ?? map.pendingProviders),
+    missingProviders: normalizeNumbers(map.missing_providers ?? map.missingProviders),
+    coldSummary: normalizeThreePlusOneBoxColdSummary(map.cold_summary ?? map.coldSummary),
+    rankings
+  };
+}
+
 export async function fetchProviderLatest(providerCode: string, options?: {cache?: 'revalidate' | 'no-store'}): Promise<ProviderResultState> {
   const url = `${latestBaseUrl.replace(/\/$/, '')}/${providerCode}.json`;
   try {
@@ -866,6 +1036,24 @@ export async function fetchThreePlusOneAiHitHistory(providerCode: string): Promi
     return {ok: true, providerCode, url, payload};
   } catch (error) {
     return {ok: false, providerCode, url, reason: compactErrorReason(error)};
+  }
+}
+
+export async function fetchThreePlusOneBoxRanking(range: ThreePlusOneBoxRange, providerCode: string): Promise<ThreePlusOneBoxRankingState> {
+  const url = `${threePlusOneBoxRankingBaseUrl.replace(/\/$/, '')}/${range}/provider/${providerCode}.json`;
+  try {
+    if (!isThreePlusOneBoxRange(range) || !isThreePlusOneBoxSupportedProvider(providerCode)) {
+      return {ok: false, url, reason: 'invalid_params'};
+    }
+    const response = await fetch(url, {cache: 'no-store', headers: {accept: 'application/json'}});
+    if (!response.ok) return {ok: false, url, reason: `status_${response.status}`};
+    const decoded = parseJsonSafely(await response.text());
+    if (!decoded) return {ok: false, url, reason: 'invalid_json'};
+    const payload = normalizeThreePlusOneBoxRankingFeed(decoded);
+    if (!payload) return {ok: false, url, reason: 'invalid_json_shape'};
+    return {ok: true, url, payload};
+  } catch (error) {
+    return {ok: false, url, reason: compactErrorReason(error)};
   }
 }
 
