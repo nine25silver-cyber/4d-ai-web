@@ -149,25 +149,27 @@ export function ThreePlusOneBoxRankingClient({locale, provider, providerName, la
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="rounded-lg bg-slate-50 p-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-black text-slate-950">{labels.hotTitle}</p>
-              <p className="mt-0.5 text-xs font-bold text-slate-500">{labels.hotRangeTitle}</p>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {ranges.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setRange(item)}
-                  className={`rounded-md px-2.5 py-1.5 text-xs font-black transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37] ${
-                    range === item ? 'bg-[#d4af37] text-slate-950' : 'bg-white text-slate-700 hover:bg-slate-100'
-                  }`}
-                  aria-pressed={range === item}
-                >
-                  {rangeLabel(item, labels)}
-                </button>
-              ))}
+          <div className="rounded-md bg-[#1e3a8a] px-3 py-2.5 text-white">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="rounded-full bg-[#d4af37] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-950">HOT</span>
+                <p className="text-sm font-black text-white">{labels.hotTitle}</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {ranges.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setRange(item)}
+                    className={`rounded-md px-2.5 py-1.5 text-xs font-black transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37] ${
+                      range === item ? 'bg-[#d4af37] text-slate-950' : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
+                    aria-pressed={range === item}
+                  >
+                    {rangeLabel(item, labels)}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           <RankingPanel
@@ -184,9 +186,14 @@ export function ThreePlusOneBoxRankingClient({locale, provider, providerName, la
         </div>
 
         <div className="rounded-lg bg-slate-50 p-3">
-          <div>
-            <p className="text-sm font-black text-slate-950">{labels.coldTitle}</p>
-            <p className="mt-0.5 text-xs font-bold text-slate-500">{labels.rangeAll}</p>
+          <div className="rounded-md bg-[#1e3a8a] px-3 py-2.5 text-white">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="rounded-full bg-sky-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#0f2f5f]">COLD</span>
+                <p className="text-sm font-black text-white">{labels.coldTitle}</p>
+              </div>
+              <span className="w-fit rounded-md bg-white/10 px-2.5 py-1.5 text-xs font-black text-white">{labels.rangeAll}</span>
+            </div>
           </div>
           <ColdSummary summary={coldBucket?.coldSummary} labels={labels} />
           <RankingPanel
