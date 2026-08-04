@@ -1,8 +1,9 @@
 import {NextResponse} from 'next/server';
-import {fetchCombinationRanking} from '@/lib/cloudflare';
+import {fetchCombinationRanking, type CombinationRankingBucket, type CombinationRankingItem} from '@/lib/cloudflare';
 import {regions} from '@/lib/providers';
 
 type RankingRow = {
+  rank: number;
   boxed: string;
   count: number;
   latestDate: string;
@@ -10,11 +11,14 @@ type RankingRow = {
   providers: string[];
   groupType: '24' | '12' | '6' | '4';
   currentGapDays: number;
+  currentGapDraws?: number;
   historicalMaxGapDays?: number;
+  historicalMaxGapDraws?: number;
 };
 
 type TrendMode = 'hot' | 'cold';
 type PackageType = 'ABCD' | 'AABC' | 'AABB' | 'AAAB';
+type ScopeType = 'provider' | 'group';
 
 const providersByCode = new Map(regions.flatMap((region) => region.providers).map((provider) => [provider.code, provider]));
 const supportedProviders = new Set(providersByCode.keys());
@@ -35,6 +39,19 @@ const supportedGroupScopes = new Set([
   'east_cambodia_singapore',
   'west_east_cambodia_singapore'
 ]);
+
+// Product-confirmed canonical draw-sequence rule for region-group draw counts.
+const canonicalDrawProviderByGroupScope: Partial<Record<string, string>> = {
+  west: 'magnum',
+  east: 'sabah88',
+  singapore: 'singapore'
+};
+const dailyDrawsEqualDaysGroupScopes = new Set(['cambodia']);
+
+type DrawGapFields = {
+  currentGapDraws?: number;
+  historicalMaxGapDraws?: number;
+};
 
 function normalizeWindow(value: string) {
   if (value === '365d') return '1y';
@@ -71,8 +88,8 @@ function normalizeGroupType(mode: string): RankingRow['groupType'] {
   return '4';
 }
 
-function normalizeScope(url: URL) {
-  const scopeType = url.searchParams.get('scopeType') === 'provider' ? 'provider' : 'group';
+function normalizeScope(url: URL): {scopeType: ScopeType; scope: string} {
+  const scopeType: ScopeType = url.searchParams.get('scopeType') === 'provider' ? 'provider' : 'group';
   const rawScope = String(url.searchParams.get('scope') ?? '').trim();
   if (scopeType === 'provider') {
     return supportedProviders.has(rawScope) ? {scopeType, scope: rawScope} : {scopeType, scope: 'magnum'};
@@ -82,6 +99,91 @@ function normalizeScope(url: URL) {
 
 function providerLabel(providerCode: string) {
   return providersByCode.get(providerCode)?.shortName ?? providerCode;
+}
+
+function findRankingBucket(buckets: CombinationRankingBucket[], packageType: PackageType, rankingType: TrendMode, prizeScopeKey: string): CombinationRankingBucket | undefined {
+  return buckets.find((item) =>
+    item.mode === packageType &&
+    item.rankingType === rankingType &&
+    item.prizeScopeKey === prizeScopeKey
+  );
+}
+
+function drawGapFieldsFromItem(item: CombinationRankingItem | undefined): DrawGapFields {
+  if (!item) return {};
+  return {
+    currentGapDraws: item.currentGapDraws,
+    historicalMaxGapDraws: item.historicalMaxGapDraws
+  };
+}
+
+function dailyDrawGapFieldsFromItem(item: CombinationRankingItem): DrawGapFields {
+  return {
+    currentGapDraws: item.currentGapDays,
+    historicalMaxGapDraws: item.historicalMaxGapDays
+  };
+}
+
+function buildRows(items: CombinationRankingItem[], packageType: PackageType, drawGapsByKey: Map<string, DrawGapFields>): RankingRow[] {
+  return items
+    .filter((item) => item.key !== '----')
+    .map((item) => {
+      const drawGaps = drawGapsByKey.get(item.key) ?? {};
+      return {
+        rank: item.rank,
+        boxed: item.key,
+        count: item.count,
+        latestDate: item.lastSeen ?? '',
+        sampleNumbers: [],
+        providers: item.providers.map(providerLabel).sort(),
+        groupType: normalizeGroupType(packageType),
+        currentGapDays: item.currentGapDays,
+        currentGapDraws: drawGaps.currentGapDraws,
+        historicalMaxGapDays: item.historicalMaxGapDays,
+        historicalMaxGapDraws: drawGaps.historicalMaxGapDraws
+      };
+    });
+}
+
+async function buildDrawGapsByKey({
+  scopeType,
+  scope,
+  window,
+  packageType,
+  rankingType,
+  prizeScopeKey,
+  groupItems
+}: {
+  scopeType: ScopeType;
+  scope: string;
+  window: string;
+  packageType: PackageType;
+  rankingType: TrendMode;
+  prizeScopeKey: string;
+  groupItems: CombinationRankingItem[];
+}): Promise<Map<string, DrawGapFields>> {
+  if (scopeType === 'provider') {
+    return new Map(groupItems.map((item) => [item.key, drawGapFieldsFromItem(item)]));
+  }
+
+  if (dailyDrawsEqualDaysGroupScopes.has(scope)) {
+    return new Map(groupItems.map((item) => [item.key, dailyDrawGapFieldsFromItem(item)]));
+  }
+
+  const canonicalProvider = canonicalDrawProviderByGroupScope[scope];
+  if (!canonicalProvider) return new Map();
+
+  const canonicalFeed = await fetchCombinationRanking(window, 'provider', canonicalProvider);
+  if (!canonicalFeed.ok) return new Map();
+
+  const canonicalBucket = findRankingBucket(canonicalFeed.payload.rankings, packageType, rankingType, prizeScopeKey);
+  if (!canonicalBucket) return new Map();
+
+  return new Map(
+    canonicalBucket.items
+      .filter((item) => item.key !== '----')
+      .map((item) => [item.key, drawGapFieldsFromItem(item)])
+  );
 }
 
 export async function GET(request: Request) {
@@ -101,26 +203,31 @@ export async function GET(request: Request) {
   }
 
   const rankingType = mode === 'cold' ? 'cold' : 'hot';
-  const bucket = feed.payload.rankings.find((item) =>
-    item.mode === packageType &&
-    item.rankingType === rankingType &&
-    item.prizeScopeKey === prizeScopeKey
-  );
-  const rows: RankingRow[] = (bucket?.items ?? [])
-    .filter((item) => item.key !== '----')
-    .map((item) => ({
-        boxed: item.key,
-        count: item.count,
-        latestDate: item.lastSeen ?? '',
-        sampleNumbers: [],
-        providers: item.providers.map(providerLabel).sort(),
-        groupType: normalizeGroupType(packageType),
-        currentGapDays: item.currentGapDays,
-        historicalMaxGapDays: item.historicalMaxGapDays
-      }));
+  const bucket = findRankingBucket(feed.payload.rankings, packageType, rankingType, prizeScopeKey);
+  const bucketItems = bucket?.items ?? [];
+  const drawGapsByKey = await buildDrawGapsByKey({
+    scopeType,
+    scope,
+    window,
+    packageType,
+    rankingType,
+    prizeScopeKey,
+    groupItems: bucketItems
+  });
+  const rows = buildRows(bucketItems, packageType, drawGapsByKey);
 
   const numberCount = rows.reduce((sum, row) => sum + row.count, 0);
-  const coldSummary = bucket?.coldSummary ?? feed.payload.coldSummary;
+  const upstreamColdSummary = bucket?.coldSummary ?? feed.payload.coldSummary;
+  const coldSummary = upstreamColdSummary
+    ? {
+        ...upstreamColdSummary,
+        longestGapDraws: scopeType === 'provider'
+          ? upstreamColdSummary.longestGapDraws
+          : dailyDrawsEqualDaysGroupScopes.has(scope)
+            ? upstreamColdSummary.longestGapDays
+            : undefined
+      }
+    : upstreamColdSummary;
 
   return NextResponse.json(
     {
