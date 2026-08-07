@@ -40,19 +40,6 @@ const supportedGroupScopes = new Set([
   'west_east_cambodia_singapore'
 ]);
 
-// Product-confirmed canonical draw-sequence rule for region-group draw counts.
-const canonicalDrawProviderByGroupScope: Partial<Record<string, string>> = {
-  west: 'magnum',
-  east: 'sabah88',
-  singapore: 'singapore'
-};
-const dailyDrawsEqualDaysGroupScopes = new Set(['cambodia']);
-
-type DrawGapFields = {
-  currentGapDraws?: number;
-  historicalMaxGapDraws?: number;
-};
-
 function normalizeWindow(value: string) {
   if (value === '365d') return '1y';
   if (value === '180d') return '6m';
@@ -109,81 +96,22 @@ function findRankingBucket(buckets: CombinationRankingBucket[], packageType: Pac
   );
 }
 
-function drawGapFieldsFromItem(item: CombinationRankingItem | undefined): DrawGapFields {
-  if (!item) return {};
-  return {
-    currentGapDraws: item.currentGapDraws,
-    historicalMaxGapDraws: item.historicalMaxGapDraws
-  };
-}
-
-function dailyDrawGapFieldsFromItem(item: CombinationRankingItem): DrawGapFields {
-  return {
-    currentGapDraws: item.currentGapDays,
-    historicalMaxGapDraws: item.historicalMaxGapDays
-  };
-}
-
-function buildRows(items: CombinationRankingItem[], packageType: PackageType, drawGapsByKey: Map<string, DrawGapFields>): RankingRow[] {
+function buildRows(items: CombinationRankingItem[], packageType: PackageType): RankingRow[] {
   return items
     .filter((item) => item.key !== '----')
-    .map((item) => {
-      const drawGaps = drawGapsByKey.get(item.key) ?? {};
-      return {
-        rank: item.rank,
-        boxed: item.key,
-        count: item.count,
-        latestDate: item.lastSeen ?? '',
-        sampleNumbers: [],
-        providers: item.providers.map(providerLabel).sort(),
-        groupType: normalizeGroupType(packageType),
-        currentGapDays: item.currentGapDays,
-        currentGapDraws: drawGaps.currentGapDraws,
-        historicalMaxGapDays: item.historicalMaxGapDays,
-        historicalMaxGapDraws: drawGaps.historicalMaxGapDraws
-      };
-    });
-}
-
-async function buildDrawGapsByKey({
-  scopeType,
-  scope,
-  window,
-  packageType,
-  rankingType,
-  prizeScopeKey,
-  groupItems
-}: {
-  scopeType: ScopeType;
-  scope: string;
-  window: string;
-  packageType: PackageType;
-  rankingType: TrendMode;
-  prizeScopeKey: string;
-  groupItems: CombinationRankingItem[];
-}): Promise<Map<string, DrawGapFields>> {
-  if (scopeType === 'provider') {
-    return new Map(groupItems.map((item) => [item.key, drawGapFieldsFromItem(item)]));
-  }
-
-  if (dailyDrawsEqualDaysGroupScopes.has(scope)) {
-    return new Map(groupItems.map((item) => [item.key, dailyDrawGapFieldsFromItem(item)]));
-  }
-
-  const canonicalProvider = canonicalDrawProviderByGroupScope[scope];
-  if (!canonicalProvider) return new Map();
-
-  const canonicalFeed = await fetchCombinationRanking(window, 'provider', canonicalProvider);
-  if (!canonicalFeed.ok) return new Map();
-
-  const canonicalBucket = findRankingBucket(canonicalFeed.payload.rankings, packageType, rankingType, prizeScopeKey);
-  if (!canonicalBucket) return new Map();
-
-  return new Map(
-    canonicalBucket.items
-      .filter((item) => item.key !== '----')
-      .map((item) => [item.key, drawGapFieldsFromItem(item)])
-  );
+    .map((item) => ({
+      rank: item.rank,
+      boxed: item.key,
+      count: item.count,
+      latestDate: item.lastSeen ?? '',
+      sampleNumbers: [],
+      providers: item.providers.map(providerLabel).sort(),
+      groupType: normalizeGroupType(packageType),
+      currentGapDays: item.currentGapDays,
+      currentGapDraws: item.currentGapDraws,
+      historicalMaxGapDays: item.historicalMaxGapDays,
+      historicalMaxGapDraws: item.historicalMaxGapDraws
+    }));
 }
 
 export async function GET(request: Request) {
@@ -205,29 +133,10 @@ export async function GET(request: Request) {
   const rankingType = mode === 'cold' ? 'cold' : 'hot';
   const bucket = findRankingBucket(feed.payload.rankings, packageType, rankingType, prizeScopeKey);
   const bucketItems = bucket?.items ?? [];
-  const drawGapsByKey = await buildDrawGapsByKey({
-    scopeType,
-    scope,
-    window,
-    packageType,
-    rankingType,
-    prizeScopeKey,
-    groupItems: bucketItems
-  });
-  const rows = buildRows(bucketItems, packageType, drawGapsByKey);
+  const rows = buildRows(bucketItems, packageType);
 
   const numberCount = rows.reduce((sum, row) => sum + row.count, 0);
   const upstreamColdSummary = bucket?.coldSummary ?? feed.payload.coldSummary;
-  const coldSummary = upstreamColdSummary
-    ? {
-        ...upstreamColdSummary,
-        longestGapDraws: scopeType === 'provider'
-          ? upstreamColdSummary.longestGapDraws
-          : dailyDrawsEqualDaysGroupScopes.has(scope)
-            ? upstreamColdSummary.longestGapDays
-            : undefined
-      }
-    : upstreamColdSummary;
 
   return NextResponse.json(
     {
@@ -246,7 +155,7 @@ export async function GET(request: Request) {
       providerCount: feed.payload.includedProviders.length,
       drawCount: 0,
       numberCount,
-      coldSummary,
+      coldSummary: upstreamColdSummary,
       rankings: rows,
       providerSummaries: feed.payload.includedProviders.map((providerCode) => ({
         providerCode,
