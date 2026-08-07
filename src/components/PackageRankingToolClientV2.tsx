@@ -8,13 +8,11 @@ import {useTranslations} from 'next-intl';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
 import {canAccessAiCore, getCurrentUserEntitlement, isPaidProEntitlement, isTrialEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {
-  addRewardCredit,
-  consumeRewardCredit,
+  grantRewardedAdAccess,
   getFeatureUnlockRemainingMinutes,
   isFeatureUnlockedNow,
-  readRewardState,
+  REWARD_AD_ACCESS_MINUTES,
   subscribeRewardState,
-  unlockFeatureForMinutes
 } from '@/lib/reward-unlock';
 import {ProviderLogoBadge} from '@/components/ProviderLogoBadge';
 
@@ -81,8 +79,8 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
   const [memberState, setMemberState] = useState<MemberState | null>(null);
   const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
   const [entitlementLoading, setEntitlementLoading] = useState(true);
-  const [rewardCredits, setRewardCredits] = useState(0);
   const [adUnlocked, setAdUnlocked] = useState(false);
+  const [adNotice, setAdNotice] = useState<string | null>(null);
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
   const [range, setRange] = useState<RangeValue>('6m');
   const [scopeMode, setScopeMode] = useState<ScopeMode>('region');
@@ -96,6 +94,8 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const requestIdRef = useRef(0);
+  const rewardFeature = 'ad_access_4d';
+  const canSimulateRewardedAd = process.env.NODE_ENV === 'development';
 
   const providerCodes = useMemo(() => new Set(providers.map((provider) => provider.code)), [providers]);
   const providerByCode = useMemo(() => new Map(providers.map((provider) => [provider.code, provider])), [providers]);
@@ -210,36 +210,36 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
 
   useEffect(() => {
     const update = () => {
-      setRewardCredits(readRewardState().package_ranking ?? 0);
-      const active = isFeatureUnlockedNow('package_ranking');
+      const active = isFeatureUnlockedNow(rewardFeature);
       setAdUnlocked(active);
-      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes('package_ranking'));
+      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes(rewardFeature));
     };
     update();
     return subscribeRewardState((state) => {
-      setRewardCredits(state.package_ranking ?? 0);
-      const active = isFeatureUnlockedNow('package_ranking');
+      const active = isFeatureUnlockedNow(rewardFeature);
       setAdUnlocked(active);
-      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes('package_ranking'));
+      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes(rewardFeature));
     });
   }, []);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      const active = isFeatureUnlockedNow('package_ranking');
+      const active = isFeatureUnlockedNow(rewardFeature);
       setAdUnlocked(active);
-      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes('package_ranking'));
+      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes(rewardFeature));
     }, 30_000);
     return () => window.clearInterval(timer);
   }, []);
 
   function unlockByRewardedAd() {
-    addRewardCredit('package_ranking', 1);
-    if (consumeRewardCredit('package_ranking', 1)) {
-      unlockFeatureForMinutes('package_ranking', 30);
-      setAdUnlocked(true);
-      setUnlockMinutesLeft(30);
+    if (!canSimulateRewardedAd) {
+      setAdNotice(locale === 'zh' ? '广告功能即将开放。' : locale === 'ms' ? 'Fungsi iklan akan tersedia tidak lama lagi.' : 'Ad access is coming soon.');
+      return;
     }
+    grantRewardedAdAccess(rewardFeature);
+    setAdUnlocked(true);
+    setUnlockMinutesLeft(REWARD_AD_ACCESS_MINUTES);
+    setAdNotice(locale === 'zh' ? 'Development 测试广告已模拟完成。' : locale === 'ms' ? 'Iklan ujian Development telah disimulasikan.' : 'Development test ad reward simulated.');
   }
 
   function selectGroup(groupId: string) {
@@ -297,7 +297,6 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
       ? (locale === 'zh' ? 'Trial 已激活' : locale === 'ms' ? 'Trial aktif' : 'Trial active')
       : (locale === 'zh' ? '广告临时解锁' : locale === 'ms' ? 'Buka sementara melalui iklan' : 'Temporary ad unlock');
   const lockedAccessText = locale === 'zh' ? '包字排行榜开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Ranking boxed untuk Pro, atau buka sementara melalui iklan.' : 'Package ranking is for Pro, or temporary ad unlock.';
-  const rewardCreditsText = locale === 'zh' ? `可用广告解锁次数：${rewardCredits}` : locale === 'ms' ? `Kredit buka iklan tersedia: ${rewardCredits}` : `Available rewarded unlock credits: ${rewardCredits}`;
   const adUnlockRemainingText = locale === 'zh' ? `本次广告解锁剩余：约 ${unlockMinutesLeft} 分钟` : locale === 'ms' ? `Baki buka kunci iklan: kira-kira ${unlockMinutesLeft} minit` : `Ad unlock remaining: about ${unlockMinutesLeft} minutes`;
   const noProviderText = locale === 'zh' ? '请选择至少一个统计范围。' : locale === 'ms' ? 'Pilih sekurang-kurangnya satu skop.' : 'Choose at least one scope.';
   const isColdMode = trendMode === 'cold';
@@ -422,9 +421,9 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
               <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold ${canUseRanking ? 'text-blue-800' : 'text-amber-800'}`}>
                 {canUseRanking ? <span>{accessBadgeText}</span> : null}
                 {!canUseRanking && entitlementLoading ? <span>{locale === 'zh' ? '正在确认会员权限' : locale === 'ms' ? 'Sedang semak akses ahli' : 'Checking membership access'}</span> : null}
-                <span>{rewardCreditsText}</span>
                 {unlockMinutesLeft > 0 ? <span>{adUnlockRemainingText}</span> : null}
               </div>
+              {adNotice ? <p className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">{adNotice}</p> : null}
             </div>
             {!canUseRanking ? (
               <div className="flex flex-wrap gap-2">
@@ -434,7 +433,9 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
                   </button>
                 ) : null}
                 <button type="button" onClick={unlockByRewardedAd} className="rounded-md border border-amber-300 bg-white px-3 py-1.5 text-xs font-black text-amber-900 hover:bg-amber-100">
-                  {locale === 'zh' ? '观看广告并解锁30分钟' : locale === 'ms' ? 'Tonton iklan & buka 30 minit' : 'Watch ad and unlock for 30 minutes'}
+                  {canSimulateRewardedAd
+                    ? (locale === 'zh' ? 'Development 测试 4D 广告解锁 3 小时' : locale === 'ms' ? 'Uji iklan 4D Development & buka 3 jam' : 'Development test 4D ad unlock for 3 hours')
+                    : (locale === 'zh' ? '广告功能即将开放' : locale === 'ms' ? 'Fungsi iklan akan tersedia' : 'Ad access coming soon')}
                 </button>
                 <Link href={`/${locale}/pricing`} className="rounded-md bg-blue-800 px-3 py-1.5 text-xs font-black text-white hover:bg-blue-900">
                   {locale === 'zh' ? '升级 Pro' : locale === 'ms' ? 'Upgrade Pro' : 'Upgrade Pro'}
@@ -447,7 +448,11 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
         {!canUseRanking ? (
           <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">
             <p>{locale === 'zh' ? '包字排行榜需要 Pro，或观看广告解锁后使用。' : locale === 'ms' ? 'Ranking boxed memerlukan Pro atau buka kunci melalui iklan.' : 'Package ranking requires Pro or ad unlock.'}</p>
-            <p className="mt-1">{locale === 'zh' ? '观看一次广告可解锁 30 分钟。' : locale === 'ms' ? 'Satu iklan membuka akses selama 30 minit.' : 'One rewarded ad unlocks access for 30 minutes.'}</p>
+            <p className="mt-1">
+              {canSimulateRewardedAd
+                ? (locale === 'zh' ? 'Development 中可模拟一次 4D 广告成功并解锁 3 小时。' : locale === 'ms' ? 'Dalam Development, kejayaan iklan 4D boleh disimulasikan untuk buka 3 jam.' : 'In Development, a 4D ad reward can be simulated for 3 hours.')
+                : (locale === 'zh' ? '广告功能即将开放。' : locale === 'ms' ? 'Fungsi iklan akan tersedia tidak lama lagi.' : 'Ad access is coming soon.')}
+            </p>
           </div>
         ) : null}
 

@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {getTranslations} from 'next-intl/server';
+import {AdAccessGateClient} from '@/components/AdAccessGateClient';
 import {AiProviderSwitcher} from '@/components/AiProviderSwitcher';
 import {ThreePlusOneBoxRankingClient} from '@/components/ThreePlusOneBoxRankingClient';
 import {isThreePlusOneBoxSupportedProvider} from '@/lib/cloudflare';
@@ -70,40 +71,47 @@ export default async function ThreePlusOneBoxProviderPage({params}: {params: Pro
             />
           </div>
 
-          <ThreePlusOneBoxRankingClient
+          <AdAccessGateClient
             locale={locale}
-            provider={provider}
-            providerName={providerName}
-            labels={{
-              updatedAt: toolsT('threeDBoxUpdatedAt'),
-              generatedAt: toolsT('threeDBoxGeneratedAt'),
-              hotTitle: toolsT('threeDBoxHotTitle'),
-              coldTitle: toolsT('threeDBoxColdTitle'),
-              coldSummaryTitle: toolsT('threeDBoxColdSummaryTitle'),
-              modeTitle: toolsT('threeDBoxModeTitle'),
-              hotRangeTitle: toolsT('threeDBoxHotRangeTitle'),
-              range6m: toolsT('threeDBoxRange6m'),
-              range1y: toolsT('threeDBoxRange1y'),
-              rangeAll: toolsT('threeDBoxRangeAll'),
-              occurrences: toolsT('threeDBoxOccurrences'),
-              occurrenceUnit: toolsT('threeDBoxOccurrenceUnit'),
-              currentGap: toolsT('threeDBoxCurrentGap'),
-              historicalMaxGap: toolsT('threeDBoxHistoricalMaxGap'),
-              days: toolsT('threeDBoxDays'),
-              draws: toolsT('threeDBoxDraws'),
-              noData: toolsT('threeDBoxNoData'),
-              loading: toolsT('threeDBoxLoading'),
-              loadFailed: toolsT('threeDBoxLoadFailed'),
-              retry: toolsT('threeDBoxRetry'),
-              latestSeen: toolsT('threeDBoxLatestSeen'),
-              viewDetails: toolsT('threeDBoxViewDetails'),
-              hideDetails: toolsT('threeDBoxHideDetails'),
-              prizeWinsTitle: toolsT('threeDBoxPrizeWinsTitle'),
-              firstPrize: toolsT('threeDBoxFirstPrize'),
-              secondPrize: toolsT('threeDBoxSecondPrize'),
-              thirdPrize: toolsT('threeDBoxThirdPrize')
-            }}
-          />
+            feature="ad_access_3d"
+            adLabel="3D"
+            lockedText={locale === 'zh' ? '3D 包字排行榜开放给 Pro 会员，或观看 3D 广告后临时解锁。' : locale === 'ms' ? 'Ranking boxed 3D untuk ahli Pro, atau buka sementara melalui iklan 3D.' : '3D BOX ranking is for Pro, or temporary 3D ad unlock.'}
+          >
+            <ThreePlusOneBoxRankingClient
+              locale={locale}
+              provider={provider}
+              providerName={providerName}
+              labels={{
+                updatedAt: toolsT('threeDBoxUpdatedAt'),
+                generatedAt: toolsT('threeDBoxGeneratedAt'),
+                hotTitle: toolsT('threeDBoxHotTitle'),
+                coldTitle: toolsT('threeDBoxColdTitle'),
+                coldSummaryTitle: toolsT('threeDBoxColdSummaryTitle'),
+                modeTitle: toolsT('threeDBoxModeTitle'),
+                hotRangeTitle: toolsT('threeDBoxHotRangeTitle'),
+                range6m: toolsT('threeDBoxRange6m'),
+                range1y: toolsT('threeDBoxRange1y'),
+                rangeAll: toolsT('threeDBoxRangeAll'),
+                occurrences: toolsT('threeDBoxOccurrences'),
+                occurrenceUnit: toolsT('threeDBoxOccurrenceUnit'),
+                currentGap: toolsT('threeDBoxCurrentGap'),
+                historicalMaxGap: toolsT('threeDBoxHistoricalMaxGap'),
+                days: toolsT('threeDBoxDays'),
+                draws: toolsT('threeDBoxDraws'),
+                noData: toolsT('threeDBoxNoData'),
+                loading: toolsT('threeDBoxLoading'),
+                loadFailed: toolsT('threeDBoxLoadFailed'),
+                retry: toolsT('threeDBoxRetry'),
+                latestSeen: toolsT('threeDBoxLatestSeen'),
+                viewDetails: toolsT('threeDBoxViewDetails'),
+                hideDetails: toolsT('threeDBoxHideDetails'),
+                prizeWinsTitle: toolsT('threeDBoxPrizeWinsTitle'),
+                firstPrize: toolsT('threeDBoxFirstPrize'),
+                secondPrize: toolsT('threeDBoxSecondPrize'),
+                thirdPrize: toolsT('threeDBoxThirdPrize')
+              }}
+            />
+          </AdAccessGateClient>
         </div>
       </div>
     </main>

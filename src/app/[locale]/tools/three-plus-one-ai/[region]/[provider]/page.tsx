@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {getTranslations} from 'next-intl/server';
+import {AdAccessGateClient} from '@/components/AdAccessGateClient';
 import {AiProviderSwitcher} from '@/components/AiProviderSwitcher';
 import {ThreePlusOneHitHistoryClient} from '@/components/ThreePlusOneHitHistoryClient';
 import {fetchThreePlusOneAiHitHistory, fetchThreePlusOneAiRecommendation} from '@/lib/cloudflare';
@@ -68,73 +69,75 @@ export default async function ThreePlusOneAiProviderPage({params}: {params: Prom
             />
           </div>
 
-          <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-black text-slate-950">{copy.currentRecommendation}</h2>
-                <p className="mt-1 text-xs font-bold text-slate-500">
-                  {recommendation.ok && recommendation.payload.sourceDrawDate
-                    ? copy.sourceDate.replace('{date}', recommendation.payload.sourceDrawDate)
-                    : copy.sourcePending}
-                </p>
-              </div>
-              <span className="rounded-md bg-[#f0c95a] px-2 py-0.5 text-[10px] font-black text-slate-900 shadow-sm">
-                PRO
-              </span>
-            </div>
-
-            {recommendation.ok ? (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {recommendation.payload.recommendation4.map((digit, index) => (
-                  <span
-                    key={`${digit}-${index}`}
-                    className="flex h-14 w-14 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-2xl font-black text-slate-950"
-                  >
-                    {digit}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <UnavailablePanel title={copy.unavailableTitle} text={copy.unavailableText} reason={recommendation.reason} />
-            )}
-
-            {recommendation.ok && recommendation.payload.generatedAt ? (
-              <p className="mt-3 text-xs font-bold text-slate-500">
-                {copy.generatedAt.replace('{time}', recommendation.payload.generatedAt)}
-              </p>
-            ) : null}
-          </section>
-
-          <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-black text-slate-950">{copy.hitHistoryTitle}</h2>
-                <p className="mt-1 text-sm font-bold text-slate-600">{copy.hitHistoryIntro}</p>
-              </div>
-              {hitHistory.ok ? (
-                <div className="text-right text-xs font-black text-slate-600">
-                  <div>{copy.totalPeriods.replace('{count}', `${hitHistory.payload.totalPeriods ?? hitHistory.payload.records.length}`)}</div>
-                  <div>{copy.totalHits.replace('{count}', `${hitHistory.payload.totalHits ?? '-'}`)}</div>
+          <AdAccessGateClient locale={locale} feature="ad_access_3d" adLabel="3D" lockedText={copy.lockedText}>
+            <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-black text-slate-950">{copy.currentRecommendation}</h2>
+                  <p className="mt-1 text-xs font-bold text-slate-500">
+                    {recommendation.ok && recommendation.payload.sourceDrawDate
+                      ? copy.sourceDate.replace('{date}', recommendation.payload.sourceDrawDate)
+                      : copy.sourcePending}
+                  </p>
                 </div>
-              ) : null}
-            </div>
+                <span className="rounded-md bg-[#f0c95a] px-2 py-0.5 text-[10px] font-black text-slate-900 shadow-sm">
+                  PRO
+                </span>
+              </div>
 
-            {hitHistory.ok && hitHistory.payload.records.length > 0 ? (
-              <ThreePlusOneHitHistoryClient
-                records={hitHistory.payload.records}
-                labels={{
-                  hitCountLabel: copy.hitCountLabel,
-                  recommendedLabel: copy.recommendedLabel,
-                  resultLabel: copy.resultLabel,
-                  noHitText: copy.noHitText,
-                  expandLabel: copy.expandLabel,
-                  collapseLabel: copy.collapseLabel
-                }}
-              />
-            ) : (
-              <UnavailablePanel title={copy.historyUnavailableTitle} text={copy.historyUnavailableText} reason={hitHistory.ok ? undefined : hitHistory.reason} />
-            )}
-          </section>
+              {recommendation.ok ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {recommendation.payload.recommendation4.map((digit, index) => (
+                    <span
+                      key={`${digit}-${index}`}
+                      className="flex h-14 w-14 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-2xl font-black text-slate-950"
+                    >
+                      {digit}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <UnavailablePanel title={copy.unavailableTitle} text={copy.unavailableText} reason={recommendation.reason} />
+              )}
+
+              {recommendation.ok && recommendation.payload.generatedAt ? (
+                <p className="mt-3 text-xs font-bold text-slate-500">
+                  {copy.generatedAt.replace('{time}', recommendation.payload.generatedAt)}
+                </p>
+              ) : null}
+            </section>
+
+            <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-black text-slate-950">{copy.hitHistoryTitle}</h2>
+                  <p className="mt-1 text-sm font-bold text-slate-600">{copy.hitHistoryIntro}</p>
+                </div>
+                {hitHistory.ok ? (
+                  <div className="text-right text-xs font-black text-slate-600">
+                    <div>{copy.totalPeriods.replace('{count}', `${hitHistory.payload.totalPeriods ?? hitHistory.payload.records.length}`)}</div>
+                    <div>{copy.totalHits.replace('{count}', `${hitHistory.payload.totalHits ?? '-'}`)}</div>
+                  </div>
+                ) : null}
+              </div>
+
+              {hitHistory.ok && hitHistory.payload.records.length > 0 ? (
+                <ThreePlusOneHitHistoryClient
+                  records={hitHistory.payload.records}
+                  labels={{
+                    hitCountLabel: copy.hitCountLabel,
+                    recommendedLabel: copy.recommendedLabel,
+                    resultLabel: copy.resultLabel,
+                    noHitText: copy.noHitText,
+                    expandLabel: copy.expandLabel,
+                    collapseLabel: copy.collapseLabel
+                  }}
+                />
+              ) : (
+                <UnavailablePanel title={copy.historyUnavailableTitle} text={copy.historyUnavailableText} reason={hitHistory.ok ? undefined : hitHistory.reason} />
+              )}
+            </section>
+          </AdAccessGateClient>
         </div>
       </div>
     </main>
@@ -163,6 +166,7 @@ function getThreePlusOneAiCopy(locale: Locale) {
       generatedAt: '生成时间：{time}',
       unavailableTitle: '3D AI 推荐暂时不可用',
       unavailableText: '此公司目前没有可显示的 3+1 推荐资料。',
+      lockedText: '3D AI 推荐号码开放给 Pro 会员，或观看 3D 广告后临时解锁。',
       hitHistoryTitle: '最近100期命中历史',
       hitHistoryIntro: '只显示日期、推荐4位数字，以及 Top1 / Top2 / Top3 的后三位命中。',
       historyUnavailableTitle: '命中历史暂时不可用',
@@ -188,6 +192,7 @@ function getThreePlusOneAiCopy(locale: Locale) {
       generatedAt: 'Dijana: {time}',
       unavailableTitle: 'Cadangan 3D AI belum tersedia',
       unavailableText: 'Syarikat ini belum mempunyai data cadangan 3+1 untuk dipaparkan.',
+      lockedText: 'Cadangan 3D AI untuk ahli Pro, atau buka sementara melalui iklan 3D.',
       hitHistoryTitle: 'Sejarah hit 100 cabutan terkini',
       hitHistoryIntro: 'Hanya tarikh, 4 digit cadangan, dan hit tiga digit akhir Top1 / Top2 / Top3 dipaparkan.',
       historyUnavailableTitle: 'Sejarah hit belum tersedia',
@@ -212,6 +217,7 @@ function getThreePlusOneAiCopy(locale: Locale) {
     generatedAt: 'Generated: {time}',
     unavailableTitle: '3D AI recommendation unavailable',
     unavailableText: 'This company does not have displayable 3+1 recommendation data right now.',
+    lockedText: '3D AI recommendations are for Pro, or temporary 3D ad unlock.',
     hitHistoryTitle: 'Latest 100 hit history',
     hitHistoryIntro: 'Shows only date, the 4 recommended digits, and Top1 / Top2 / Top3 last-three hits.',
     historyUnavailableTitle: 'Hit history unavailable',

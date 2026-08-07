@@ -1,11 +1,16 @@
 'use client';
 
-export type RewardFeature = 'ai_full' | 'hot_cold' | 'package_ranking';
+export type RewardFeature = 'ad_access_4d' | 'ad_access_3d' | 'ai_full' | 'hot_cold' | 'package_ranking';
+export type AdAccessRewardFeature = Extract<RewardFeature, 'ad_access_4d' | 'ad_access_3d'>;
 
 type RewardState = {
+  ad_access_4d: number;
+  ad_access_3d: number;
   ai_full: number;
   hot_cold: number;
   package_ranking: number;
+  unlocked_until_ad_access_4d?: string;
+  unlocked_until_ad_access_3d?: string;
   unlocked_until_ai_full?: string;
   unlocked_until_hot_cold?: string;
   unlocked_until_package_ranking?: string;
@@ -13,12 +18,17 @@ type RewardState = {
 
 const STORAGE_KEY = 'four_d_ai_reward_unlock_v1';
 const EVENT_NAME = 'four-d-ai-reward-unlock-updated';
+export const REWARD_AD_ACCESS_MINUTES = 180;
 
 function defaultState(): RewardState {
   return {
+    ad_access_4d: 0,
+    ad_access_3d: 0,
     ai_full: 0,
     hot_cold: 0,
     package_ranking: 0,
+    unlocked_until_ad_access_4d: undefined,
+    unlocked_until_ad_access_3d: undefined,
     unlocked_until_ai_full: undefined,
     unlocked_until_hot_cold: undefined,
     unlocked_until_package_ranking: undefined
@@ -32,9 +42,13 @@ export function readRewardState(): RewardState {
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw) as Partial<RewardState>;
     return {
+      ad_access_4d: Number.isFinite(parsed.ad_access_4d) ? Math.max(0, Number(parsed.ad_access_4d)) : 0,
+      ad_access_3d: Number.isFinite(parsed.ad_access_3d) ? Math.max(0, Number(parsed.ad_access_3d)) : 0,
       ai_full: Number.isFinite(parsed.ai_full) ? Math.max(0, Number(parsed.ai_full)) : 0,
       hot_cold: Number.isFinite(parsed.hot_cold) ? Math.max(0, Number(parsed.hot_cold)) : 0,
       package_ranking: Number.isFinite(parsed.package_ranking) ? Math.max(0, Number(parsed.package_ranking)) : 0,
+      unlocked_until_ad_access_4d: typeof parsed.unlocked_until_ad_access_4d === 'string' ? parsed.unlocked_until_ad_access_4d : undefined,
+      unlocked_until_ad_access_3d: typeof parsed.unlocked_until_ad_access_3d === 'string' ? parsed.unlocked_until_ad_access_3d : undefined,
       unlocked_until_ai_full: typeof parsed.unlocked_until_ai_full === 'string' ? parsed.unlocked_until_ai_full : undefined,
       unlocked_until_hot_cold: typeof parsed.unlocked_until_hot_cold === 'string' ? parsed.unlocked_until_hot_cold : undefined,
       unlocked_until_package_ranking: typeof parsed.unlocked_until_package_ranking === 'string' ? parsed.unlocked_until_package_ranking : undefined
@@ -69,7 +83,9 @@ export function consumeRewardCredit(feature: RewardFeature, amount = 1): boolean
   return true;
 }
 
-function unlockUntilKey(feature: RewardFeature): 'unlocked_until_ai_full' | 'unlocked_until_hot_cold' | 'unlocked_until_package_ranking' {
+function unlockUntilKey(feature: RewardFeature): 'unlocked_until_ad_access_4d' | 'unlocked_until_ad_access_3d' | 'unlocked_until_ai_full' | 'unlocked_until_hot_cold' | 'unlocked_until_package_ranking' {
+  if (feature === 'ad_access_4d') return 'unlocked_until_ad_access_4d';
+  if (feature === 'ad_access_3d') return 'unlocked_until_ad_access_3d';
   if (feature === 'ai_full') return 'unlocked_until_ai_full';
   if (feature === 'hot_cold') return 'unlocked_until_hot_cold';
   return 'unlocked_until_package_ranking';
@@ -85,6 +101,10 @@ export function unlockFeatureForMinutes(feature: RewardFeature, minutes: number)
     [key]: until
   });
   return until;
+}
+
+export function grantRewardedAdAccess(feature: AdAccessRewardFeature): string {
+  return unlockFeatureForMinutes(feature, REWARD_AD_ACCESS_MINUTES);
 }
 
 export function isFeatureUnlockedNow(feature: RewardFeature): boolean {

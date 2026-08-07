@@ -6,12 +6,11 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 import {canAccessAiCore, getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
 import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
 import {
-  addRewardCredit,
-  consumeRewardCredit,
+  grantRewardedAdAccess,
   getFeatureUnlockRemainingMinutes,
   isFeatureUnlockedNow,
+  REWARD_AD_ACCESS_MINUTES,
   subscribeRewardState,
-  unlockFeatureForMinutes
 } from '@/lib/reward-unlock';
 
 type Props = {
@@ -78,10 +77,13 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
   const [guideOpen, setGuideOpen] = useState(false);
   const [selectedExpertMode, setSelectedExpertMode] = useState<ExpertMode>('all_round');
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
+  const [adNotice, setAdNotice] = useState<string | null>(null);
   const recordsRef = useRef<HTMLDivElement | null>(null);
+  const rewardFeature = 'ad_access_4d';
+  const canSimulateRewardedAd = process.env.NODE_ENV === 'development';
   const hasAiAccess = canAccessAiCore(entitlement);
   const canUseAllRoundExpert = hasAiAccess || adUnlocked;
-  const canUseTop3Expert = hasAiAccess;
+  const canUseTop3Expert = hasAiAccess || adUnlocked;
   const allRoundDigits = useMemo(() => toFiveDigits(coreDigits), [coreDigits]);
   const top3Digits = useMemo(() => toFiveDigits(top3ExpertDigits), [top3ExpertDigits]);
   const guideDigits = useMemo(() => allRoundDigits.filter((digit) => /^\d$/.test(digit)), [allRoundDigits]);
@@ -113,34 +115,35 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
   void lockedAccessText;
   useEffect(() => {
     const update = () => {
-      const active = isFeatureUnlockedNow('ai_full');
+      const active = isFeatureUnlockedNow(rewardFeature);
       setAdUnlocked(active);
-      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes('ai_full'));
+      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes(rewardFeature));
     };
     update();
     return subscribeRewardState(() => {
-      const active = isFeatureUnlockedNow('ai_full');
+      const active = isFeatureUnlockedNow(rewardFeature);
       setAdUnlocked(active);
-      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes('ai_full'));
+      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes(rewardFeature));
     });
   }, []);
   useEffect(() => {
     const timer = window.setInterval(() => {
-      const active = isFeatureUnlockedNow('ai_full');
+      const active = isFeatureUnlockedNow(rewardFeature);
       setAdUnlocked(active);
-      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes('ai_full'));
+      setUnlockMinutesLeft(getFeatureUnlockRemainingMinutes(rewardFeature));
     }, 30_000);
     return () => window.clearInterval(timer);
   }, []);
 
   function unlockByRewardedAd() {
-    // MVP: simulate a rewarded ad completion, consume one credit, unlock for 30 minutes.
-    addRewardCredit('ai_full', 1);
-    if (consumeRewardCredit('ai_full', 1)) {
-      unlockFeatureForMinutes('ai_full', 30);
-      setAdUnlocked(true);
-      setUnlockMinutesLeft(30);
+    if (!canSimulateRewardedAd) {
+      setAdNotice(locale === 'zh' ? '广告功能即将开放。' : locale === 'ms' ? 'Fungsi iklan akan tersedia tidak lama lagi.' : 'Ad access is coming soon.');
+      return;
     }
+    grantRewardedAdAccess(rewardFeature);
+    setAdUnlocked(true);
+    setUnlockMinutesLeft(REWARD_AD_ACCESS_MINUTES);
+    setAdNotice(locale === 'zh' ? 'Development 测试广告已模拟完成。' : locale === 'ms' ? 'Iklan ujian Development telah disimulasikan.' : 'Development test ad reward simulated.');
   }
   function showRecords(mode: ExpertMode) {
     if (mode === 'top3_expert' && !canUseTop3Expert) return;
@@ -173,7 +176,7 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
               stats={expertStats?.top3Expert ?? null}
               copy={expertCopy}
               canAccess={canUseTop3Expert}
-              lockedText={locale === 'zh' ? 'Top3 专家仅限 Trial / Pro 使用。' : locale === 'ms' ? 'Pakar Top3 hanya untuk Trial / Pro.' : 'Top3 Expert is available for Trial / Pro only.'}
+              lockedText={locale === 'zh' ? 'Top3 专家可通过 Trial / Pro 或 4D 广告解锁使用。' : locale === 'ms' ? 'Pakar Top3 boleh dibuka melalui Trial / Pro atau iklan 4D.' : 'Top3 Expert is available with Trial / Pro or 4D ad unlock.'}
               onViewRecords={() => showRecords('top3_expert')}
             />
             <ExpertRecommendationCard
@@ -197,7 +200,8 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
                 onLogin={() => void loginUser(locale)}
                 onUnlockByAd={unlockByRewardedAd}
                 unlockMinutesLeft={unlockMinutesLeft}
-                top3Only
+                adNotice={adNotice}
+                canSimulateRewardedAd={canSimulateRewardedAd}
               />
             ))
             : (canUseAllRoundExpert ? allRoundHistorySlot : (
@@ -208,6 +212,8 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
                 onLogin={() => void loginUser(locale)}
                 onUnlockByAd={unlockByRewardedAd}
                 unlockMinutesLeft={unlockMinutesLeft}
+                adNotice={adNotice}
+                canSimulateRewardedAd={canSimulateRewardedAd}
               />
             ))}
         </div>
@@ -262,13 +268,9 @@ function ExpertRecommendationCard({title, digits, stats, copy, canAccess, locked
   );
 }
 
-function LockedExpertPanel({locale, memberLoggedIn, labels, onLogin, onUnlockByAd, unlockMinutesLeft, top3Only = false}: {locale: string; memberLoggedIn: boolean; labels: Props['labels']; onLogin: () => void; onUnlockByAd: () => void; unlockMinutesLeft: number; top3Only?: boolean}) {
-  const title = top3Only
-    ? (locale === 'zh' ? 'Top3 专家需要 Trial / Pro 权限' : locale === 'ms' ? 'Pakar Top3 memerlukan akses Trial / Pro' : 'Top3 Expert requires Trial / Pro access')
-    : labels.proRequiredTitle;
-  const description = top3Only
-    ? (locale === 'zh' ? '观看广告只会解锁全方位专家，不能解锁 Top3 专家。' : locale === 'ms' ? 'Iklan hanya membuka Pakar Menyeluruh, bukan Pakar Top3.' : 'Ad unlock only opens All-round Expert, not Top3 Expert.')
-    : labels.proRequiredDescription;
+function LockedExpertPanel({locale, memberLoggedIn, labels, onLogin, onUnlockByAd, unlockMinutesLeft, adNotice, canSimulateRewardedAd}: {locale: string; memberLoggedIn: boolean; labels: Props['labels']; onLogin: () => void; onUnlockByAd: () => void; unlockMinutesLeft: number; adNotice: string | null; canSimulateRewardedAd: boolean}) {
+  const title = labels.proRequiredTitle;
+  const description = labels.proRequiredDescription;
   return (
     <section className="rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-sm">
       <h3 className="text-lg font-black text-slate-950">{title}</h3>
@@ -282,17 +284,18 @@ function LockedExpertPanel({locale, memberLoggedIn, labels, onLogin, onUnlockByA
               : `Ad unlock remaining: about ${unlockMinutesLeft} minutes`}
         </p>
       ) : null}
+      {adNotice ? <p className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">{adNotice}</p> : null}
       <div className="mt-4 flex flex-wrap gap-2">
         {!memberLoggedIn ? (
           <button type="button" onClick={onLogin} className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100">
             {labels.login}
           </button>
         ) : null}
-        {!top3Only ? (
-          <button type="button" onClick={onUnlockByAd} className="rounded-md border border-amber-300 bg-white px-4 py-2 text-sm font-black text-amber-900 hover:bg-amber-100">
-            {locale === 'zh' ? '观看广告并解锁30分钟' : locale === 'ms' ? 'Tonton iklan & buka 30 minit' : 'Watch ad and unlock for 30 minutes'}
-          </button>
-        ) : null}
+        <button type="button" onClick={onUnlockByAd} className="rounded-md border border-amber-300 bg-white px-4 py-2 text-sm font-black text-amber-900 hover:bg-amber-100">
+          {canSimulateRewardedAd
+            ? (locale === 'zh' ? 'Development 测试 4D 广告解锁 3 小时' : locale === 'ms' ? 'Uji iklan 4D Development & buka 3 jam' : 'Development test 4D ad unlock for 3 hours')
+            : (locale === 'zh' ? '广告功能即将开放' : locale === 'ms' ? 'Fungsi iklan akan tersedia' : 'Ad access coming soon')}
+        </button>
         <Link href={`/${locale}/pricing`} className="rounded-md bg-blue-800 px-4 py-2 text-sm font-black text-white hover:bg-blue-900">
           {labels.goPro}
         </Link>
