@@ -1,29 +1,29 @@
 import type {Metadata} from 'next';
 
 export const metadata: Metadata = {
-  title: '4D AI Terms of Service',
-  description: 'Terms of Service for 4D AI.'
+  title: '4D Live AI App and 4D AI Terms of Service',
+  description: 'Terms of Service for the 4D Live AI mobile application and 4D AI website/services.'
 };
 
 const sections = [
   {
     title: 'Scope',
     body: [
-      'These Terms of Service apply to the 4D AI website (https://4dai88.com) and related web services operated under the 4D AI name.',
-      'The service is intended for users who access 4D AI through the website or related account features.'
+      'These Terms of Service apply to the 4D Live AI mobile application and 4D AI website/services, including https://4dai88.com and related web services operated under the 4D AI name.',
+      'The service is intended for users who access 4D AI through the App, website, or related account features.'
     ]
   },
   {
     title: 'Agreement',
     body: [
-      'By using the 4D AI website or service, users agree to these terms. Users who do not agree should not use the service.',
+      'By using the 4D AI App, website, or related services, users agree to these terms. Users who do not agree should not use the service.',
       'Users are responsible for reviewing these terms and using the service only where lawful and appropriate.'
     ]
   },
   {
     title: 'Service Purpose',
     body: [
-      'The website provides lottery result information, historical data, analysis tools, AI recommendation features, and account-related services for informational purposes only.',
+      'The App, website, and related services provide lottery result information, historical data, analysis tools, AI recommendation features, and account-related services for informational purposes only.',
       '4D AI does not encourage unlawful activity and does not guarantee that all data is always complete, accurate, current, or available.'
     ]
   },
@@ -63,7 +63,7 @@ const sections = [
   {
     title: 'Limitation of Liability',
     body: [
-      '4D AI is not responsible for losses, damages, or decisions made based on website information, lottery results, AI recommendations, or service availability.',
+      '4D AI is not responsible for losses, damages, or decisions made based on App or website information, lottery results, AI recommendations, or service availability.',
       'Users use the service at their own discretion and should verify important information independently where necessary.'
     ]
   },
@@ -84,7 +84,7 @@ export default function TermsPage() {
     <main className="min-h-screen bg-slate-50 px-6 py-12 text-slate-900">
       <article className="mx-auto max-w-3xl rounded border border-slate-200 bg-white p-8 shadow-sm">
         <p className="text-sm font-semibold uppercase tracking-normal text-blue-700">4D AI</p>
-        <h1 className="mt-3 text-3xl font-bold">4D AI Terms of Service</h1>
+        <h1 className="mt-3 text-3xl font-bold">4D Live AI App and 4D AI Terms of Service</h1>
         <p className="mt-2 text-sm text-slate-600">Last updated: 2026-07-09</p>
 
         <div className="mt-8 space-y-7">
