@@ -60,16 +60,89 @@ function resolveLocale(acceptLanguage: string): Locale {
   return 'en';
 }
 
-function buildGooglePlayUrl(searchParams: Record<string, string | string[] | undefined>): string {
-  const target = new URL(googlePlayUrl);
-  for (const [key, value] of Object.entries(searchParams)) {
-    if (typeof value === 'string' && value) target.searchParams.set(key, value);
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        if (item) target.searchParams.append(key, item);
-      }
-    }
+function firstParam(
+  value: string | string[] | undefined
+): string | undefined {
+  if (typeof value === 'string' && value) return value;
+  if (Array.isArray(value)) return value.find(Boolean);
+  return undefined;
+}
+
+type Attribution = {
+  source: string;
+  medium: string;
+  campaign: string;
+};
+
+function resolveAttribution(
+  searchParams: Record<string, string | string[] | undefined>,
+  requestHeaders: Headers
+): Attribution | null {
+  const explicitSource = firstParam(searchParams.utm_source);
+  const explicitMedium = firstParam(searchParams.utm_medium);
+  const explicitCampaign = firstParam(searchParams.utm_campaign);
+
+  if (explicitSource) {
+    return {
+      source: explicitSource,
+      medium: explicitMedium ?? 'referral',
+      campaign: explicitCampaign ?? 'app_link'
+    };
   }
+
+  const referer = (requestHeaders.get('referer') ?? '').toLowerCase();
+  const userAgent = (requestHeaders.get('user-agent') ?? '').toLowerCase();
+
+  const fromFacebook =
+    referer.includes('facebook.com') ||
+    referer.includes('fb.com') ||
+    userAgent.includes('fban') ||
+    userAgent.includes('fbav') ||
+    userAgent.includes('fb_iab');
+
+  if (fromFacebook) {
+    return {
+      source: 'facebook',
+      medium: 'social',
+      campaign: 'app_link'
+    };
+  }
+
+  const fromInstagram =
+    referer.includes('instagram.com') ||
+    userAgent.includes('instagram');
+
+  if (fromInstagram) {
+    return {
+      source: 'instagram',
+      medium: 'social',
+      campaign: 'app_link'
+    };
+  }
+
+  return null;
+}
+
+function buildGooglePlayUrl(
+  searchParams: Record<string, string | string[] | undefined>,
+  requestHeaders: Headers
+): string {
+  const target = new URL(googlePlayUrl);
+  const attribution = resolveAttribution(searchParams, requestHeaders);
+
+  if (attribution) {
+    const referrer = new URLSearchParams({
+      utm_source: attribution.source,
+      utm_medium: attribution.medium,
+      utm_campaign: attribution.campaign
+    });
+
+    target.searchParams.set('referrer', referrer.toString());
+  }
+
+  const listing = firstParam(searchParams.listing);
+  if (listing) target.searchParams.set('listing', listing);
+
   return target.toString();
 }
 
@@ -83,7 +156,7 @@ export default async function AppDownloadPage({
   const device = resolveDevice(requestHeaders.get('user-agent') ?? '');
   const locale = resolveLocale(requestHeaders.get('accept-language') ?? '');
   const labels = copy[locale];
-  const playHref = buildGooglePlayUrl(params);
+  const playHref = buildGooglePlayUrl(params, requestHeaders);
 
   if (device === 'android') redirect(playHref);
 
