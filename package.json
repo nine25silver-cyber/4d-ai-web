@@ -7,6 +7,7 @@
     "dev:clean": "node scripts/dev-clean.mjs",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
+    "test:smart-link": "node --test src/lib/app-smart-link.test.ts",
     "typecheck": "tsc --noEmit",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "npm run cf:build && wrangler dev",
