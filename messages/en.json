@@ -481,6 +481,8 @@
     "proGateStatusPro": "Pro member"
   },
   "MembershipEntitlement": {
+    "checkUnavailable": "Unable to confirm membership",
+    "retryCheck": "Retry",
     "title": "Supabase entitlement",
     "loading": "Checking...",
     "readOnlyNote": "Read-only membership source. This panel does not change feature access yet.",

@@ -481,6 +481,8 @@
     "noTrendResults": "这个日期范围没有找到走势结果。"
   },
   "MembershipEntitlement": {
+    "checkUnavailable": "暂时无法确认会员状态",
+    "retryCheck": "重试",
     "title": "Supabase 会员权限",
     "loading": "检查中...",
     "readOnlyNote": "只读会员来源。本面板暂时不会改变功能权限。",

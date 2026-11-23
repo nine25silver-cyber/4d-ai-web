@@ -18,6 +18,21 @@ const EVENT_NAME = 'four-d-ai-member-state-updated';
 const DEFAULT_LOGIN_EMAIL = 'demo@4dai.local';
 
 let bootstrapped = false;
+let memberAuthRevision = 0;
+let observedToken: string | null | undefined;
+let observedUserId: string | null | undefined;
+
+export function readMemberAuthRevision() {return memberAuthRevision;}
+export function readMemberAuthUserId() {return observedUserId;}
+
+function observeSession(session:Session|null) {
+  const token = session?.access_token ?? null;
+  observedUserId = session?.user.id ?? null;
+  if (token !== observedToken) {
+    observedToken = token;
+    memberAuthRevision++;
+  }
+}
 
 function defaultState(): MemberState {
   return {
@@ -58,7 +73,7 @@ export function writeMemberState(next: MemberState) {
   notifyUpdate();
 }
 
-async function writeFromSession(session: Session | null) {
+function writeFromSession(session: Session | null) {
   if (!session) {
     writeMemberState({
       loggedIn: false,
@@ -121,9 +136,28 @@ export function initMemberState() {
   if (!hasSupabaseConfig()) return;
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return;
-  void supabase.auth.getSession().then(({data}) => void writeFromSession(data.session));
-  supabase.auth.onAuthStateChange((_event, session) => {
-    void writeFromSession(session);
+  let authEventSeen = false;
+  let publishRevision = 0;
+  const publishSession = (session:Session|null) => {
+    observeSession(session);
+    const revision = ++publishRevision;
+    // Member subscribers may themselves read Auth. Notify after the SDK callback.
+    setTimeout(() => {
+      if (revision !== publishRevision) return;
+      try {writeFromSession(session);} catch {/* Storage is not always available. */}
+    }, 0);
+  };
+  supabase.auth.onAuthStateChange((event, session) => {
+    // The SDK also emits INITIAL_SESSION/null if its internal session read errors.
+    // Only the separately checked getSession result can label that case guest.
+    if (event === 'INITIAL_SESSION' && (authEventSeen || !session)) return;
+    authEventSeen = true;
+    publishSession(session);
+  });
+  void supabase.auth.getSession().then(({data,error}) => {
+    if (!authEventSeen && !error) publishSession(data.session);
+  }).catch(() => {
+    // A failed initial read must not turn an existing session into a sign-out.
   });
 }
 
@@ -131,8 +165,12 @@ export async function refreshMemberStateFromAuth() {
   if (!hasSupabaseConfig()) return;
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return;
-  const {data} = await supabase.auth.getSession();
-  await writeFromSession(data.session);
+  const revision = memberAuthRevision;
+  const {data,error} = await supabase.auth.getSession();
+  if (!error && revision === memberAuthRevision) {
+    observeSession(data.session);
+    writeFromSession(data.session);
+  }
 }
 
 export async function loginUser(locale: string, nextPath?: string) {

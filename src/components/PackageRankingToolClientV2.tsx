@@ -5,8 +5,10 @@ import type {Locale} from '@/i18n/routing';
 import type {ProviderConfig} from '@/lib/providers';
 import Link from 'next/link';
 import {useTranslations} from 'next-intl';
-import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
-import {canAccessAiCore, getCurrentUserEntitlement, isPaidProEntitlement, isTrialEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
+import {loginUser} from '@/lib/member-state';
+import {useMemberEntitlementCheck} from '@/lib/use-member-entitlement-check';
+import {MemberVerificationNotice} from '@/components/MemberVerificationNotice';
+import {canAccessAiCore, isPaidProEntitlement, isTrialEntitlement} from '@/lib/member-entitlement';
 import {
   grantRewardedAdAccess,
   getFeatureUnlockRemainingMinutes,
@@ -76,9 +78,7 @@ const regionGroups = [
 
 export function PackageRankingToolClientV2({locale, providers}: Props) {
   const t = useTranslations('PackageRanking');
-  const [memberState, setMemberState] = useState<MemberState | null>(null);
-  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
-  const [entitlementLoading, setEntitlementLoading] = useState(true);
+  const {memberState,entitlement,entitlementLoading,retryEntitlement} = useMemberEntitlementCheck();
   const [adUnlocked, setAdUnlocked] = useState(false);
   const [adNotice, setAdNotice] = useState<string | null>(null);
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
@@ -112,6 +112,7 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
   const isFormalPro = isPaidProEntitlement(entitlement);
   const isTrial = isTrialEntitlement(entitlement);
   const canUseRanking = canAccessAiCore(entitlement) || adUnlocked;
+  const verificationNeeded = !canUseRanking && (entitlementLoading || entitlement?.source === 'error');
 
   const selectedNames = useMemo(() => {
     if (scopeMode === 'provider') return providerByCode.get(selectedProvider)?.shortName ?? '-';
@@ -182,31 +183,7 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
     setExpandedItems(new Set());
   }, [packageType, prizeScopeParam, range, scopeMode, selectedGroup, selectedProvider, trendMode]);
 
-  useEffect(() => {
-    initMemberState();
-    setMemberState(readMemberState());
-    return subscribeMemberState(setMemberState);
-  }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadEntitlement = async () => {
-      setEntitlementLoading(true);
-      const next = await getCurrentUserEntitlement();
-      if (!cancelled) {
-        setEntitlement(next);
-        setEntitlementLoading(false);
-      }
-    };
-    void loadEntitlement();
-    const unsubscribe = subscribeMemberState(() => {
-      void loadEntitlement();
-    });
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     const update = () => {
@@ -414,7 +391,7 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
       </section>
 
       <section className="grid self-start content-start gap-5">
-        <div className={`self-start rounded-lg border px-4 py-3 shadow-sm ${canUseRanking ? 'border-blue-200 bg-blue-50' : 'border-amber-200 bg-amber-50'}`}>
+        {verificationNeeded ? <MemberVerificationNotice loading={entitlementLoading} retry={retryEntitlement} /> : <div className={`self-start rounded-lg border px-4 py-3 shadow-sm ${canUseRanking ? 'border-blue-200 bg-blue-50' : 'border-amber-200 bg-amber-50'}`}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="min-w-0">
               <p className={`text-sm font-bold ${canUseRanking ? 'text-blue-900' : 'text-amber-900'}`}>{canUseRanking ? unlockedAccessText : lockedAccessText}</p>
@@ -443,9 +420,9 @@ export function PackageRankingToolClientV2({locale, providers}: Props) {
               </div>
             ) : null}
           </div>
-        </div>
+        </div>}
 
-        {!canUseRanking ? (
+        {!canUseRanking && !verificationNeeded ? (
           <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">
             <p>{locale === 'zh' ? '包字排行榜需要 Pro，或观看广告解锁后使用。' : locale === 'ms' ? 'Ranking boxed memerlukan Pro atau buka kunci melalui iklan.' : 'Package ranking requires Pro or ad unlock.'}</p>
             <p className="mt-1">

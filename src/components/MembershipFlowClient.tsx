@@ -1,12 +1,13 @@
 'use client';
 
-import {useEffect, useMemo, useState} from 'react';
+import {useMemo} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
-import {getCurrentUserEntitlement, isPaidProEntitlement, isTrialEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
-import {initMemberState, loginUser, logoutUser, readMemberState, setPlan, subscribeMemberState, type MemberState} from '@/lib/member-state';
+import {isPaidProEntitlement, isTrialEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
+import {loginUser, logoutUser, setPlan} from '@/lib/member-state';
 import {hasSupabaseConfig} from '@/lib/supabase-browser';
+import {useMemberEntitlementCheck} from '@/lib/use-member-entitlement-check';
 
 type Props = {
   labels: {
@@ -39,36 +40,15 @@ function formatDateOnly(raw: string | null | undefined): string | null {
 }
 
 export function MembershipFlowClient({labels, pricingHref, variant = 'default'}: Props) {
-  const [state, setStateState] = useState<MemberState | null>(null);
-  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
-  const [entitlementLoading, setEntitlementLoading] = useState(true);
+  const {memberState:state,entitlement,entitlementLoading,retryEntitlement} = useMemberEntitlementCheck();
+  const entitlementPhase = entitlementLoading ? 'loading'
+    : !entitlement || entitlement.source === 'error' || (state?.loggedIn && !entitlement.loggedIn && entitlement.source !== 'supabase_unconfigured')
+      ? 'error' : 'ready';
   const locale = useLocale();
   const pathname = usePathname();
   const entitlementT = useTranslations('MembershipEntitlement');
   const isSupabaseMode = hasSupabaseConfig();
   const showDevelopmentPlanControls = !isSupabaseMode && process.env.NODE_ENV !== 'production';
-
-  useEffect(() => {
-    let active = true;
-    const refreshEntitlement = async () => {
-      setEntitlementLoading(true);
-      const next = await getCurrentUserEntitlement();
-      if (!active) return;
-      setEntitlement(next);
-      setEntitlementLoading(false);
-    };
-    initMemberState();
-    setStateState(readMemberState());
-    void refreshEntitlement();
-    const unsubscribe = subscribeMemberState((next) => {
-      setStateState(next);
-      void refreshEntitlement();
-    });
-    return () => {
-      active = false;
-      unsubscribe();
-    };
-  }, []);
 
   const statusText = useMemo(() => {
     if (!state?.loggedIn) return labels.loggedOut;
@@ -83,7 +63,7 @@ export function MembershipFlowClient({labels, pricingHref, variant = 'default'}:
   }, [isSupabaseMode, labels.syncWarningFallback, labels.syncWarningPrefix, state?.loggedIn, state?.syncError]);
 
   const entitlementSourceText = useMemo(() => {
-    if (!entitlement) return entitlementT('sourceLoading');
+    if (!entitlement) return entitlementT(entitlementPhase === 'error' ? 'sourceError' : 'sourceLoading');
     const keyBySource: Record<CurrentUserEntitlement['source'], string> = {
       user_membership_entitlements: 'sourceUserEntitlements',
       missing_row: 'sourceMissingRow',
@@ -92,7 +72,7 @@ export function MembershipFlowClient({labels, pricingHref, variant = 'default'}:
       error: 'sourceError'
     };
     return entitlementT(keyBySource[entitlement.source]);
-  }, [entitlement, entitlementT]);
+  }, [entitlement, entitlementPhase, entitlementT]);
 
   const trialPlanText = 'Trial';
   const isPaidPro = isPaidProEntitlement(entitlement);
@@ -100,6 +80,14 @@ export function MembershipFlowClient({labels, pricingHref, variant = 'default'}:
   const entitlementPlanText = isPaidPro ? labels.proPlan : isTrial ? trialPlanText : labels.freePlan;
   const googleStatusText = state?.loggedIn ? (state.email || labels.loggedIn) : labels.loggedOut;
   const accessExpiryDate = isPaidPro || isTrial ? formatDateOnly(entitlement?.currentPeriodEnd) : null;
+  const entitlementStatusText = entitlementPhase === 'loading'
+    ? entitlementT('loading')
+    : entitlementPhase === 'error' ? entitlementT('checkUnavailable') : entitlementPlanText;
+  const retryAction = entitlementPhase === 'error' ? (
+    <button type="button" onClick={retryEntitlement} className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100">
+      {entitlementT('retryCheck')}
+    </button>
+  ) : null;
   const accessExpiryText = accessExpiryDate
     ? `${isPaidPro ? (locale === 'zh' ? 'Pro 到期' : locale === 'ms' ? 'Pro tamat' : 'Pro expires') : (locale === 'zh' ? 'Trial 到期' : locale === 'ms' ? 'Trial tamat' : 'Trial expires')}: ${accessExpiryDate}`
     : null;
@@ -113,13 +101,13 @@ export function MembershipFlowClient({labels, pricingHref, variant = 'default'}:
             <p className="mt-1 text-sm font-semibold text-slate-600">{labels.panelText}</p>
           </div>
           <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-800">
-            {entitlementLoading ? entitlementT('loading') : entitlementPlanText}
+            {entitlementStatusText}
           </span>
         </div>
         <dl className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
           <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
             <dt className="text-xs font-black uppercase text-slate-500">{labels.membershipLabel}</dt>
-            <dd className="mt-1 text-sm font-bold text-slate-900">{entitlementLoading ? entitlementT('loading') : entitlementPlanText}</dd>
+            <dd className="mt-1 text-sm font-bold text-slate-900">{entitlementStatusText}</dd>
             {accessExpiryText ? <dd className="mt-1 text-xs font-semibold text-slate-600">{accessExpiryText}</dd> : null}
           </div>
           <div className="text-sm font-semibold text-slate-600">
@@ -132,6 +120,7 @@ export function MembershipFlowClient({labels, pricingHref, variant = 'default'}:
           </p>
         ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
+          {retryAction}
           {!state?.loggedIn ? (
             <button type="button" onClick={() => void loginUser(locale, pathname)} className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100">
               {labels.login}
@@ -179,7 +168,7 @@ export function MembershipFlowClient({labels, pricingHref, variant = 'default'}:
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="font-black text-slate-950">{entitlementT('title')}</p>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-700">
-            {entitlementLoading ? entitlementT('loading') : entitlementPlanText}
+            {entitlementStatusText}
           </span>
         </div>
         <p className="mt-2 text-xs font-bold leading-5 text-slate-500">{entitlementT('readOnlyNote')}</p>
@@ -205,13 +194,9 @@ export function MembershipFlowClient({labels, pricingHref, variant = 'default'}:
             </div>
           ) : null}
         </dl>
-        {entitlement?.source === 'error' ? (
-          <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">
-            {entitlementT('errorText')}
-          </p>
-        ) : null}
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
+          {retryAction}
         <button type="button" onClick={() => void loginUser(locale, pathname)} className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100">
           {labels.login}
         </button>

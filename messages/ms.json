@@ -481,6 +481,8 @@
     "noTrendResults": "Tiada keputusan trend untuk julat ini."
   },
   "MembershipEntitlement": {
+    "checkUnavailable": "Status keahlian belum dapat disahkan",
+    "retryCheck": "Cuba lagi",
     "title": "Kelayakan Supabase",
     "loading": "Sedang semak...",
     "readOnlyNote": "Sumber keahlian baca sahaja. Panel ini belum mengubah akses ciri.",

@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import type {ReactNode} from 'react';
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {canAccessAiCore, getCurrentUserEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
-import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
+import {canAccessAiCore} from '@/lib/member-entitlement';
+import {loginUser} from '@/lib/member-state';
+import {useMemberEntitlementCheck} from '@/lib/use-member-entitlement-check';
+import {MemberVerificationNotice} from '@/components/MemberVerificationNotice';
 import {
   grantRewardedAdAccess,
   getFeatureUnlockRemainingMinutes,
@@ -70,9 +72,7 @@ type ExpertCardCopy = {
 };
 
 export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDigits, expertStats, top3HistorySlot, allRoundHistorySlot, labels}: Props) {
-  const [memberState, setMemberState] = useState<MemberState | null>(null);
-  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
-  const [entitlementLoading, setEntitlementLoading] = useState(true);
+  const {memberState,entitlement,entitlementLoading,retryEntitlement} = useMemberEntitlementCheck();
   const [adUnlocked, setAdUnlocked] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [selectedExpertMode, setSelectedExpertMode] = useState<ExpertMode>('all_round');
@@ -88,31 +88,7 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
   const top3Digits = useMemo(() => toFiveDigits(top3ExpertDigits), [top3ExpertDigits]);
   const guideDigits = useMemo(() => allRoundDigits.filter((digit) => /^\d$/.test(digit)), [allRoundDigits]);
   const expertCopy = useMemo(() => getExpertCardCopy(locale), [locale]);
-  const lockedAccessText = entitlementLoading
-    ? (locale === 'zh' ? '正在确认会员权限；也可通过广告临时解锁。' : locale === 'ms' ? 'Sedang menyemak akses ahli; iklan masih boleh membuka akses sementara.' : 'Checking membership access; ad unlock remains available.')
-    : (locale === 'zh' ? 'AI 完整推荐仅开放给 Pro 会员，或观看广告后临时解锁。' : locale === 'ms' ? 'Cadangan AI penuh hanya untuk Pro atau buka sementara melalui iklan.' : 'Full AI recommendations are for Pro or temporary ad unlock.');
-  useEffect(() => {
-    let active = true;
-    const refreshEntitlement = async () => {
-      setEntitlementLoading(true);
-      const next = await getCurrentUserEntitlement();
-      if (!active) return;
-      setEntitlement(next);
-      setEntitlementLoading(false);
-    };
-    initMemberState();
-    setMemberState(readMemberState());
-    void refreshEntitlement();
-    const unsubscribe = subscribeMemberState((next) => {
-      setMemberState(next);
-      void refreshEntitlement();
-    });
-    return () => {
-      active = false;
-      unsubscribe();
-    };
-  }, []);
-  void lockedAccessText;
+  const verificationNeeded = !canUseAllRoundExpert && (entitlementLoading || entitlement?.source === 'error');
   useEffect(() => {
     const update = () => {
       const active = isFeatureUnlockedNow(rewardFeature);
@@ -176,7 +152,7 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
               stats={expertStats?.top3Expert ?? null}
               copy={expertCopy}
               canAccess={canUseTop3Expert}
-              lockedText={locale === 'zh' ? 'Top3 专家可通过 Trial / Pro 或 4D 广告解锁使用。' : locale === 'ms' ? 'Pakar Top3 boleh dibuka melalui Trial / Pro atau iklan 4D.' : 'Top3 Expert is available with Trial / Pro or 4D ad unlock.'}
+              lockedText={verificationNeeded ? '' : locale === 'zh' ? 'Top3 专家可通过 Trial / Pro 或 4D 广告解锁使用。' : locale === 'ms' ? 'Pakar Top3 boleh dibuka melalui Trial / Pro atau iklan 4D.' : 'Top3 Expert is available with Trial / Pro or 4D ad unlock.'}
               onViewRecords={() => showRecords('top3_expert')}
             />
             <ExpertRecommendationCard
@@ -185,13 +161,13 @@ export function AiRecommendationPreviewClient({locale, coreDigits, top3ExpertDig
               stats={expertStats?.allRound ?? null}
               copy={expertCopy}
               canAccess={canUseAllRoundExpert}
-              lockedText={locale === 'zh' ? '观看广告后可临时使用全方位专家。' : locale === 'ms' ? 'Tonton iklan untuk membuka Pakar Menyeluruh sementara.' : 'Watch an ad to unlock All-round Expert temporarily.'}
+              lockedText={verificationNeeded ? '' : locale === 'zh' ? '观看广告后可临时使用全方位专家。' : locale === 'ms' ? 'Tonton iklan untuk membuka Pakar Menyeluruh sementara.' : 'Watch an ad to unlock All-round Expert temporarily.'}
               onViewRecords={() => showRecords('all_round')}
             />
           </div>
         </section>
         <div id="ai-hit-history-details" ref={recordsRef}>
-          {selectedExpertMode === 'top3_expert'
+          {verificationNeeded ? <MemberVerificationNotice loading={entitlementLoading} retry={retryEntitlement} /> : selectedExpertMode === 'top3_expert'
             ? (canUseTop3Expert ? top3HistorySlot : (
               <LockedExpertPanel
                 locale={locale}
@@ -242,7 +218,7 @@ function ExpertRecommendationCard({title, digits, stats, copy, canAccess, locked
           {copy.viewRecords}
         </button>
       </div>
-      {!canAccess ? <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-bold leading-4 text-amber-900">{lockedText}</p> : null}
+      {!canAccess && lockedText ? <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-bold leading-4 text-amber-900">{lockedText}</p> : null}
       <div className="mt-2 grid gap-1.5">
         {metricRows.map((row) => (
           <div key={row.label} className="flex items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50 px-2 py-1">

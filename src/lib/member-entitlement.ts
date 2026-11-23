@@ -1,6 +1,8 @@
 'use client';
 
 import {getSupabaseBrowserClient} from '@/lib/supabase-browser';
+import {readMemberAuthRevision} from './member-state';
+import {scopedEntitlementRead} from './scoped-entitlement-read';
 
 export type CurrentUserEntitlement = {
   loggedIn: boolean;
@@ -131,12 +133,14 @@ function entitlementFromRpcRow(row: UserAccessStateRow, userId: string): Current
 
 async function getCurrentUserEntitlementFromLegacyTable(
   supabase: NonNullable<ReturnType<typeof getSupabaseBrowserClient>>,
-  userId: string
+  userId: string,
+  signal: AbortSignal
 ): Promise<CurrentUserEntitlement> {
   const {data, error} = await supabase
     .from('user_membership_entitlements')
     .select('user_id,plan,is_pro,status,current_period_end,updated_at')
     .eq('user_id', userId)
+    .abortSignal(signal)
     .maybeSingle<EntitlementRow>();
 
   if (error) {
@@ -210,7 +214,11 @@ export function canAccessHitHistory(entitlement: CurrentUserEntitlement | null |
   return entitlement?.source === 'user_membership_entitlements' && entitlement.canAccessHitHistory;
 }
 
-export async function getCurrentUserEntitlement(): Promise<CurrentUserEntitlement> {
+function entitlementUnavailable(): CurrentUserEntitlement {
+  return {...FREE_FALLBACK,source:'error',error:'Unable to confirm membership status.'};
+}
+
+async function readCurrentUserEntitlement(signal:AbortSignal): Promise<CurrentUserEntitlement> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
     return {
@@ -220,6 +228,7 @@ export async function getCurrentUserEntitlement(): Promise<CurrentUserEntitlemen
   }
 
   const sessionResult = await supabase.auth.getSession();
+  if (signal.aborted) return entitlementUnavailable();
   if (sessionResult.error) {
     return {
       ...FREE_FALLBACK,
@@ -231,11 +240,19 @@ export async function getCurrentUserEntitlement(): Promise<CurrentUserEntitlemen
   const user = sessionResult.data.session?.user;
   if (!user) return FREE_FALLBACK;
 
-  const rpcResult = await supabase.rpc('get_user_access_state', {p_platform: 'web'});
+  const rpcResult = await supabase.rpc('get_user_access_state', {p_platform: 'web'}).abortSignal(signal);
+  if (signal.aborted) return entitlementUnavailable();
   if (!rpcResult.error) {
     const rpcRow = getRpcAccessRow(rpcResult.data);
     if (rpcRow) return entitlementFromRpcRow(rpcRow, user.id);
   }
 
-  return getCurrentUserEntitlementFromLegacyTable(supabase, user.id);
+  const legacy = await getCurrentUserEntitlementFromLegacyTable(supabase, user.id, signal);
+  // Keep a previously supported affirmative legacy result, but don't label a
+  // failed canonical check plus no legacy grant as a confirmed Free plan.
+  return legacy.isPro ? legacy : {...entitlementUnavailable(),loggedIn:true,userId:user.id};
 }
+
+export const getCurrentUserEntitlement = scopedEntitlementRead(
+  readMemberAuthRevision,readCurrentUserEntitlement,entitlementUnavailable,12000
+);

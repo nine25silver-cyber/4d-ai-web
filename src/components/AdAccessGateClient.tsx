@@ -4,8 +4,10 @@ import Link from 'next/link';
 import type {ReactNode} from 'react';
 import {useEffect, useState} from 'react';
 import type {Locale} from '@/i18n/routing';
-import {canAccessAiCore, getCurrentUserEntitlement, isPaidProEntitlement, isTrialEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
-import {initMemberState, loginUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
+import {canAccessAiCore, isPaidProEntitlement, isTrialEntitlement} from '@/lib/member-entitlement';
+import {loginUser} from '@/lib/member-state';
+import {useMemberEntitlementCheck} from '@/lib/use-member-entitlement-check';
+import {MemberVerificationNotice} from '@/components/MemberVerificationNotice';
 import {
   grantRewardedAdAccess,
   getFeatureUnlockRemainingMinutes,
@@ -24,16 +26,15 @@ type Props = {
 };
 
 export function AdAccessGateClient({locale, feature, adLabel, lockedText, children}: Props) {
-  const [memberState, setMemberState] = useState<MemberState | null>(null);
-  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
-  const [entitlementLoading, setEntitlementLoading] = useState(true);
+  const {memberState,entitlement,entitlementLoading,retryEntitlement} = useMemberEntitlementCheck();
   const [adUnlocked, setAdUnlocked] = useState(false);
   const [unlockMinutesLeft, setUnlockMinutesLeft] = useState(0);
   const [adNotice, setAdNotice] = useState<string | null>(null);
 
   const memberAccess = canAccessAiCore(entitlement);
   const canUseFeature = memberAccess || adUnlocked;
-  const canShowAdAction = !entitlementLoading && !canUseFeature;
+  const verificationNeeded = !canUseFeature && (entitlementLoading || entitlement?.source === 'error');
+  const canShowAdAction = !verificationNeeded && !canUseFeature;
   const canSimulateRewardedAd = process.env.NODE_ENV === 'development';
   const accessBadgeText = isPaidProEntitlement(entitlement)
     ? (locale === 'zh' ? 'Pro 已激活' : locale === 'ms' ? 'Pro aktif' : 'Pro active')
@@ -41,27 +42,7 @@ export function AdAccessGateClient({locale, feature, adLabel, lockedText, childr
       ? (locale === 'zh' ? 'Trial 已激活' : locale === 'ms' ? 'Trial aktif' : 'Trial active')
       : (locale === 'zh' ? '广告临时解锁' : locale === 'ms' ? 'Buka sementara melalui iklan' : 'Temporary ad unlock');
 
-  useEffect(() => {
-    let active = true;
-    const refreshEntitlement = async () => {
-      setEntitlementLoading(true);
-      const next = await getCurrentUserEntitlement();
-      if (!active) return;
-      setEntitlement(next);
-      setEntitlementLoading(false);
-    };
-    initMemberState();
-    setMemberState(readMemberState());
-    void refreshEntitlement();
-    const unsubscribe = subscribeMemberState((next) => {
-      setMemberState(next);
-      void refreshEntitlement();
-    });
-    return () => {
-      active = false;
-      unsubscribe();
-    };
-  }, []);
+
 
   useEffect(() => {
     const update = () => {
@@ -93,6 +74,8 @@ export function AdAccessGateClient({locale, feature, adLabel, lockedText, childr
     setUnlockMinutesLeft(REWARD_AD_ACCESS_MINUTES);
     setAdNotice(locale === 'zh' ? 'Development 测试广告已模拟完成。' : locale === 'ms' ? 'Iklan ujian Development telah disimulasikan.' : 'Development test ad reward simulated.');
   }
+
+  if (verificationNeeded) return <MemberVerificationNotice loading={entitlementLoading} retry={retryEntitlement} />;
 
   return (
     <section className="grid gap-3">

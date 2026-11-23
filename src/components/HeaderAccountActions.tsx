@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import {useEffect, useState} from 'react';
 import {Locale} from '@/i18n/routing';
-import {getCurrentUserEntitlement, isPaidProEntitlement, isTrialEntitlement, type CurrentUserEntitlement} from '@/lib/member-entitlement';
-import {initMemberState, loginUser, logoutUser, readMemberState, subscribeMemberState, type MemberState} from '@/lib/member-state';
+import {isPaidProEntitlement, isTrialEntitlement} from '@/lib/member-entitlement';
+import {loginUser, logoutUser} from '@/lib/member-state';
+import {useMemberEntitlementCheck} from '@/lib/use-member-entitlement-check';
 
 type Props = {
   locale: Locale;
@@ -18,32 +18,14 @@ type Props = {
 };
 
 export function HeaderAccountActions({locale, labels}: Props) {
-  const [state, setState] = useState<MemberState | null>(null);
-  const [entitlement, setEntitlement] = useState<CurrentUserEntitlement | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    const refreshEntitlement = async () => {
-      const next = await getCurrentUserEntitlement();
-      if (active) setEntitlement(next);
-    };
-    initMemberState();
-    setState(readMemberState());
-    void refreshEntitlement();
-    const unsubscribe = subscribeMemberState((next) => {
-      setState(next);
-      void refreshEntitlement();
-    });
-    return () => {
-      active = false;
-      unsubscribe();
-    };
-  }, []);
+  const {memberState:state,entitlement,entitlementLoading} = useMemberEntitlementCheck();
 
   const isEntitledPro = isPaidProEntitlement(entitlement);
   const isTrial = isTrialEntitlement(entitlement);
-  const accessHref = `/${locale}/${isEntitledPro || isTrial ? 'account' : 'pricing'}`;
-  const accessLabel = isEntitledPro ? labels.proBadge : isTrial ? 'Trial' : labels.goPro;
+  const awaitingVerification = state?.loggedIn && (entitlementLoading || entitlement?.source === 'error');
+  const accessHref = `/${locale}/${isEntitledPro || isTrial || awaitingVerification ? 'account' : 'pricing'}`;
+  const accessLabel = isEntitledPro ? labels.proBadge : isTrial ? 'Trial'
+    : awaitingVerification ? labels.account : labels.goPro;
 
   if (!state) {
     return (
