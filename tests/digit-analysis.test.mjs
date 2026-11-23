@@ -1,0 +1,21 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {rowsFor,labelFor,drawIdentity,heatWindows,number,integer} from '../src/lib/digit-analysis/model.ts';
+const bundle=(mode,data)=>({single:{providers:{}},double:{providers:{}},triple:{providers:{}},[mode]:{providers:{magnum:data}}});
+test('single preserves feed order and numeric zero',()=>{const b=bundle('single',{digits:[{digit:9},{digit:0},{digit:2}]});assert.deepEqual(rowsFor(b,'single','magnum','all23').map(r=>r.digit),[9,0,2]);assert.equal(labelFor({digit:0},'single'),'0');});
+test('double selects prize scope and sorts current gap descending',()=>{const b=bundle('double',{doubles:[{double:'00',filters:{all23:{current_gap:2},top3:{current_gap:9}}},{double:'11',filters:{all23:{current_gap:8},top3:{current_gap:1}}}]});assert.deepEqual(rowsFor(b,'double','magnum','all23').map(r=>r.double),['11','00']);assert.deepEqual(rowsFor(b,'double','magnum','top3').map(r=>r.double),['00','11']);});
+test('double missing gap sorts last and zero remains visible',()=>{const b=bundle('double',{doubles:[{double:'00',filters:{all23:{current_gap:null}}},{double:'11',filters:{all23:{current_gap:0}}}]});assert.deepEqual(rowsFor(b,'double','magnum','all23').map(r=>r.double),['11','00']);});
+test('triple uses raw current gap / p95 not rounded display field',()=>{const b=bundle('triple',{all23:[{digit:1,current_gap:6,p95:10,current_over_p95:99},{digit:2,current_gap:5,p95:5,current_over_p95:0},{digit:0,current_gap:999,p95:0}]});assert.deepEqual(rowsFor(b,'triple','magnum','all23').map(r=>r.digit),[2,1,0]);});
+test('triple equal ratio breaks tie by current gap',()=>{const b=bundle('triple',{top3:[{digit:1,current_gap:5,p95:5},{digit:2,current_gap:10,p95:10}]});assert.deepEqual(rowsFor(b,'triple','magnum','top3').map(r=>r.digit),[2,1]);assert.equal(labelFor({digit:0},'triple'),'000');});
+test('unknown provider and absent scope have empty rows',()=>{const b=bundle('triple',{});assert.deepEqual(rowsFor(b,'triple','magnum','all23'),[]);assert.deepEqual(rowsFor(b,'triple','missing','all23'),[]);});
+test('draw date fallback only applies single and double',()=>{const b=bundle('single',{});b.single.latest_draw_date='2026-01-01';b.triple={providers:{magnum:{}},latest_draw_date:'2026-01-01'};assert.equal(drawIdentity(b,'single','magnum').date,'2026-01-01');assert.equal(drawIdentity(b,'triple','magnum').date,'');});
+test('App heat windows match each mode and filter',()=>{assert.deepEqual(heatWindows('single','top3'),[3,5,10]);assert.deepEqual(heatWindows('double','top3'),[20,50,100]);assert.deepEqual(heatWindows('double','all23'),[5,10,30]);});
+test('missing/nonfinite values never become numeric zeros',()=>{for(const x of [null,undefined,'','   ',NaN,Infinity,{},true])assert.equal(number(x),null);assert.equal(number('0'),0);});
+test('source records and order are not mutated by sort',()=>{const b=bundle('triple',{all23:[{digit:1,current_gap:1,p95:2},{digit:2,current_gap:2,p95:2}]});const original=JSON.stringify(b);rowsFor(b,'triple','magnum','all23');assert.equal(JSON.stringify(b),original);});
+
+test('Android integer parser truncates numbers but rejects decimal text',()=>{assert.equal(integer(2.7),2);assert.equal(integer('2.7'),null);assert.equal(integer(' 0 '),0);assert.equal(integer(true),null);});
+test('Android drops null-digit records while retaining zero and order',()=>{const b=bundle('single',{digits:[{digit:7},{digit:null},{digit:0},null,{}]});assert.deepEqual(rowsFor(b,'single','magnum','all23').map(r=>r.digit),[7,0]);});
+test('independent Android contract expected ranking 222,111,000,333',()=>{const b=bundle('triple',{all23:[{digit:1,current_gap:10,p95:4},{digit:2,current_gap:15,p95:6},{digit:3,current_gap:80,p95:0},{digit:0,current_gap:0,p95:3}]});assert.deepEqual(rowsFor(b,'triple','magnum','all23').map(r=>labelFor(r,'triple')),['222','111','000','333']);});
+test('already tripled format remains unchanged',()=>{assert.equal(labelFor({digit:'777'},'triple'),'777');});
+
+test('null triple gap is ratio -1, below valid zero',()=>{const b=bundle('triple',{all23:[{digit:1,current_gap:null,p95:10},{digit:0,current_gap:0,p95:10}]});assert.deepEqual(rowsFor(b,'triple','magnum','all23').map(r=>r.digit),[0,1]);});
