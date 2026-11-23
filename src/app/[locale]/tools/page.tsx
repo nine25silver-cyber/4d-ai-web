@@ -106,11 +106,6 @@ function localizedCopy(locale: Locale) {
       moreAnalytics: locale === 'zh' ? '更多数据分析' : locale === 'ms' ? 'Lebih banyak analisis data' : 'More data analysis'
     },
     soonLabel: locale === 'zh' ? '即将推出' : locale === 'ms' ? 'Akan datang' : 'Coming soon',
-    digitAnalysis: locale === 'zh'
-      ? {title: '数字分析', subtitle: '单号 · 双号 · 三号统计分析'}
-      : locale === 'ms'
-        ? {title: 'Analisis Digit', subtitle: 'Statistik digit tunggal, berganda dan bertiga'}
-        : {title: 'Digit Analysis', subtitle: 'Single, double and triple digit statistics'},
     proLabel: 'PRO'
   } as const;
 }
@@ -167,27 +162,12 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
     packageRanking3d: {prefix: '', accent: '', suffix: t('toolboxBoxEntryTitle')}
   };
 
-  const appOrder = ['ai', 'packageRanking', 'ai3d', 'packageRanking3d'] as const;
   return (
     <main data-tools-page="true" className="bg-[#f7f4ee]">
       <style>{'main[data-tools-page="true"] + footer { margin-top: 1rem; }'}</style>
       <section className="pt-2 pb-2 sm:pt-3">
         <div className="container-shell">
-          <div className="grid grid-cols-2 gap-3 sm:hidden">
-            {appOrder.map((tool, index) => {
-              const {prefix, accent, suffix} = featuredTitleParts[tool];
-              return <Link key={tool} href={getFeaturedHref(locale, tool)}
-                className={`flex min-w-0 flex-col rounded-[23px] border border-[#4d6176] bg-gradient-to-br from-[#3b526a] to-[#2c4058] px-3 py-3 text-[#f9fcff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bf8623] ${index<2?'min-h-[143px] shadow-[0_8px_18px_#23394e40]':'min-h-24 justify-center'}`}>
-                <span className="flex items-center justify-between gap-1">
-                  <span className="text-[30px] leading-none font-black text-[#e7b95c]">{featuredDimensions[tool]}</span>
-                  {index===0&&<span className="rounded bg-[#e8ba60] px-1.5 py-1 text-xs font-black leading-none text-[#263b50]">{copy.proLabel}</span>}
-                </span>
-                <span className="mt-1 text-base leading-tight font-black">{prefix}{prefix&&' '}{accent&&<span className="text-[#e7b95c]">{accent}{' '}</span>}{suffix}</span>
-                {index<2&&<span className="mt-1 text-sm leading-snug font-bold text-[#c6d3df]">{categoryCards[index===0?'ai':'box'].description}</span>}
-              </Link>;
-            })}
-          </div>
-          <div className="hidden gap-2.5 sm:grid lg:grid-cols-2">
+          <div className="grid gap-2.5 lg:grid-cols-2">
             {featuredCategories.map((category) => {
               const item = categoryCards[category];
               const tools = category === 'ai' ? (['ai', 'ai3d'] as const) : (['packageRanking', 'packageRanking3d'] as const);
@@ -261,16 +241,6 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
               );
             })}
           </div>
-          <Link href={`/${locale}/tools/digit-analysis-pro`}
-            className="mt-3 flex min-h-[86px] items-center gap-3 rounded-[23px] border border-[#4d6176] bg-gradient-to-br from-[#3b526a] to-[#2c4058] px-3 py-3 text-[#f9fcff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bf8623] sm:min-h-[76px] sm:px-4">
-            <span className="grid size-[47px] shrink-0 place-items-center rounded-[15px] border border-white/20 bg-white/10 text-[#dff1fc]">
-              <svg aria-hidden="true" className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="m2 17 5-6 3 3 4-5m4-1 3-5m-4 14 4 4"/><circle cx="14.5" cy="14.5" r="3.5"/></svg>
-            </span>
-            <span className="min-w-0">
-              <span className="flex flex-wrap items-center gap-2 text-lg leading-tight font-black sm:text-xl">{copy.digitAnalysis.title}<span className="rounded bg-[#e8ba60] px-1.5 py-1 text-xs font-black leading-none text-[#263b50]">{copy.proLabel}</span></span>
-              <span className="mt-0.5 block text-xs font-bold text-[#c9d6e1] sm:text-sm">{copy.digitAnalysis.subtitle}</span>
-            </span>
-          </Link>
         </div>
       </section>
 
@@ -286,12 +256,7 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
                   className={`${tool === 'hotCold' || tool === 'cold4d' ? 'min-[520px]:min-h-24' : ''} group flex min-h-20 items-center gap-2.5 rounded-[20px] border border-stone-200 bg-white/90 p-2.5 shadow-sm shadow-stone-200 transition-transform duration-200 hover:-translate-y-1 hover:shadow-md`}
                 >
                   <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] border border-stone-200 text-[11px] font-black shadow-sm ${standardIconStyles[tool]}`}>
-                    {tool === 'thousandHits' || tool === 'numberSearch' || tool === 'digitMap' ? <>
-                      <span className="hidden sm:inline">{standardIcons[tool]}</span>
-                      {tool==='digitMap'
-                        ? <svg aria-hidden="true" className="size-6 sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M10 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5m-15 3 4-5 3 3 2-2 3 4m2-9 3 3"/><circle cx="16" cy="6" r="4"/></svg>
-                        : <svg aria-hidden="true" className="size-6 sm:hidden" viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10v2h4v3a5 5 0 0 1-5 5h-.2a6 6 0 0 1-2.8 2.2V20h4v2H7v-2h4v-4.8A6 6 0 0 1 8.2 13H8a5 5 0 0 1-5-5V5h4zm10 4v3.8A3 3 0 0 0 19 8V7zM5 7v1a3 3 0 0 0 2 2.8V7z"/></svg>}
-                    </> : standardIcons[tool]}
+                    {standardIcons[tool]}
                   </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-black leading-tight text-slate-950 sm:text-base">
