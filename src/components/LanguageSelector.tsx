@@ -10,6 +10,8 @@ const localeLabels: Record<Locale, string> = {
   ms: 'MY'
 };
 
+const fullLocaleLabels: Record<Locale, string> = {en: 'English', zh: '中文', ms: 'Bahasa Melayu'};
+
 function localizedPath(pathname: string, locale: Locale) {
   const segments = pathname.split('/').filter(Boolean);
   if (segments.length > 0 && routing.locales.includes(segments[0] as Locale)) {
@@ -29,6 +31,7 @@ export function LanguageSelector({locale, className = ''}: {locale: Locale; clas
           key={item}
           href={localizedPath(pathname, item)}
           className={`flex h-7 items-center rounded px-2 ${locale === item ? 'bg-[#f0dc9a] text-[#4c3b0b]' : 'bg-transparent text-slate-500 hover:bg-white hover:text-slate-800'}`}
+          aria-label={fullLocaleLabels[item]}
           aria-current={locale === item ? 'page' : undefined}
         >
           {localeLabels[item]}

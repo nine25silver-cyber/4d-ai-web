@@ -47,7 +47,7 @@ export function HeaderAccountActions({locale, labels}: Props) {
 
   if (!state) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="site-header-account flex items-center gap-2">
         <Link href={`/${locale}/account`} className="inline-flex h-8 items-center rounded-md border border-[#f7da7a] bg-[#fff8df] px-3 text-sm font-bold text-[#5f4700] hover:bg-[#fff3c4]">
           {labels.login}
         </Link>
@@ -62,7 +62,7 @@ export function HeaderAccountActions({locale, labels}: Props) {
   const ctaLabel = accessLabel;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="site-header-account flex items-center gap-2">
       <button
         type="button"
         onClick={() => {

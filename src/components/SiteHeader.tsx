@@ -59,39 +59,39 @@ export function SiteHeader({locale}: {locale: Locale}) {
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#2b2b2b] bg-black/95 backdrop-blur">
-      <div className="container-shell grid min-h-16 grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 py-2 md:grid-cols-[auto_1fr_auto]">
+      <div className="site-header-shell container-shell grid min-h-16 grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 py-2 md:grid-cols-[auto_1fr_auto]">
         <div className="flex min-w-0 shrink-0 items-center">
           <Link href={`${base}/account`} className="flex min-w-0 shrink-0 items-center font-black text-white">
-            <span className="relative block h-14 w-[150px] overflow-hidden sm:w-[220px] lg:w-[280px]">
+            <span className="site-header-logo relative block h-14 w-[150px] overflow-hidden sm:w-[220px] lg:w-[280px]">
               <Image
                 src="/brand/web-logo-horizontal.png"
                 alt="4D AI Malaysia Results"
                 fill
-                sizes="(min-width: 1024px) 280px, (min-width: 640px) 220px, 150px"
+                sizes="(min-width: 1024px) 280px, (min-width: 640px) 220px, 112px"
                 className="object-contain object-left"
                 priority
               />
             </span>
           </Link>
         </div>
-        <nav className="relative z-10 col-span-2 flex min-w-0 flex-wrap items-center justify-start gap-1 overflow-visible text-sm font-semibold text-white md:col-span-1 md:justify-center md:text-base">
+        <nav className="site-header-nav relative z-10 col-span-2 flex min-w-0 flex-wrap items-center justify-start gap-1 overflow-visible text-sm font-semibold text-white md:col-span-1 md:justify-center md:text-base">
           {nav.map((item) => {
             const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-            return <Link key={item.href} href={item.href} className={`relative z-10 shrink-0 rounded px-3 py-2 outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/70 ${active ? 'bg-white/15 text-white' : ''}`}>{item.label}</Link>;
+            return <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={`site-header-nav-action relative z-10 shrink-0 rounded px-3 py-2 outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/70 ${active ? 'bg-white/15 text-white' : ''}`}>{item.label}</Link>;
           })}
-          <div ref={moreRef} className="relative z-20 shrink-0">
+          <div ref={moreRef} className="site-header-more relative z-20 shrink-0">
             <button
               type="button"
               aria-haspopup="menu"
               aria-expanded={moreOpen}
               aria-controls={moreMenuId}
               onClick={() => setMoreOpen((open) => !open)}
-              className={`rounded px-3 py-2 font-semibold text-white outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/70 ${moreActive ? 'bg-white/15' : ''}`}
+              className={`site-header-nav-action rounded px-3 py-2 font-semibold text-white outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/70 ${moreActive ? 'bg-white/15' : ''}`}
             >
               {t('more')}
             </button>
             {moreOpen ? (
-              <div id={moreMenuId} className="fixed left-4 right-4 top-[74px] z-50 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 p-2 text-sm shadow-xl md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:min-w-[300px] md:max-w-[calc(100vw-2rem)]">
+              <div id={moreMenuId} className="site-header-more-panel fixed left-4 right-4 top-[74px] z-50 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 p-2 text-sm shadow-xl md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:min-w-[300px] md:max-w-[calc(100vw-2rem)]">
                 <Link href={`${base}/about`} onClick={() => setMoreOpen(false)} className="block rounded-md px-3 py-2 font-bold text-white outline-none hover:bg-white/10 focus-visible:bg-white/10">
                   {t('about')}
                 </Link>
@@ -120,10 +120,9 @@ export function SiteHeader({locale}: {locale: Locale}) {
               </div>
             ) : null}
           </div>
-          <LanguageSelector locale={locale} className="ml-auto shrink-0 md:hidden" />
         </nav>
-        <div className="flex shrink-0 items-center gap-2 justify-self-end">
-          <LanguageSelector locale={locale} className="hidden md:flex" />
+        <div className="site-header-controls flex shrink-0 items-center gap-2 justify-self-end">
+          <LanguageSelector locale={locale} className="site-header-language" />
           <HeaderAccountActions
             locale={locale}
             labels={{

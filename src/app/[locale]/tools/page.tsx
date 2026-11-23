@@ -173,17 +173,17 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
       <style>{'main[data-tools-page="true"] + footer { margin-top: 1rem; }'}</style>
       <section className="pt-2 pb-2 sm:pt-3">
         <div className="container-shell">
-          <div className="grid grid-cols-2 gap-3 sm:hidden">
+          <div className="grid grid-cols-2 gap-2.5 sm:hidden">
             {appOrder.map((tool, index) => {
               const {prefix, accent, suffix} = featuredTitleParts[tool];
               return <Link key={tool} href={getFeaturedHref(locale, tool)}
-                className={`flex min-w-0 flex-col rounded-[23px] border border-[#4d6176] bg-gradient-to-br from-[#3b526a] to-[#2c4058] px-3 py-3 text-[#f9fcff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bf8623] ${index<2?'min-h-[143px] shadow-[0_8px_18px_#23394e40]':'min-h-24 justify-center'}`}>
+                className={`flex min-w-0 flex-col rounded-[18px] border border-[#4d6176] bg-gradient-to-br from-[#3b526a] to-[#2c4058] px-3 py-2.5 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bf8623] ${index<2?'min-h-[99px] shadow-[0_5px_12px_#23394e32]':'min-h-[72px] justify-center'}`}>
                 <span className="flex items-center justify-between gap-1">
-                  <span className="text-[30px] leading-none font-black text-[#e7b95c]">{featuredDimensions[tool]}</span>
+                  <span className="text-[27px] leading-none font-black text-[#e7b95c]">{featuredDimensions[tool]}</span>
                   {index===0&&<span className="rounded bg-[#e8ba60] px-1.5 py-1 text-xs font-black leading-none text-[#263b50]">{copy.proLabel}</span>}
                 </span>
-                <span className="mt-1 text-base leading-tight font-black">{prefix}{prefix&&' '}{accent&&<span className="text-[#e7b95c]">{accent}{' '}</span>}{suffix}</span>
-                {index<2&&<span className="mt-1 text-sm leading-snug font-bold text-[#c6d3df]">{categoryCards[index===0?'ai':'box'].description}</span>}
+                <span className="mt-1 text-[15px] leading-tight font-black text-white">{prefix}{prefix&&' '}{accent&&<span className="text-[#e7b95c]">{accent}{' '}</span>}{suffix}</span>
+                {index<2&&<span className="mt-1 text-[13px] leading-snug font-bold text-[#d9e4ef]">{categoryCards[index===0?'ai':'box'].description}</span>}
               </Link>;
             })}
           </div>
@@ -262,12 +262,12 @@ export default async function InfoPage({params}: {params: Promise<{locale: Local
             })}
           </div>
           <Link href={`/${locale}/tools/digit-analysis-pro`}
-            className="mt-3 flex min-h-[86px] items-center gap-3 rounded-[23px] border border-[#4d6176] bg-gradient-to-br from-[#3b526a] to-[#2c4058] px-3 py-3 text-[#f9fcff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bf8623] sm:min-h-[76px] sm:px-4">
-            <span className="grid size-[47px] shrink-0 place-items-center rounded-[15px] border border-white/20 bg-white/10 text-[#dff1fc]">
+            className="mt-2.5 flex min-h-[66px] items-center gap-2.5 sm:mt-3 sm:gap-3 sm:rounded-[23px] rounded-[18px] border border-[#4d6176] bg-gradient-to-br from-[#3b526a] to-[#2c4058] px-3 py-2.5 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bf8623] sm:min-h-[76px] sm:px-4 sm:py-3">
+            <span className="grid size-[40px] shrink-0 sm:size-[47px] place-items-center rounded-[15px] border border-white/20 bg-white/10 text-[#dff1fc]">
               <svg aria-hidden="true" className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="m2 17 5-6 3 3 4-5m4-1 3-5m-4 14 4 4"/><circle cx="14.5" cy="14.5" r="3.5"/></svg>
             </span>
             <span className="min-w-0">
-              <span className="flex flex-wrap items-center gap-2 text-lg leading-tight font-black sm:text-xl">{copy.digitAnalysis.title}<span className="rounded bg-[#e8ba60] px-1.5 py-1 text-xs font-black leading-none text-[#263b50]">{copy.proLabel}</span></span>
+              <span className="flex flex-wrap items-center gap-2 text-[17px] leading-tight font-black text-white sm:text-xl">{copy.digitAnalysis.title}<span className="rounded bg-[#e8ba60] px-1.5 py-1 text-xs font-black leading-none text-[#263b50]">{copy.proLabel}</span></span>
               <span className="mt-0.5 block text-xs font-bold text-[#c9d6e1] sm:text-sm">{copy.digitAnalysis.subtitle}</span>
             </span>
           </Link>

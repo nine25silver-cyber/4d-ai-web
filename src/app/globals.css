@@ -37,3 +37,66 @@ button, input, select { font: inherit; }
 .ai-hit-sequence-flash {
   animation: ai-hit-flash 360ms ease-in-out 3;
 }
+
+/* Compact phone-only site header; desktop structure and styling stay unchanged. */
+@media (max-width: 767px) {
+  .site-header-shell {
+    width: calc(100% - 20px);
+    min-height: 0;
+    grid-template-columns: minmax(68px, 1fr) auto;
+    column-gap: 4px;
+    row-gap: 0;
+    padding-block: 3px 2px;
+  }
+  .site-header-logo { width: clamp(74px, 29vw, 120px); height: 40px; }
+  .site-header-controls {
+    grid-column: 2;
+    grid-row: 1;
+    gap: 5px;
+  }
+  .site-header-language {
+    height: 40px;
+    flex-shrink: 0;
+  }
+  .site-header-language a {
+    justify-content: center;
+    min-width: 26px;
+    height: 34px;
+    color: #334155;
+    padding-inline: 3px;
+  }
+  .site-header-language a[aria-current='page'] { color: #4c3b0b; }
+  .site-header-account { gap: 4px; }
+  .site-header-account > * {
+    min-width: 35px;
+    height: 40px;
+    justify-content: center;
+    padding-inline: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .site-header-account > :first-child { color: #5f4700; }
+  .site-header-account > :last-child { color: #222034; }
+  .site-header-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    gap: 0 2px;
+    justify-content: space-between;
+  }
+  .site-header-nav .site-header-nav-action {
+    display: inline-flex;
+    min-height: 38px;
+    align-items: center;
+    padding: 0 5px;
+    color: #fff;
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .site-header-more { position: static; }
+  .site-header-more-panel {
+    position: absolute;
+    inset: calc(100% + 3px) 0 auto;
+    max-height: calc(100dvh - 105px);
+  }
+}
