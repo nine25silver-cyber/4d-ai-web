@@ -12,9 +12,9 @@ export async function generateMetadata({params}: {params: Promise<{locale: Local
   const {locale} = await params;
   return buildMetadata({
     locale,
-    path: '/tools/search',
-    title: '4D number search',
-    description: 'Search exact and boxed 4D winning records across providers.'
+    path: '/tools/4d-search',
+    title: locale === 'zh' ? '搜索万字中奖记录 - 4D AI' : locale === 'ms' ? 'Carian Nombor 4D - 4D AI' : '4D number search - 4D AI',
+    description: locale === 'zh' ? '按公司搜索正4D与包字历史中奖记录。' : locale === 'ms' ? 'Cari rekod kemenangan 4D tepat dan boxed mengikut syarikat.' : 'Search exact and boxed 4D winning records across providers.'
   });
 }
 

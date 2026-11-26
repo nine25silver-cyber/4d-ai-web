@@ -50,7 +50,7 @@ export async function generateMetadata({params}: {params: Promise<{locale: Local
   const market = getMarketForRegion(region.slug);
   return buildMetadata({
     locale,
-    path: `/results/${region.slug}`,
+    path: `/results/${market?.hrefRegion ?? region.slug}`,
     title: `${market?.label ?? region.label} Latest 4D Results`,
     description: `View latest 4D results for ${market?.label ?? region.label}.`
   });
@@ -72,7 +72,7 @@ export default async function RegionResultsPage({params}: {params: Promise<{loca
     '@context': 'https://schema.org',
     '@type': 'Dataset',
     name: `${result.payload.provider_code} 4D result`,
-    url: siteUrl(`/${locale}/results/${region.slug}`),
+    url: siteUrl(`/${locale}/results/${activeMarket.hrefRegion}`),
     dateModified: result.payload.updated_at || result.payload.generated_at || undefined,
     spatialCoverage: activeMarket.label,
     variableMeasured: ['draw_date', 'draw_no', 'first_prize', 'second_prize', 'third_prize'],

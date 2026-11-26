@@ -3,6 +3,7 @@ import {routing} from '@/i18n/routing';
 import {regions} from '@/lib/providers';
 import {providerPayoutPages} from '@/lib/provider-payouts';
 import {siteUrl} from '@/lib/seo';
+import {historyDiscovery} from '@/lib/history-discovery';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [
@@ -23,8 +24,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/data-sources',
     '/pricing'
   ];
-  const resultPages = regions.map((region) => `/results/${region.slug}`);
-  const historyRegionPages = regions.map((region) => `/history/${region.slug}`);
+  const resultPages = ['west-malaysia', 'east-malaysia', 'cambodia'].map((region) => `/results/${region}`);
+  const historyRegionPages = ['west-malaysia', 'east-malaysia', 'international'].map((region) => `/history/${region}`);
   const historyProviderPages = regions.flatMap((region) => region.providers.map((provider) => `/history/${region.slug}/${provider.code}`));
   const aiRegionPages = regions.map((region) => `/ai/${region.slug}`);
   const aiProviderPages = regions.flatMap((region) => region.providers.map((provider) => `/ai/${region.slug}/${provider.code}`));
@@ -44,5 +45,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.4
   }));
 
-  return [...localizedPages, ...legalPages];
+  const selectedHistoryPages: MetadataRoute.Sitemap = routing.locales.flatMap((locale) => historyDiscovery.flatMap((entry) => {
+    const base = `/${locale}/history/${entry.region}/${entry.provider}`;
+    // No invented lastModified date: verification time is not content modification time.
+    return [{url: siteUrl(`${base}/archive`)}, ...entry.dates.map((date) => ({url: siteUrl(`${base}/${date}`)}))];
+  }));
+  return [...localizedPages, ...legalPages, ...selectedHistoryPages];
 }

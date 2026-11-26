@@ -1,6 +1,7 @@
 import './globals.css';
 import type {Metadata} from 'next';
 import Script from 'next/script';
+import {getLocale} from 'next-intl/server';
 
 export const metadata: Metadata = {
   icons: {
@@ -9,9 +10,10 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default async function RootLayout({children}: {children: React.ReactNode}) {
+  const locale = await getLocale();
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <Script
           id="google-adsense-verification"

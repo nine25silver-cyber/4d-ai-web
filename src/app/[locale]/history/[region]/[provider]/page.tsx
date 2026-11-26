@@ -6,6 +6,7 @@ import {fetchHistoryLatest30} from '@/lib/cloudflare';
 import {getRegion} from '@/lib/providers';
 import {buildMetadata} from '@/lib/seo';
 import type {Locale} from '@/i18n/routing';
+import {getHistoryDiscovery, historyDiscoveryCopy} from '@/lib/history-discovery';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +62,10 @@ export default async function ProviderHistoryPage({params}: {params: Promise<{lo
           <div className="p-5 text-sm text-slate-600">{t('historyUnavailable')}: {state.reason}</div>
         )}
       </section>
+      {getHistoryDiscovery(region.slug, provider.code) ? <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5">
+        <Link href={`/${locale}/history/${region.slug}/${provider.code}/archive`} className="font-bold text-blue-800 hover:underline">{historyDiscoveryCopy[locale].title}</Link>
+        <p className="mt-2 text-sm text-slate-600">{historyDiscoveryCopy[locale].intro}</p>
+      </section> : null}
     </main>
   );
 }
