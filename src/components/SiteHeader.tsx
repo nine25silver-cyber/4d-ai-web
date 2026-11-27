@@ -15,10 +15,11 @@ export function SiteHeader({locale}: {locale: Locale}) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
   const base = `/${locale}`;
   const moreMenuId = 'more-navigation-menu';
   const nav = [
-    {href: `${base}/results/west-malaysia`, label: t('results')},
+    {href: `${base}/results/west-malaysia`, label: t('results'), compactLabel: locale === 'zh' ? undefined : t('resultsCompact')},
     {href: `${base}/history`, label: t('history')},
     {href: `${base}/ai/west-malaysia/magnum`, label: t('ai')},
     {href: `${base}/tools`, label: t('tools')},
@@ -42,7 +43,10 @@ export function SiteHeader({locale}: {locale: Locale}) {
     }
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setMoreOpen(false);
+      if (event.key === 'Escape') {
+        setMoreOpen(false);
+        if (moreRef.current?.contains(document.activeElement)) moreButtonRef.current?.focus();
+      }
     }
 
     document.addEventListener('pointerdown', onPointerDown);
@@ -75,14 +79,25 @@ export function SiteHeader({locale}: {locale: Locale}) {
           </Link>
         </div>
         <nav className="site-header-nav relative z-10 col-span-2 flex min-w-0 flex-wrap items-center justify-start gap-1 overflow-visible text-sm font-semibold text-white md:col-span-1 md:justify-center md:text-base">
-          {nav.map((item) => {
-            const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-            return <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={`site-header-nav-action relative z-10 shrink-0 rounded px-3 py-2 outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/70 ${active ? 'bg-white/15 text-white' : ''}`}>{item.label}</Link>;
-          })}
+          <div className="site-header-primary-links">
+            {nav.map((item) => {
+              const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+              return (
+                <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} aria-label={item.compactLabel ? item.label : undefined} className={`site-header-nav-action relative z-10 shrink-0 rounded px-3 py-2 outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/70 ${active ? 'bg-white/15 text-white' : ''}`}>
+                  {item.compactLabel ? (
+                    <>
+                      <span className="md:hidden">{item.compactLabel}</span>
+                      <span className="hidden md:inline">{item.label}</span>
+                    </>
+                  ) : item.label}
+                </Link>
+              );
+            })}
+          </div>
           <div ref={moreRef} className="site-header-more relative z-20 shrink-0">
             <button
+              ref={moreButtonRef}
               type="button"
-              aria-haspopup="menu"
               aria-expanded={moreOpen}
               aria-controls={moreMenuId}
               onClick={() => setMoreOpen((open) => !open)}

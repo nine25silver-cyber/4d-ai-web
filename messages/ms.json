@@ -1,6 +1,7 @@
 {
   "Nav": {
     "results": "Keputusan Terkini",
+    "resultsCompact": "Keputusan",
     "history": "Sejarah",
     "ai": "AI",
     "tools": "Alat",

@@ -38,6 +38,8 @@ button, input, select { font: inherit; }
   animation: ai-hit-flash 360ms ease-in-out 3;
 }
 
+.site-header-primary-links { display: contents; }
+
 /* Compact phone-only site header; desktop structure and styling stay unchanged. */
 @media (max-width: 767px) {
   .site-header-shell {
@@ -80,12 +82,28 @@ button, input, select { font: inherit; }
   .site-header-nav {
     grid-column: 1 / -1;
     grid-row: 2;
+    max-width: calc(100vw - 20px);
+    align-items: flex-start;
     gap: 0 2px;
+    flex-wrap: nowrap;
     justify-content: space-between;
+  }
+  .site-header-primary-links {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-items: center;
+    gap: 2px;
+    justify-content: space-between;
+    overflow-x: auto;
+    scroll-padding-inline: 2px;
+    padding-inline: 2px;
   }
   .site-header-nav .site-header-nav-action {
     display: inline-flex;
-    min-height: 38px;
+    min-width: 28px;
+    min-height: 44px;
+    justify-content: center;
     align-items: center;
     padding: 0 5px;
     color: #fff;
@@ -93,6 +111,7 @@ button, input, select { font: inherit; }
     line-height: 1.2;
     white-space: nowrap;
   }
+  .site-header-primary-links .site-header-nav-action:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
   .site-header-more { position: static; }
   .site-header-more-panel {
     position: absolute;

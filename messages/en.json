@@ -1,6 +1,7 @@
 {
   "Nav": {
     "results": "Latest Results",
+    "resultsCompact": "Results",
     "history": "History",
     "ai": "AI",
     "tools": "Tools",
